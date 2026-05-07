@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0dfa49d21dd0a2f45987781eb6e636c8, type: 3}
+  m_Name: BasicTowerData
+  m_EditorClassIdentifier: Assembly-CSharp::TD.Data.BuildingData
+  buildingName: Basic Tower
+  prefab: {fileID: 8843286229658649047, guid: b116d6e8c37bdf1449c09aabd8c2a9a4, type: 3}
+  buyCost: 50
+  baseHealth: 100
+  upgrades:
+  - cost: 30
+    healthIncrease: 50
+    statMultiplier: 1.2
+  - cost: 60
+    healthIncrease: 100
+    statMultiplier: 1.5
+  refundPercentage: 0.5
