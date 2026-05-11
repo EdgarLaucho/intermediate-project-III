@@ -4,16 +4,16 @@
 TagManager:
   serializedVersion: 3
   tags:
-  - FoodTable
+  - Nexus
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - FoodTable
+  - 
   - Water
   - UI
-  - 
-  - 
+  - Ground
+  - Enemy
   - 
   - 
   - 
@@ -51,4 +51,3 @@ TagManager:
   - Light Layer 5
   - Light Layer 6
   - Light Layer 7
-  m_MigratedRenderPipelines: []

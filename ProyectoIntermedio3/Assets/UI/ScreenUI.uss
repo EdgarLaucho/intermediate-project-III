@@ -1,0 +1,366 @@
+/* ── Gold HUD ───────────────────────────────────────────────────────────── */
+
+.gold-hud {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 196px;
+    height: 98px;
+    overflow: visible;
+}
+
+.gold-panel {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 196px;
+    height: 58px;
+    flex-direction: row;
+    align-items: center;
+    background-color: rgba(28, 18, 12, 0.94);
+    border-radius: 8px;
+    padding-left: 10px;
+    padding-right: 14px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    border-width: 2px;
+    border-color: rgba(232, 156, 34, 0.88);
+    overflow: visible;
+}
+
+.gold-icon {
+    width: 42px;
+    height: 42px;
+    margin-right: 12px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(240, 174, 40);
+    border-radius: 21px;
+    border-width: 2px;
+    border-color: rgb(92, 47, 11);
+}
+
+.gold-icon-symbol {
+    width: 42px;
+    height: 42px;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    background-color: rgba(0, 0, 0, 0);
+    color: rgb(70, 34, 6);
+    font-size: 21px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.gold-copy {
+    flex-grow: 1;
+    flex-shrink: 0;
+    width: 114px;
+    height: 46px;
+    justify-content: flex-start;
+    padding-left: 2px;
+    padding-top: 2px;
+}
+
+.gold-title {
+    color: rgba(255, 220, 136, 0.78);
+    font-size: 10px;
+    height: 13px;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    -unity-font-style: bold;
+    -unity-text-align: upper-left;
+}
+
+.gold-label {
+    color: rgb(255, 222, 86);
+    font-size: 28px;
+    height: 30px;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: -1px;
+    margin-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
+}
+
+.gold-delta-layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: visible;
+}
+
+.gold-delta {
+    position: absolute;
+    width: 60px;
+    height: 20px;
+    border-radius: 5px;
+    padding-left: 5px;
+    padding-right: 5px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: rgb(255, 240, 180);
+    font-size: 11px;
+}
+
+.gold-delta-gain {
+    background-color: rgba(17, 47, 16, 0.92);
+    border-width: 1px;
+    border-color: rgb(130, 236, 86);
+    color: rgb(158, 255, 109);
+}
+
+.gold-delta-spend {
+    background-color: rgba(62, 20, 10, 0.92);
+    border-width: 1px;
+    border-color: rgb(255, 112, 72);
+    color: rgb(255, 132, 92);
+}
+
+/* ── Radial menu container ──────────────────────────────────────────────── */
+
+.radial-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+
+.radial-menu-element {
+    position: absolute;
+    overflow: visible;
+}
+
+.radial-backdrop {
+    position: absolute;
+}
+
+.radial-entry-node {
+    position: absolute;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(79, 46, 19, 0.98);
+    border-width: 2px;
+    border-color: rgba(219, 143, 45, 0.94);
+    border-radius: 38px;
+}
+
+.radial-entry-node.is-hovered {
+    background-color: rgb(107, 62, 24);
+    border-color: rgb(255, 206, 78);
+}
+
+.radial-entry-node.is-pressed {
+    background-color: rgb(59, 31, 11);
+    border-color: rgb(162, 89, 27);
+}
+
+.radial-entry-node.is-flashing {
+    background-color: rgb(255, 209, 71);
+    border-color: rgb(255, 240, 140);
+}
+
+.radial-entry-node.is-disabled {
+    background-color: rgba(31, 25, 17, 0.78);
+    border-color: rgba(96, 74, 48, 0.70);
+}
+
+.radial-entry-face {
+    width: 56px;
+    height: 56px;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(184, 148, 89, 0.90);
+    border-width: 1px;
+    border-color: rgba(86, 47, 17, 0.88);
+    border-radius: 28px;
+}
+
+.radial-entry-face.is-hovered {
+    background-color: rgba(240, 186, 97, 0.96);
+    border-color: rgb(255, 218, 94);
+}
+
+.radial-entry-face.is-pressed {
+    background-color: rgba(148, 107, 56, 0.94);
+}
+
+.radial-entry-face.is-flashing {
+    background-color: rgb(255, 225, 92);
+    border-color: rgb(255, 250, 178);
+}
+
+.radial-entry-face.is-disabled {
+    background-color: rgba(76, 66, 50, 0.60);
+    border-color: rgba(65, 52, 37, 0.62);
+}
+
+.radial-entry-icon {
+    width: 56px;
+    height: 56px;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    color: rgba(46, 24, 9, 0.92);
+    font-size: 25px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.radial-entry-icon.is-hovered,
+.radial-entry-icon.is-flashing {
+    color: rgba(31, 15, 5, 1.00);
+}
+
+.radial-entry-icon.is-disabled {
+    color: rgba(47, 38, 27, 0.62);
+}
+
+.radial-entry-label-plate {
+    position: absolute;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    background-color: rgba(33, 18, 8, 0.94);
+    border-width: 1px;
+    border-color: rgba(222, 151, 51, 0.74);
+    border-radius: 8px;
+}
+
+.radial-entry-label-plate.is-hovered {
+    background-color: rgba(61, 31, 11, 0.98);
+    border-color: rgb(255, 206, 78);
+}
+
+.radial-entry-label-plate.is-pressed {
+    background-color: rgba(35, 18, 7, 0.98);
+    border-color: rgb(164, 92, 25);
+}
+
+.radial-entry-label-plate.is-flashing {
+    background-color: rgba(84, 47, 8, 0.98);
+    border-color: rgb(255, 236, 122);
+}
+
+.radial-entry-label-plate.is-disabled {
+    background-color: rgba(25, 21, 16, 0.84);
+    border-color: rgba(91, 73, 48, 0.62);
+}
+
+.radial-entry-title {
+    width: 100%;
+    height: 16px;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    color: rgb(250, 225, 168);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.radial-entry-title.is-hovered,
+.radial-entry-title.is-flashing {
+    color: rgb(255, 246, 200);
+}
+
+.radial-entry-title.is-disabled {
+    color: rgba(138, 120, 91, 0.72);
+}
+
+.radial-entry-subtitle {
+    width: 100%;
+    height: 12px;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: -1px;
+    margin-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    color: rgb(255, 191, 69);
+    font-size: 8px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.radial-entry-subtitle.is-hovered,
+.radial-entry-subtitle.is-flashing {
+    color: rgb(255, 230, 122);
+}
+
+.radial-entry-subtitle.is-disabled {
+    color: rgba(143, 110, 57, 0.66);
+}
+
+.radial-center-button {
+    position: absolute;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(54, 27, 9, 0.98);
+    border-width: 2px;
+    border-color: rgba(238, 151, 37, 0.98);
+    border-radius: 32px;
+}
+
+.radial-center-button.is-hovered {
+    background-color: rgba(86, 49, 19, 1.00);
+    border-color: rgb(255, 215, 82);
+}
+
+.radial-center-icon {
+    width: 100%;
+    height: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+    padding-bottom: 2px;
+    color: rgb(238, 204, 142);
+    font-size: 24px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}

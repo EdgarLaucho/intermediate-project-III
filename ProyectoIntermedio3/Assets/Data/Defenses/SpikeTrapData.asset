@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e4e9cbe90762814591360f178b4c1ce, type: 3}
+  m_Name: SpikeTrapData
+  m_EditorClassIdentifier: Assembly-CSharp::TD.Data.TrapData
+  buildingName: Pinchos
+  prefab: {fileID: 1000000000000000041, guid: a1f0c9e76b9a4b4fb2e8e8d47a100005, type: 3}
+  buyCost: 35
+  refundPercentage: 0.35
+  repairCostPerHP: 0.6
+  baseMaxHealth: 40
+  maxLevel: 2
+  upgradeLevels:
+  - upgradeCost: 30
+    bonusMaxHealth: 10
+    statMultiplier: 1.25
+    fireRateMultiplier: 1
+    bonusTrapUses: 2
+    bonusRange: 0
+    bonusArmor: 0
+    bonusThornsDamage: 0
+    specialLabel: Sharper spikes
+  - upgradeCost: 65
+    bonusMaxHealth: 15
+    statMultiplier: 1.25
+    fireRateMultiplier: 1
+    bonusTrapUses: 3
+    bonusRange: 0.05
+    bonusArmor: 0
+    bonusThornsDamage: 0
+    specialLabel: Bleeding cuts
+  role: 0
+  trapStats:
+    triggerDamage: 22
+    cooldown: 0.25
+    maxUses: 6
+    triggerRadius: 0.55
+    effectDuration: 0
+    slowPercent: 0
