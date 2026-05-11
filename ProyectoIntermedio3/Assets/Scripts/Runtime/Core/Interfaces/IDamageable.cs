@@ -6,7 +6,6 @@ using System;
 public interface IDamageable
 {
     #region Health Properties
-
     int  CurrentHealth { get; }
     int  MaxHealth     { get; }
     bool IsAlive       { get; }

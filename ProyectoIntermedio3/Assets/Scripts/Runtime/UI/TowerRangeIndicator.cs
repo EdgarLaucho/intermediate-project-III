@@ -14,18 +14,17 @@ public sealed class TowerRangeIndicator : MonoBehaviour
     [Header("Visuals")]
     [SerializeField] private bool drawSubtleFill = true;
     [SerializeField] private Color currentFillColor = new(0.22f, 0.72f, 1.00f, 0.045f);
-    [SerializeField] private Color currentRingColor = new(0.66f, 0.94f, 1.00f, 0.78f);
+    [SerializeField] private Color currentRingColor = new(0.70f, 0.96f, 1.00f, 1.00f);
     [SerializeField] private Color upgradeFillColor = new(0.48f, 1.00f, 0.36f, 0.032f);
-    [SerializeField] private Color upgradeRingColor = new(0.78f, 1.00f, 0.34f, 0.84f);
-    [SerializeField] private Color invalidRingColor = new(1.00f, 0.30f, 0.18f, 0.82f);
+    [SerializeField] private Color upgradeRingColor = new(0.80f, 1.00f, 0.36f, 1.00f);
+    [SerializeField] private Color invalidRingColor = new(1.00f, 0.28f, 0.16f, 1.00f);
 
     [Header("Feel")]
     [SerializeField] private float fadeSpeed = 14f;
-    [SerializeField] private float pulseSpeed = 2.4f;
-    [SerializeField] private float pulseAmount = 0.09f;
-    [SerializeField] private float currentRingRotationSpeed = 17f;
-    [SerializeField] private float upgradeRingRotationSpeed = -13f;
-    [SerializeField] private float rangeEchoAmount = 0.055f;
+    [SerializeField] private float pulseSpeed = 2.2f;
+    [SerializeField] private float pulseAmount = 0.06f;
+    [SerializeField] private float currentRingRotationSpeed = 22f;
+    [SerializeField] private float upgradeRingRotationSpeed = -16f;
     [SerializeField] private float invalidJitterDegrees = 2.2f;
 
     #endregion
@@ -53,9 +52,9 @@ public sealed class TowerRangeIndicator : MonoBehaviour
 
     #region Mesh Constants
 
-    private const int Segments = 96;
+    private const int Segments  = 96;
     private const int DashCount = 36;
-    private const int DashSteps = 3;
+    private const int DashSteps = 9;   // higher = smoother arcs at large range
 
     #endregion
 
@@ -160,32 +159,21 @@ public sealed class TowerRangeIndicator : MonoBehaviour
         if (_visibility <= 0f) return;
 
         float time = Time.unscaledTime;
-        // Pulse controls alpha, breathe controls radius, echoWave controls the secondary ring.
         float pulse = 1f + Mathf.Sin(time * pulseSpeed) * pulseAmount;
         float alpha = Mathf.Clamp01(_visibility * pulse);
-        float breathe = 1f + Mathf.Sin(time * pulseSpeed * 0.57f) * pulseAmount * 0.35f;
-        float echoWave = 0.5f + 0.5f * Mathf.Sin(time * pulseSpeed * 0.82f);
-        // Invalid placement gets a small rotational shake so the warning reads quickly.
         float invalidJitter = _isValid ? 0f : Mathf.Sin(time * 22f) * invalidJitterDegrees;
         float currentRotation = time * currentRingRotationSpeed + invalidJitter;
         float upgradeRotation = time * upgradeRingRotationSpeed;
 
         if (_hasUpgradeRange && _upgradeRange > _currentRange + 0.05f)
         {
-            DrawFillIfEnabled(_upgradeRange * breathe, WithAlpha(upgradeFillColor, upgradeFillColor.a * alpha));
-            DrawRing(_upgradeRange * breathe, WithAlpha(upgradeRingColor, upgradeRingColor.a * alpha), upgradeRotation);
-            DrawRing(_upgradeRange * breathe * 0.985f, WithAlpha(upgradeRingColor, upgradeRingColor.a * alpha * 0.32f), -upgradeRotation * 0.42f);
+            DrawFillIfEnabled(_upgradeRange, WithAlpha(upgradeFillColor, upgradeFillColor.a * alpha));
+            DrawRing(_upgradeRange, WithAlpha(upgradeRingColor, upgradeRingColor.a * alpha), upgradeRotation);
         }
 
         Color activeRingColor = _isValid ? currentRingColor : invalidRingColor;
-        float currentRange = _currentRange * breathe;
-        DrawFillIfEnabled(currentRange, WithAlpha(currentFillColor, currentFillColor.a * alpha));
-        DrawRing(currentRange, WithAlpha(activeRingColor, activeRingColor.a * alpha), currentRotation);
-        DrawRing(currentRange * 0.985f, WithAlpha(activeRingColor, activeRingColor.a * alpha * 0.36f), -currentRotation * 0.35f);
-
-        float echoScale = 1f + rangeEchoAmount * echoWave;
-        float echoAlpha = activeRingColor.a * alpha * (1f - echoWave) * 0.42f;
-        DrawRing(currentRange * echoScale, WithAlpha(activeRingColor, echoAlpha), currentRotation + 9f);
+        DrawFillIfEnabled(_currentRange, WithAlpha(currentFillColor, currentFillColor.a * alpha));
+        DrawRing(_currentRange, WithAlpha(activeRingColor, activeRingColor.a * alpha), currentRotation);
     }
 
     #endregion
@@ -306,9 +294,9 @@ public sealed class TowerRangeIndicator : MonoBehaviour
 
     private static Mesh BuildRingMesh()
     {
-        const float outerRadius = 0.5f;
-        const float innerRadius = 0.484f;
-        const float dashFill = 0.66f;
+        const float outerRadius = 0.500f;
+        const float innerRadius = 0.455f;  // 4.5% — thick stroke, reads clearly at any range
+        const float dashFill    = 0.58f;   // visible gap between dashes
 
         // Each dash is a short curved strip built from paired outer/inner vertices.
         int vertsPerDash = (DashSteps + 1) * 2;

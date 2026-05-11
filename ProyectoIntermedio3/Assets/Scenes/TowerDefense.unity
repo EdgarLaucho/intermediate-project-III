@@ -1270,7 +1270,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70225af5c0caca649b17d783800ba13c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TD.Grid.GridManager
-  gridRadius: 3
+  gridRadius: 10
   nexusSize: {x: 3, y: 3}
   cellSize: 2
   nexusTransform: {fileID: 4419084295523701}
@@ -1329,7 +1329,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1841829050}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 2
@@ -1381,7 +1381,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0
   m_ShadowAngle: 0
   m_LightUnit: 1
   m_LuxAtDistance: 1
@@ -1510,7 +1510,6 @@ MonoBehaviour:
   pulseAmount: 0.06
   currentRingRotationSpeed: 17
   upgradeRingRotationSpeed: -13
-  rangeEchoAmount: 0.055
   invalidJitterDegrees: 2.2
 --- !u!1 &2103000000
 GameObject:
@@ -1614,6 +1613,38 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7690022326535440020, guid: 7565fad9ecc429d4f8b0d1b00e7a2c76, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.000000010998303
+      objectReference: {fileID: 0}
+    - target: {fileID: 7690022326535440020, guid: 7565fad9ecc429d4f8b0d1b00e7a2c76, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 8.758868
+      objectReference: {fileID: 0}
+    - target: {fileID: 7690022326535440020, guid: 7565fad9ecc429d4f8b0d1b00e7a2c76, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.000000013051678
+      objectReference: {fileID: 0}
+    - target: {fileID: 7690022326535440020, guid: 7565fad9ecc429d4f8b0d1b00e7a2c76, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.6123734
+      objectReference: {fileID: 0}
+    - target: {fileID: 7690022326535440020, guid: 7565fad9ecc429d4f8b0d1b00e7a2c76, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.35355383
+      objectReference: {fileID: 0}
+    - target: {fileID: 7690022326535440020, guid: 7565fad9ecc429d4f8b0d1b00e7a2c76, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.61237144
+      objectReference: {fileID: 0}
+    - target: {fileID: 7690022326535440020, guid: 7565fad9ecc429d4f8b0d1b00e7a2c76, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0.35355297
+      objectReference: {fileID: 0}
+    - target: {fileID: 7690022326535440020, guid: 7565fad9ecc429d4f8b0d1b00e7a2c76, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 90
+      objectReference: {fileID: 0}
     - target: {fileID: 8071886677626114796, guid: 7565fad9ecc429d4f8b0d1b00e7a2c76, type: 3}
       propertyPath: m_Name
       value: Nexus
@@ -1625,7 +1656,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7690022326535440019, guid: 7565fad9ecc429d4f8b0d1b00e7a2c76, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 0}
   m_SourcePrefab: {fileID: 100100000, guid: 7565fad9ecc429d4f8b0d1b00e7a2c76, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
