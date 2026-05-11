@@ -8,7 +8,7 @@ public class BaseEnemyAI : MonoBehaviour
 
     protected NavMeshAgent agent;
     protected Transform currentTarget;
-    protected IDamageable currentDamageable;
+    protected IDamageable2 currentDamageable;
 
     protected float attackTimer;
 
@@ -59,7 +59,7 @@ public class BaseEnemyAI : MonoBehaviour
         }
 
         currentTarget = hits[0].transform;
-        currentDamageable = hits[0].GetComponent<IDamageable>();
+        currentDamageable = hits[0].GetComponent<IDamageable2>();
     }
     protected virtual void MoveToTarget()
     {
