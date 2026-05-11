@@ -1,0 +1,286 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1000000000000000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1000000000000000002}
+  - component: {fileID: 1000000000000000003}
+  - component: {fileID: 1000000000000000005}
+  - component: {fileID: 1000000000000000006}
+  m_Layer: 0
+  m_Name: MissilTower
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1000000000000000002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000000000000000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1000000000000000101}
+  - {fileID: 483810584690299545}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1000000000000000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000000000000000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 960bae35c889481419082bcea75a90df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TD.Construction.Tower
+--- !u!114 &1000000000000000005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000000000000000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5e0a3d8f0f844f4ab9c61af3d97e9ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TD.Construction.TowerShooter
+  targetMask:
+    serializedVersion: 2
+    m_Bits: 128
+  aimPivot: {fileID: 4638671901645976606}
+  shootPoint: {fileID: 618513260394028254}
+  projectilePrefab: {fileID: 1309340257592674333, guid: 93005f87f56780d47a7aabc943b15a58, type: 3}
+  idleSweepAngle: 35
+  idleSweepFrequency: 0.35
+  idleTurnSpeed: 90
+  targetTurnSpeed: 420
+  fireAlignmentAngle: 10
+--- !u!114 &1000000000000000006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000000000000000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b64f96721f0e4ba7a6f2d2d8616a7c31, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TD.Construction.BuildingVisualController
+  visualParent: {fileID: 1000000000000000101}
+  visualChildName: Visual
+--- !u!1 &1000000000000000100
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1000000000000000101}
+  - component: {fileID: 1000000000000000102}
+  m_Layer: 0
+  m_Name: Visual
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1000000000000000101
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000000000000000100}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.7336869, y: 0.7336869, z: 0.7336869}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 3434161085806661455}
+  m_Father: {fileID: 1000000000000000002}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1000000000000000102
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000000000000000100}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d77cd34ad9e14db0ad631ca2dfb17bd2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TD.Construction.TowerLaunchSockets
+  aimPivot: {fileID: 4638671901645976606}
+  shootPoints:
+  - {fileID: 618513260394028254}
+  aimPivotName: Turret
+  shootPointName: ShootPoint
+--- !u!1 &2889546637995442001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 483810584690299545}
+  - component: {fileID: 3615449595964164003}
+  - component: {fileID: 3925317867744052545}
+  m_Layer: 0
+  m_Name: HealthBarUI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &483810584690299545
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2889546637995442001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.5, y: 0, z: 0, w: 0.8660254}
+  m_LocalPosition: {x: 0, y: 2.5, z: 0.29}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 1000000000000000002}
+  m_LocalEulerAnglesHint: {x: 60, y: 0, z: 0}
+--- !u!114 &3615449595964164003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2889546637995442001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.UIDocument
+  m_PanelSettings: {fileID: 11400000, guid: 60203a5581f06d543b491a8128911973, type: 2}
+  m_ParentUI: {fileID: 0}
+  sourceAsset: {fileID: 9197481963319205126, guid: 45883c0478467114c951fcfe808abd92, type: 3}
+  m_SortingOrder: 0
+  m_Position: 0
+  m_WorldSpaceSizeMode: 1
+  m_WorldSpaceWidth: 90
+  m_WorldSpaceHeight: 20
+  m_PivotReferenceSize: 0
+  m_Pivot: 0
+  m_WorldSpaceCollider: {fileID: 0}
+--- !u!114 &3925317867744052545
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2889546637995442001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3800428466ddfb548ae907253596d92a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TD.UI.BuildingHealthBar
+  hideWhenFullHealth: 1
+  fullHealthLingerTime: 0.65
+  targetCamera: {fileID: 0}
+  faceCamera: 1
+  keepUpright: 1
+  scaleWithDistance: 1
+  referenceDistance: 8
+  minScale: 0.9
+  maxScale: 1.45
+--- !u!1001 &3658936196284407315
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1000000000000000101}
+    m_Modifications:
+    - target: {fileID: 2121107762860527964, guid: 7305af08917843d47b56efc2c15aa9d9, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2121107762860527964, guid: 7305af08917843d47b56efc2c15aa9d9, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2121107762860527964, guid: 7305af08917843d47b56efc2c15aa9d9, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2121107762860527964, guid: 7305af08917843d47b56efc2c15aa9d9, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2121107762860527964, guid: 7305af08917843d47b56efc2c15aa9d9, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2121107762860527964, guid: 7305af08917843d47b56efc2c15aa9d9, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2121107762860527964, guid: 7305af08917843d47b56efc2c15aa9d9, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2121107762860527964, guid: 7305af08917843d47b56efc2c15aa9d9, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2121107762860527964, guid: 7305af08917843d47b56efc2c15aa9d9, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2121107762860527964, guid: 7305af08917843d47b56efc2c15aa9d9, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4741022238408084207, guid: 7305af08917843d47b56efc2c15aa9d9, type: 3}
+      propertyPath: m_Name
+      value: Level 1
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 7305af08917843d47b56efc2c15aa9d9, type: 3}
+--- !u!4 &618513260394028254 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4202493545627402957, guid: 7305af08917843d47b56efc2c15aa9d9, type: 3}
+  m_PrefabInstance: {fileID: 3658936196284407315}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &3434161085806661455 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2121107762860527964, guid: 7305af08917843d47b56efc2c15aa9d9, type: 3}
+  m_PrefabInstance: {fileID: 3658936196284407315}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &4638671901645976606 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8257623219048573453, guid: 7305af08917843d47b56efc2c15aa9d9, type: 3}
+  m_PrefabInstance: {fileID: 3658936196284407315}
+  m_PrefabAsset: {fileID: 0}

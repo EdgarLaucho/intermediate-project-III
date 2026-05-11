@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d5fbce3a6924c04fbced9e19b628639, type: 3}
+  m_Name: CannonTowerData
+  m_EditorClassIdentifier: Assembly-CSharp::TD.Data.TowerData
+  buildingName: Torre de Canon
+  prefab: {fileID: 1000000000000000011, guid: a1f0c9e76b9a4b4fb2e8e8d47a100002, type: 3}
+  buyCost: 90
+  refundPercentage: 0.5
+  repairCostPerHP: 0.55
+  baseMaxHealth: 150
+  maxLevel: 2
+  upgradeLevels:
+  - upgradeCost: 70
+    bonusMaxHealth: 40
+    statMultiplier: 1.2
+    fireRateMultiplier: 1.05
+    bonusTrapUses: 0
+    bonusRange: 0.15
+    bonusArmor: 0
+    bonusThornsDamage: 0
+    bonusProjectilesPerAttack: 0
+    visualPrefabOverride: {fileID: 0}
+    specialLabel: Bigger shells
+  - upgradeCost: 130
+    bonusMaxHealth: 70
+    statMultiplier: 1.22
+    fireRateMultiplier: 1.08
+    bonusTrapUses: 0
+    bonusRange: 0.2
+    bonusArmor: 0
+    bonusThornsDamage: 0
+    bonusProjectilesPerAttack: 0
+    visualPrefabOverride: {fileID: 0}
+    specialLabel: Shrapnel blast
+  role: 1
+  damageKind: 1
+  towerStats:
+    attackRange: 4.4
+    attackDamage: 28
+    fireRate: 0.55
+    projectileSpeed: 8
+    projectilesPerAttack: 1
+    splashRadius: 1.1
+    slowPercent: 0
+    slowDuration: 0

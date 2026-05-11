@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dce0f33572c6a0347a62ddde9199c8fa, type: 3}
+  m_Name: WoodenWallData
+  m_EditorClassIdentifier: Assembly-CSharp::TD.Data.WallData
+  buildingName: Muro de Madera
+  prefab: {fileID: 1000000000000000071, guid: a1f0c9e76b9a4b4fb2e8e8d47a100008, type: 3}
+  buyCost: 30
+  refundPercentage: 0.5
+  repairCostPerHP: 0.35
+  baseMaxHealth: 180
+  maxLevel: 2
+  upgradeLevels:
+  - upgradeCost: 35
+    bonusMaxHealth: 90
+    statMultiplier: 1
+    fireRateMultiplier: 1
+    bonusTrapUses: 0
+    bonusRange: 0
+    bonusArmor: 1
+    bonusThornsDamage: 0
+    specialLabel: Braced planks
+  - upgradeCost: 80
+    bonusMaxHealth: 130
+    statMultiplier: 1
+    fireRateMultiplier: 1
+    bonusTrapUses: 0
+    bonusRange: 0
+    bonusArmor: 2
+    bonusThornsDamage: 0
+    specialLabel: Reinforced frame
+  role: 0
+  armor: 1
+  thornsDamage: 0
