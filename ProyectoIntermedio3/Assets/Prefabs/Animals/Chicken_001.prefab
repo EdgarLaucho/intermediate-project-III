@@ -5,6 +5,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
+    serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: f709cd56f14494d43a4d2c7e2b8bcaed, type: 3}
@@ -13,15 +14,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f709cd56f14494d43a4d2c7e2b8bcaed, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 2.646
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f709cd56f14494d43a4d2c7e2b8bcaed, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.112
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f709cd56f14494d43a4d2c7e2b8bcaed, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -0.136
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f709cd56f14494d43a4d2c7e2b8bcaed, type: 3}
       propertyPath: m_LocalRotation.w
@@ -56,6 +57,18 @@ PrefabInstance:
       value: Chicken_001
       objectReference: {fileID: 0}
     m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f709cd56f14494d43a4d2c7e2b8bcaed, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 554450613155169962}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f709cd56f14494d43a4d2c7e2b8bcaed, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6914025501768605202}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f709cd56f14494d43a4d2c7e2b8bcaed, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6626416365391958936}
   m_SourcePrefab: {fileID: 100100000, guid: f709cd56f14494d43a4d2c7e2b8bcaed, type: 3}
 --- !u!1 &305033601637051736 stripped
 GameObject:
@@ -70,9 +83,51 @@ MeshCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 305033601637051736}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 0
+  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 4
+  serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 0}
+--- !u!195 &6914025501768605202
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 305033601637051736}
+  m_Enabled: 1
+  m_AgentTypeID: 0
+  m_Radius: 0.2
+  m_Speed: 3.5
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 0
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 2
+  m_BaseOffset: 0
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4
+--- !u!114 &6626416365391958936
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 305033601637051736}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99af4f8316cccf347a9e5dda5a72469b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BaseEnemyAI
