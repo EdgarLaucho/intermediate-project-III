@@ -30,6 +30,15 @@ public sealed class ConstructionPresenter : MonoBehaviour
     private BuildingBase _menuBuilding;
     private bool _hasPointer;
 
+    // Paint mode: true while the player holds left-click during a paint-capable placement.
+    private bool _isPainting;
+    private Vector2Int _lastPaintCell;
+    private bool _hasLastPaintCell;
+    private Vector2Int _paintCursorCell;
+    private bool _hasPaintCursorCell;
+    private readonly List<Vector2Int> _paintStroke = new();
+    private readonly HashSet<Vector2Int> _paintStrokeSet = new();
+
     // Filtered copy of availableBuildings with null entries removed.
     private BuildingData[] _catalogue;
 
@@ -47,7 +56,10 @@ public sealed class ConstructionPresenter : MonoBehaviour
         InputEvents.OnWorldPointerMoved += OnPointerMoved;
         InputEvents.OnWorldPointerLost += OnPointerLost;
         InputEvents.OnPrimaryPressed += OnPrimaryPressed;
+        InputEvents.OnPrimaryHeld += OnPrimaryHeld;
+        InputEvents.OnPrimaryReleased += OnPrimaryReleased;
         InputEvents.OnSecondaryPressed += OnSecondaryPressed;
+        InputEvents.OnTertiaryPressed += OnTertiaryPressed;
         InputEvents.OnCancelPressed += CancelToIdle;
         SubscribeRadial();
     }
@@ -57,7 +69,10 @@ public sealed class ConstructionPresenter : MonoBehaviour
         InputEvents.OnWorldPointerMoved -= OnPointerMoved;
         InputEvents.OnWorldPointerLost -= OnPointerLost;
         InputEvents.OnPrimaryPressed -= OnPrimaryPressed;
+        InputEvents.OnPrimaryHeld -= OnPrimaryHeld;
+        InputEvents.OnPrimaryReleased -= OnPrimaryReleased;
         InputEvents.OnSecondaryPressed -= OnSecondaryPressed;
+        InputEvents.OnTertiaryPressed -= OnTertiaryPressed;
         InputEvents.OnCancelPressed -= CancelToIdle;
         UnsubscribeRadial();
     }
@@ -83,7 +98,10 @@ public sealed class ConstructionPresenter : MonoBehaviour
         switch (_state)
         {
             case State.Idle: UpdateIdleHover(gridCoords); break;
-            case State.Placing: UpdatePlacementPreview(gridCoords, worldPos); break;
+            case State.Placing:
+                UpdatePlacementPreview(gridCoords, worldPos);
+                if (_isPainting) AppendPaintCellsThrough(gridCoords);
+                break;
         }
     }
 
@@ -99,13 +117,36 @@ public sealed class ConstructionPresenter : MonoBehaviour
 
     private void OnPrimaryPressed()
     {
-        if (_state == State.Placing) ConfirmPlacement();
+        if (_state != State.Placing) return;
+
+        if (CanPaintSelectedBuilding())
+            BeginPaintStroke(_hoveredCell);
+        else
+            ConfirmPlacement();
+    }
+
+    private void OnPrimaryHeld()
+    {
+        if (_state == State.Placing && _isPainting)
+            AppendPaintCellsThrough(_hoveredCell);
+    }
+
+    private void OnPrimaryReleased()
+    {
+        if (_isPainting)
+            CommitPaintStroke();
     }
 
     private void OnSecondaryPressed()
     {
         if (_state == State.Placing) { CancelToIdle(); return; }
         if (_state == State.Idle && _hasPointer) OpenContextMenu(_hoveredCell);
+    }
+
+    private void OnTertiaryPressed()
+    {
+        if (_state != State.Idle || !_hasPointer) return;
+        TryDuplicateHoveredBuilding();
     }
 
     #endregion
@@ -178,6 +219,22 @@ public sealed class ConstructionPresenter : MonoBehaviour
         }
     }
 
+    private void TryDuplicateHoveredBuilding()
+    {
+        GridCell cell = grid.GetCell(_hoveredCell);
+        BuildingBase sourceBuilding = cell?.CurrentBuilding;
+        BuildingData data = sourceBuilding != null ? sourceBuilding.Data : null;
+        if (data == null) return;
+
+        if (!construction.CanBeginPlacement(data, out string reason))
+        {
+            Debug.Log($"[ConstructionPresenter] Cannot duplicate '{data.buildingName}' from {_hoveredCell}: {reason}.");
+            return;
+        }
+
+        BeginPlacement(data);
+    }
+
     private void ConfirmPlacement()
     {
         if (_selectedBuilding == null) { CancelToIdle(); return; }
@@ -201,6 +258,7 @@ public sealed class ConstructionPresenter : MonoBehaviour
         _state = State.Idle;
         _selectedBuilding = null;
         _menuBuilding = null;
+        ClearPaintStroke(true);
         radialMenu?.HideImmediate();
         ConstructionEvents.PlacementEnded();
         ConstructionEvents.TowerFocused(null);
@@ -211,6 +269,7 @@ public sealed class ConstructionPresenter : MonoBehaviour
         _selectedBuilding = data;
         _state = State.Placing;
         _menuBuilding = null;
+        ClearPaintStroke(true);
         radialMenu?.HideImmediate();
         ConstructionEvents.PlacementStarted(data);
         ConstructionEvents.CellLost();
@@ -219,6 +278,213 @@ public sealed class ConstructionPresenter : MonoBehaviour
         // so it doesn't wait for the next pointer-moved event.
         if (_hasPointer)
             UpdatePlacementPreview(_hoveredCell, _hoveredWorldPos);
+    }
+
+    private bool CanPaintSelectedBuilding()
+        => _selectedBuilding != null
+        && (_selectedBuilding.allowPaintPlacement || _selectedBuilding.Category == BuildingCategory.Wall);
+
+    private void BeginPaintStroke(Vector2Int coords)
+    {
+        ClearPaintStroke(false);
+        _isPainting = true;
+        AppendPaintCellsThrough(coords);
+    }
+
+    private void AppendPaintCellsThrough(Vector2Int coords)
+    {
+        if (_selectedBuilding == null) return;
+
+        if (!_hasLastPaintCell)
+        {
+            ProcessPaintCell(coords);
+            _lastPaintCell = coords;
+            _hasLastPaintCell = true;
+            BroadcastPaintPreview();
+            return;
+        }
+
+        int dx = coords.x - _lastPaintCell.x;
+        int dy = coords.y - _lastPaintCell.y;
+        int steps = Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dy));
+        if (steps <= 0) return;
+
+        for (int step = 1; step <= steps; step++)
+        {
+            float t = step / (float)steps;
+            int x = Mathf.RoundToInt(Mathf.Lerp(_lastPaintCell.x, coords.x, t));
+            int y = Mathf.RoundToInt(Mathf.Lerp(_lastPaintCell.y, coords.y, t));
+            ProcessPaintCell(new Vector2Int(x, y));
+        }
+
+        _lastPaintCell = coords;
+        BroadcastPaintPreview();
+    }
+
+    private void ProcessPaintCell(Vector2Int coords)
+    {
+        _paintCursorCell = coords;
+        _hasPaintCursorCell = true;
+
+        if (TryGetPaintCellIndex(coords, out int existingIndex))
+        {
+            TrimPaintStrokeTo(existingIndex);
+            return;
+        }
+
+        BuildManager.PlacementValidation validation = construction.GetPlacementValidation(coords, _selectedBuilding);
+        if (!ShouldKeepPaintCell(validation))
+            return;
+
+        AddPaintCell(coords);
+    }
+
+    private bool ShouldKeepPaintCell(BuildManager.PlacementValidation validation)
+    {
+        return validation.IsValid || validation.State == BuildManager.PlacementState.InsufficientGold;
+    }
+
+    private bool TryGetPaintCellIndex(Vector2Int coords, out int index)
+    {
+        for (int i = 0; i < _paintStroke.Count; i++)
+        {
+            if (_paintStroke[i] == coords)
+            {
+                index = i;
+                return true;
+            }
+        }
+
+        index = -1;
+        return false;
+    }
+
+    private void TrimPaintStrokeTo(int index)
+    {
+        for (int i = _paintStroke.Count - 1; i > index; i--)
+        {
+            _paintStrokeSet.Remove(_paintStroke[i]);
+            _paintStroke.RemoveAt(i);
+        }
+    }
+
+    private void AddPaintCell(Vector2Int coords)
+    {
+        if (_paintStrokeSet.Add(coords))
+            _paintStroke.Add(coords);
+    }
+
+    private void CommitPaintStroke()
+    {
+        List<PaintPlacementCell> previewCells = BuildPaintPreviewCells(
+            out _, out _, out _, out _, out _);
+
+        foreach (PaintPlacementCell cell in previewCells)
+        {
+            if (cell.WillPlace)
+                construction.TryBuild(cell.Coords, _selectedBuilding);
+        }
+
+        ClearPaintStroke(true);
+
+        if (_state == State.Placing && _hasPointer)
+            UpdatePlacementPreview(_hoveredCell, _hoveredWorldPos);
+    }
+
+    private void BroadcastPaintPreview()
+    {
+        List<PaintPlacementCell> previewCells = BuildPaintPreviewCells(
+            out int placeableCount, out int blockedCount, out int totalCost,
+            out int currentGold, out int remainingGold);
+
+        ConstructionEvents.PaintPlacementPreviewUpdated(new PaintPlacementPreviewArgs(
+            _selectedBuilding, previewCells, placeableCount, blockedCount,
+            totalCost, currentGold, remainingGold));
+    }
+
+    private List<PaintPlacementCell> BuildPaintPreviewCells(out int placeableCount, out int blockedCount,
+                                                            out int totalCost, out int currentGold,
+                                                            out int remainingGold)
+    {
+        var previewCells = new List<PaintPlacementCell>(_paintStroke.Count);
+        placeableCount = 0;
+        blockedCount = 0;
+        totalCost = 0;
+        currentGold = construction != null ? construction.CurrentGold : 0;
+        remainingGold = currentGold;
+
+        if (_selectedBuilding == null || grid == null || construction == null)
+            return previewCells;
+
+        int cost = Mathf.Max(0, _selectedBuilding.buyCost);
+
+        foreach (Vector2Int coords in _paintStroke)
+        {
+            BuildManager.PlacementValidation validation = construction.GetPlacementValidation(coords, _selectedBuilding);
+            bool willPlace = validation.IsValid && totalCost + cost <= currentGold;
+
+            if (validation.IsValid && !willPlace)
+            {
+                GridCell cell = validation.Cell ?? grid.GetCell(coords);
+                int missing = totalCost + cost - currentGold;
+                validation = new BuildManager.PlacementValidation(
+                    BuildManager.PlacementState.InsufficientGold,
+                    cell,
+                    $"Need {missing} more gold");
+            }
+
+            if (willPlace)
+            {
+                placeableCount++;
+                totalCost += cost;
+                remainingGold = currentGold - totalCost;
+            }
+            else
+            {
+                blockedCount++;
+            }
+
+            previewCells.Add(new PaintPlacementCell(
+                coords,
+                grid.GridToWorld(coords),
+                grid.CellSize,
+                validation,
+                willPlace));
+        }
+
+        AddTransientCursorCell(previewCells, ref blockedCount);
+
+        return previewCells;
+    }
+
+    private void AddTransientCursorCell(List<PaintPlacementCell> previewCells, ref int blockedCount)
+    {
+        if (!_hasPaintCursorCell || _paintStrokeSet.Contains(_paintCursorCell))
+            return;
+
+        BuildManager.PlacementValidation validation = construction.GetPlacementValidation(_paintCursorCell, _selectedBuilding);
+        if (ShouldKeepPaintCell(validation))
+            return;
+
+        blockedCount++;
+        previewCells.Add(new PaintPlacementCell(
+            _paintCursorCell,
+            grid.GridToWorld(_paintCursorCell),
+            grid.CellSize,
+            validation,
+            false));
+    }
+
+    private void ClearPaintStroke(bool notify)
+    {
+        _isPainting = false;
+        _hasLastPaintCell = false;
+        _hasPaintCursorCell = false;
+        _paintStroke.Clear();
+        _paintStrokeSet.Clear();
+
+        if (notify)
+            ConstructionEvents.PaintPlacementPreviewEnded();
     }
 
     #endregion
@@ -349,12 +615,12 @@ public sealed class ConstructionPresenter : MonoBehaviour
     private static string BuildUpgradeSubLabel(BuildingBase building, int upgradeCost)
     {
         if (building is Tower tower &&
-            tower.TryPreviewNextUpgrade(out int nextDamage, out float nextRange, out float nextFireRate))
+            tower.TryPreviewNextUpgrade(out int nextDamage, out int nextRange, out float nextFireRate))
         {
             UpgradeLevelData upgrade = building.Data.upgradeLevels[building.CurrentLevel];
             var towerParts = new List<string> { $"{upgradeCost}g" };
             if (nextDamage - tower.AttackDamage > 0) towerParts.Add($"+{nextDamage - tower.AttackDamage} DMG");
-            if (nextRange - tower.AttackRange > 0.05f) towerParts.Add($"+{FormatStat(nextRange - tower.AttackRange)} RNG");
+            if (nextRange - tower.AttackRange > 0) towerParts.Add($"+{nextRange - tower.AttackRange} RNG");
             if (nextFireRate - tower.FireRate > 0.05f) towerParts.Add($"+{FormatStat(nextFireRate - tower.FireRate)} CAD");
             if (upgrade.bonusProjectilesPerAttack > 0) towerParts.Add($"+{upgrade.bonusProjectilesPerAttack} PROJ");
             if (upgrade.visualPrefabOverride != null) towerParts.Add("VIS");

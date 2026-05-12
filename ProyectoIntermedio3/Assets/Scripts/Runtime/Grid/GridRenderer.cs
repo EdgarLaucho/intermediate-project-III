@@ -22,17 +22,17 @@ public class GridRenderer : MonoBehaviour
     [SerializeField] private float yOffset = 0.02f;
 
     [Header("Materials")]
-    [SerializeField] private Material buildableMaterial;   // Submesh 0
-    [SerializeField] private Material nexusMaterial;       // Submesh 1
-    [SerializeField] private Material occupiedMaterial;    // Submesh 2
+    [SerializeField] private Material buildableMaterial; // Submesh 0
+    [SerializeField] private Material nexusMaterial; // Submesh 1
+    [SerializeField] private Material occupiedMaterial; // Submesh 2
 
     #endregion
 
     #region Runtime State
 
-    private MeshFilter   _mf;
+    private MeshFilter _mf;
     private MeshRenderer _mr;
-    private Mesh         _mesh;
+    private Mesh _mesh;
 
     // Prevents double-subscription: OnEnable can fire before Start in some cases.
     private bool _subscribed;
@@ -62,7 +62,7 @@ public class GridRenderer : MonoBehaviour
         Subscribe();
     }
 
-    private void OnEnable()  => Subscribe();
+    private void OnEnable() => Subscribe();
     private void OnDisable() => Unsubscribe();
 
     private void OnDestroy()
@@ -70,7 +70,7 @@ public class GridRenderer : MonoBehaviour
         Unsubscribe();
         // Meshes created via `new Mesh()` are not automatically cleaned up by Unity;
         // destroy it explicitly to avoid a memory leak.
-        if (_mesh != null) 
+        if (_mesh != null)
             Destroy(_mesh);
     }
 
@@ -81,7 +81,7 @@ public class GridRenderer : MonoBehaviour
     private void Subscribe()
     {
         if (_subscribed) return;
-        ConstructionEvents.OnBuildingPlaced     += OnBuildingPlaced;
+        ConstructionEvents.OnBuildingPlaced += OnBuildingPlaced;
         ConstructionEvents.OnBuildingDemolished += OnBuildingDemolished;
         _subscribed = true;
     }
@@ -89,13 +89,13 @@ public class GridRenderer : MonoBehaviour
     private void Unsubscribe()
     {
         if (!_subscribed) return;
-        ConstructionEvents.OnBuildingPlaced     -= OnBuildingPlaced;
+        ConstructionEvents.OnBuildingPlaced -= OnBuildingPlaced;
         ConstructionEvents.OnBuildingDemolished -= OnBuildingDemolished;
         _subscribed = false;
     }
 
     private void OnBuildingPlaced(BuildingActionArgs _) => RebuildMesh();
-    private void OnBuildingDemolished(Vector2Int _)     => RebuildMesh();
+    private void OnBuildingDemolished(Vector2Int _) => RebuildMesh();
 
     #endregion
 
@@ -160,24 +160,24 @@ public class GridRenderer : MonoBehaviour
     // (two arms per corner — one horizontal, one vertical).
     private static void AddBuildableCell(Vector3 center, float half, List<Vector3> verts, List<int> tris)
     {
-        float centralHalf     = half * 0.30f;
+        float centralHalf = half * 0.30f;
         float cornerThickness = half * 0.085f;
-        float cornerLength    = half * 0.34f;
-        float inner           = half - cornerThickness;
-        float cornerStart     = half - cornerLength;
+        float cornerLength = half * 0.34f;
+        float inner = half - cornerThickness;
+        float cornerStart = half - cornerLength;
 
         // Central dot.
         AddQuad(center, centralHalf, verts, tris);
 
         // Four corners, two rects each.
-        AddRect(center, -half,       -cornerStart,  inner,       half,  verts, tris);
-        AddRect(center, -half,       -inner,         cornerStart, half,  verts, tris);
-        AddRect(center,  cornerStart,  half,          inner,       half,  verts, tris);
-        AddRect(center,  inner,        half,          cornerStart, half,  verts, tris);
-        AddRect(center, -half,       -cornerStart, -half,       -inner,  verts, tris);
-        AddRect(center, -half,       -inner,       -half,       -cornerStart, verts, tris);
-        AddRect(center,  cornerStart,  half,       -half,       -inner,  verts, tris);
-        AddRect(center,  inner,        half,       -half,       -cornerStart, verts, tris);
+        AddRect(center, -half, -cornerStart, inner, half, verts, tris);
+        AddRect(center, -half, -inner, cornerStart, half, verts, tris);
+        AddRect(center, cornerStart, half, inner, half, verts, tris);
+        AddRect(center, inner, half, cornerStart, half, verts, tris);
+        AddRect(center, -half, -cornerStart, -half, -inner, verts, tris);
+        AddRect(center, -half, -inner, -half, -cornerStart, verts, tris);
+        AddRect(center, cornerStart, half, -half, -inner, verts, tris);
+        AddRect(center, inner, half, -half, -cornerStart, verts, tris);
     }
 
     // Nexus cell: only draws border edges that face outward (where the neighbouring
@@ -187,17 +187,17 @@ public class GridRenderer : MonoBehaviour
                               List<Vector3> verts, List<int> tris)
     {
         float edgeThickness = half * 0.12f;
-        float inner         = half - edgeThickness;
+        float inner = half - edgeThickness;
 
-        bool westOpen  = !IsNexusCell(cell.Coordinates + Vector2Int.left);
-        bool eastOpen  = !IsNexusCell(cell.Coordinates + Vector2Int.right);
+        bool westOpen = !IsNexusCell(cell.Coordinates + Vector2Int.left);
+        bool eastOpen = !IsNexusCell(cell.Coordinates + Vector2Int.right);
         bool southOpen = !IsNexusCell(cell.Coordinates + Vector2Int.down);
         bool northOpen = !IsNexusCell(cell.Coordinates + Vector2Int.up);
 
-        if (northOpen) AddRect(center, -half,  half,  inner,  half, verts, tris);
-        if (southOpen) AddRect(center, -half,  half, -half, -inner, verts, tris);
-        if (westOpen)  AddRect(center, -half, -inner, -half,  half, verts, tris);
-        if (eastOpen)  AddRect(center,  inner,  half, -half,  half, verts, tris);
+        if (northOpen) AddRect(center, -half, half, inner, half, verts, tris);
+        if (southOpen) AddRect(center, -half, half, -half, -inner, verts, tris);
+        if (westOpen) AddRect(center, -half, -inner, -half, half, verts, tris);
+        if (eastOpen) AddRect(center, inner, half, -half, half, verts, tris);
 
         AddNexusGlyph(center, half, verts, tris);
     }
@@ -213,19 +213,19 @@ public class GridRenderer : MonoBehaviour
     private static void AddNexusGlyph(Vector3 center, float half,
                                       List<Vector3> verts, List<int> tris)
     {
-        float diamondRadius  = half * 0.20f;
+        float diamondRadius = half * 0.20f;
         AddDiamond(center, diamondRadius, verts, tris);
 
         float tickHalfLength = half * 0.20f;
-        float tickGap        = half * 0.30f;
-        float tickThickness  = half * 0.030f;
+        float tickGap = half * 0.30f;
+        float tickThickness = half * 0.030f;
 
         // Left and right horizontal ticks.
-        AddRect(center, -tickGap - tickHalfLength, -tickGap, -tickThickness,  tickThickness, verts, tris);
-        AddRect(center,  tickGap,  tickGap + tickHalfLength, -tickThickness,  tickThickness, verts, tris);
+        AddRect(center, -tickGap - tickHalfLength, -tickGap, -tickThickness, tickThickness, verts, tris);
+        AddRect(center, tickGap, tickGap + tickHalfLength, -tickThickness, tickThickness, verts, tris);
         // Bottom and top vertical ticks.
-        AddRect(center, -tickThickness,  tickThickness, -tickGap - tickHalfLength, -tickGap, verts, tris);
-        AddRect(center, -tickThickness,  tickThickness,  tickGap,  tickGap + tickHalfLength, verts, tris);
+        AddRect(center, -tickThickness, tickThickness, -tickGap - tickHalfLength, -tickGap, verts, tris);
+        AddRect(center, -tickThickness, tickThickness, tickGap, tickGap + tickHalfLength, verts, tris);
     }
 
     #endregion
@@ -237,9 +237,9 @@ public class GridRenderer : MonoBehaviour
     {
         int baseIdx = verts.Count;
         verts.Add(center + new Vector3(-half, 0f, -half));
-        verts.Add(center + new Vector3(-half, 0f,  half));
-        verts.Add(center + new Vector3( half, 0f,  half));
-        verts.Add(center + new Vector3( half, 0f, -half));
+        verts.Add(center + new Vector3(-half, 0f, half));
+        verts.Add(center + new Vector3(half, 0f, half));
+        verts.Add(center + new Vector3(half, 0f, -half));
         tris.Add(baseIdx); tris.Add(baseIdx + 1); tris.Add(baseIdx + 2);
         tris.Add(baseIdx); tris.Add(baseIdx + 2); tris.Add(baseIdx + 3);
     }
@@ -261,10 +261,10 @@ public class GridRenderer : MonoBehaviour
     private static void AddDiamond(Vector3 center, float radius, List<Vector3> verts, List<int> tris)
     {
         int baseIdx = verts.Count;
-        verts.Add(center + new Vector3(     0f, 0f,  radius));
-        verts.Add(center + new Vector3( radius, 0f,      0f));
-        verts.Add(center + new Vector3(     0f, 0f, -radius));
-        verts.Add(center + new Vector3(-radius, 0f,      0f));
+        verts.Add(center + new Vector3(0f, 0f, radius));
+        verts.Add(center + new Vector3(radius, 0f, 0f));
+        verts.Add(center + new Vector3(0f, 0f, -radius));
+        verts.Add(center + new Vector3(-radius, 0f, 0f));
         tris.Add(baseIdx); tris.Add(baseIdx + 1); tris.Add(baseIdx + 2);
         tris.Add(baseIdx); tris.Add(baseIdx + 2); tris.Add(baseIdx + 3);
     }

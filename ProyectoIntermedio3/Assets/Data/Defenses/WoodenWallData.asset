@@ -18,6 +18,9 @@ MonoBehaviour:
   refundPercentage: 0.5
   repairCostPerHP: 0.35
   baseMaxHealth: 180
+  autoOrientRadially: 1
+  placementYawOffset: 0
+  allowPaintPlacement: 1
   maxLevel: 2
   upgradeLevels:
   - upgradeCost: 35
@@ -28,6 +31,8 @@ MonoBehaviour:
     bonusRange: 0
     bonusArmor: 1
     bonusThornsDamage: 0
+    bonusProjectilesPerAttack: 0
+    visualPrefabOverride: {fileID: 0}
     specialLabel: Braced planks
   - upgradeCost: 80
     bonusMaxHealth: 130
@@ -37,7 +42,11 @@ MonoBehaviour:
     bonusRange: 0
     bonusArmor: 2
     bonusThornsDamage: 0
+    bonusProjectilesPerAttack: 0
+    visualPrefabOverride: {fileID: 0}
     specialLabel: Reinforced frame
   role: 0
   armor: 1
   thornsDamage: 0
+  cornerPrefab: {fileID: 1936804532874447123, guid: ac7a04ed08ea5044d8787502f114d6c7, type: 3}
+  cornerPlacementYawOffset: 135

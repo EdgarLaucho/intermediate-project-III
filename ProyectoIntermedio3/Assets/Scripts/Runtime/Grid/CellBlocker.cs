@@ -20,8 +20,6 @@ public class CellBlocker : MonoBehaviour
 {
     #region Inspector Fields
 
-    [Tooltip("Extra world-space padding added uniformly to the combined renderer bounds " +
-             "before converting to grid cells. Useful when the mesh barely overlaps a cell edge.")]
     [SerializeField] private float boundsPadding = 0f;
 
     #endregion

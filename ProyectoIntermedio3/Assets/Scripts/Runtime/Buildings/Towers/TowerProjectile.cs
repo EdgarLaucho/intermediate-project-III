@@ -31,7 +31,7 @@ public sealed class TowerProjectile : MonoBehaviour
     private LayerMask _targetMask;
     private float _speed;
     private int _damage;
-    private float _splashRadius;
+    private int _splashRadius;
     private float _slowPercent;
     private float _slowDuration;
     private float _age;
@@ -47,7 +47,7 @@ public sealed class TowerProjectile : MonoBehaviour
 
     #region Public API
 
-    public void Launch(ITargetable target, float speed, int damage, float splashRadius, float slowPercent, float slowDuration, LayerMask targetMask)
+    public void Launch(ITargetable target, float speed, int damage, int splashRadius, float slowPercent, float slowDuration, LayerMask targetMask)
     {
         _target = target;
         _targetComponent = target as Component;
@@ -130,7 +130,7 @@ public sealed class TowerProjectile : MonoBehaviour
         if (_impacted) return;
         _impacted = true;
 
-        if (_splashRadius > 0.05f)
+        if (_splashRadius > 0)
             DamageSplash(impactPosition);
         else
             DamageTarget(_target);
@@ -141,7 +141,10 @@ public sealed class TowerProjectile : MonoBehaviour
     private void DamageSplash(Vector3 center)
     {
         _splashTargets.Clear();
-        int count = Physics.OverlapSphereNonAlloc(center, _splashRadius, _hits, _targetMask, QueryTriggerInteraction.Ignore);
+        Vector3 boxCenter = SnapToGridCenter(center);
+        float cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
+        float half = (_splashRadius + 0.5f) * cellSize;
+        int count = Physics.OverlapBoxNonAlloc(boxCenter, new Vector3(half, half, half), _hits, Quaternion.identity, _targetMask, QueryTriggerInteraction.Ignore);
 
         for (int index = 0; index < count; index++)
         {
@@ -152,6 +155,12 @@ public sealed class TowerProjectile : MonoBehaviour
             if (target == null || !target.IsAlive || !_splashTargets.Add(target)) continue;
             DamageTarget(target);
         }
+    }
+
+    private static Vector3 SnapToGridCenter(Vector3 worldPosition)
+    {
+        GridManager grid = GridManager.Instance;
+        return grid != null ? grid.GridToWorld(grid.WorldToGrid(worldPosition)) : worldPosition;
     }
 
     private void DamageTarget(ITargetable target)

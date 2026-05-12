@@ -10,7 +10,7 @@ public class RadialMenu : MonoBehaviour
     #region Inspector Fields
 
     [Header("Dependencies")]
-    [SerializeField] private RadialAudio        radialAudio;
+    [SerializeField] private RadialAudio radialAudio;
 
     [Header("Layout")]
     [SerializeField] private float outerRadius = 130f;

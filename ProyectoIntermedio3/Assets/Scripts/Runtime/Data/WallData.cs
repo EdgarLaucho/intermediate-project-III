@@ -15,4 +15,11 @@ public class WallData : BuildingData
     public WallRole role = WallRole.Wooden;
     public int armor;
     public int thornsDamage;
+
+    [Header("Corner Piece")]
+    // Optional prefab used on diagonal cells (|x|==|y|).
+    // Leave null to reuse the normal prefab on corners.
+    public GameObject cornerPrefab;
+    // Extra yaw applied to the corner prefab if its forward direction differs from the normal one.
+    public float cornerPlacementYawOffset = 0f;
 }

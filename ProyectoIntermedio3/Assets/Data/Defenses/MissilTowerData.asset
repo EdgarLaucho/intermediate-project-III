@@ -25,7 +25,7 @@ MonoBehaviour:
     statMultiplier: 1.25
     fireRateMultiplier: 1.12
     bonusTrapUses: 0
-    bonusRange: 0.2
+    bonusRange: 0
     bonusArmor: 0
     bonusThornsDamage: 0
     bonusProjectilesPerAttack: 0
@@ -36,7 +36,7 @@ MonoBehaviour:
     statMultiplier: 1.2
     fireRateMultiplier: 1.15
     bonusTrapUses: 0
-    bonusRange: 0.3
+    bonusRange: 1
     bonusArmor: 0
     bonusThornsDamage: 0
     bonusProjectilesPerAttack: 1
@@ -45,7 +45,7 @@ MonoBehaviour:
   role: 0
   damageKind: 0
   towerStats:
-    attackRange: 4.8
+    attackRange: 3
     attackDamage: 12
     fireRate: 1.4
     projectileSpeed: 14

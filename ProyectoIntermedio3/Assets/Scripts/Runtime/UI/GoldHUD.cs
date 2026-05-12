@@ -58,9 +58,9 @@ public class GoldHUD : MonoBehaviour
     {
         public Label Label;
         public float Age;
-        public float StartLeft;   // resolved pixel position in _deltaLayer local space
+        public float StartLeft; // resolved pixel position in _deltaLayer local space
         public float StartTop;
-        public float DriftX;      // horizontal drift direction per stack slot (+/-)
+        public float DriftX; // horizontal drift direction per stack slot (+/-)
     }
 
     #endregion

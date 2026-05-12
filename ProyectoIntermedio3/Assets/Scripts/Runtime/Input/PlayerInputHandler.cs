@@ -46,7 +46,10 @@ public class PlayerInputHandler : MonoBehaviour
     {
         if (Mouse.current == null) return;
         if (Mouse.current.leftButton.wasPressedThisFrame) InputEvents.PrimaryPressed();
+        if (Mouse.current.leftButton.isPressed) InputEvents.PrimaryHeld();
+        if (Mouse.current.leftButton.wasReleasedThisFrame) InputEvents.PrimaryReleased();
         if (Mouse.current.rightButton.wasPressedThisFrame) InputEvents.SecondaryPressed();
+        if (Mouse.current.middleButton.wasPressedThisFrame) InputEvents.TertiaryPressed();
     }
 
     private bool TryGetGroundHit(out Vector3 worldPos)

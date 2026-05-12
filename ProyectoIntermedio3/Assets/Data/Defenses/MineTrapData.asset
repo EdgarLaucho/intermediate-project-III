@@ -25,24 +25,28 @@ MonoBehaviour:
     statMultiplier: 1.25
     fireRateMultiplier: 1
     bonusTrapUses: 0
-    bonusRange: 0.15
+    bonusRange: 0
     bonusArmor: 0
     bonusThornsDamage: 0
+    bonusProjectilesPerAttack: 0
+    visualPrefabOverride: {fileID: 0}
     specialLabel: Bigger charge
   - upgradeCost: 105
     bonusMaxHealth: 10
     statMultiplier: 1.25
     fireRateMultiplier: 1
-    bonusTrapUses: 0
-    bonusRange: 0.2
+    bonusTrapUses: 1
+    bonusRange: 1
     bonusArmor: 0
     bonusThornsDamage: 0
+    bonusProjectilesPerAttack: 0
+    visualPrefabOverride: {fileID: 0}
     specialLabel: Burning blast
   role: 2
   trapStats:
     triggerDamage: 75
     cooldown: 0
     maxUses: 1
-    triggerRadius: 1.25
+    effectRadius: 1
     effectDuration: 0
     slowPercent: 0

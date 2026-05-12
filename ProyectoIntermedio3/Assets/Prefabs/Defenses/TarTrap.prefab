@@ -43,9 +43,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1000000000000000051}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ac5d4e19a05a0f240b332c43111374a9, type: 3}
+  m_Script: {fileID: 11500000, guid: 61c3e7f7b21bcfd45883199523737b3f, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TD.Construction.Trap
+  m_EditorClassIdentifier: Assembly-CSharp::TarTrap
+  slowFieldVfxPrefab: {fileID: 0}
 --- !u!114 &1000000000000000055
 MonoBehaviour:
   m_ObjectHideFlags: 0

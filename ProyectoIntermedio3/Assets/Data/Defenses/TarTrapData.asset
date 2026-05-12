@@ -25,24 +25,28 @@ MonoBehaviour:
     statMultiplier: 1.05
     fireRateMultiplier: 1
     bonusTrapUses: 1
-    bonusRange: 0.15
+    bonusRange: 0
     bonusArmor: 0
     bonusThornsDamage: 0
-    specialLabel: Wider pool
+    bonusProjectilesPerAttack: 0
+    visualPrefabOverride: {fileID: 0}
+    specialLabel: Thicker tar
   - upgradeCost: 80
     bonusMaxHealth: 20
     statMultiplier: 1.08
     fireRateMultiplier: 1
     bonusTrapUses: 2
-    bonusRange: 0.2
+    bonusRange: 1
     bonusArmor: 0
     bonusThornsDamage: 0
-    specialLabel: Armor soften
+    bonusProjectilesPerAttack: 0
+    visualPrefabOverride: {fileID: 0}
+    specialLabel: Wider tar field
   role: 1
   trapStats:
     triggerDamage: 0
     cooldown: 1
-    maxUses: 5
-    triggerRadius: 1
-    effectDuration: 3
+    maxUses: 1
+    effectRadius: 1
+    effectDuration: 5
     slowPercent: 0.45

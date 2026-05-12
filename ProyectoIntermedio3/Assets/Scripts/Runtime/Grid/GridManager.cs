@@ -15,7 +15,7 @@ public class GridManager : MonoBehaviour
     [Header("Grid Configuration")]
     [SerializeField] private int gridRadius = 3;
     // How many cells wide/tall the nexus footprint is. Centred on the origin.
-    [SerializeField] private Vector2Int nexusSize = new Vector2Int(2, 2);
+    [SerializeField] private Vector2Int nexusSize = new(2, 2);
     [SerializeField] private float cellSize = 1f;
 
     [Header("Scene References")]
@@ -41,6 +41,9 @@ public class GridManager : MonoBehaviour
 
     public float CellSize => cellSize;
     public IEnumerable<GridCell> GetAllCells() => cells.Values;
+
+    // Single-scene singleton. Set in Awake; cleared on destroy.
+    public static GridManager Instance { get; private set; }
 
     // Marks each cell in the list as blocked. Multiple blockers can overlap:
     // a cell only becomes buildable again when every blocker has been removed.
@@ -117,6 +120,7 @@ public class GridManager : MonoBehaviour
 
     private void Awake()
     {
+        Instance = this;
         InitializeGrid();
     }
 

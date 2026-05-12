@@ -8,8 +8,8 @@ public class NexusStub : MonoBehaviour, IDamageable
 
     [field: SerializeField, ReadOnly]
     public int CurrentHealth { get; private set; }
-    public int MaxHealth     => maxHealth;
-    public bool IsAlive      => CurrentHealth > 0;
+    public int MaxHealth => maxHealth;
+    public bool IsAlive => CurrentHealth > 0;
 
     public event Action<IDamageable> OnDeath;
     public event Action OnHealthChanged;

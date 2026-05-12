@@ -12,16 +12,16 @@ public class BuildManager : MonoBehaviour
     public enum PlacementState
     {
         Valid,
-        MissingDependency,  // Grid or Economy reference not set in Inspector.
-        MissingData,        // No BuildingData was provided by the caller.
-        MissingPrefab,      // BuildingData.prefab is null.
-        InvalidPrefab,      // Prefab exists but lacks a BuildingBase component.
-        InvalidPhase,       // Action is blocked during the current game phase.
-        OutOfBounds,        // Coordinates fall outside the grid.
-        NotBuildable,       // Cell exists but is marked non-buildable (e.g. path tile).
-        Occupied,           // Another building already occupies the cell.
-        InsufficientGold,   // Player cannot afford the cost.
-        InvalidCost,        // BuildingData has a negative cost (data authoring error).
+        MissingDependency, // Grid or Economy reference not set in Inspector.
+        MissingData, // No BuildingData was provided by the caller.
+        MissingPrefab, // BuildingData.prefab is null.
+        InvalidPrefab, // Prefab exists but lacks a BuildingBase component.
+        InvalidPhase, // Action is blocked during the current game phase.
+        OutOfBounds, // Coordinates fall outside the grid.
+        NotBuildable, // Cell exists but is marked non-buildable (e.g. path tile).
+        Occupied, // Another building already occupies the cell.
+        InsufficientGold, // Player cannot afford the cost.
+        InvalidCost, // BuildingData has a negative cost (data authoring error).
     }
 
     // Immutable result value returned by GetPlacementValidation.
@@ -36,7 +36,7 @@ public class BuildManager : MonoBehaviour
         }
 
         public PlacementState State { get; }
-        public GridCell Cell { get; }       // Null for out-of-bounds or dependency failures.
+        public GridCell Cell { get; } // Null for out-of-bounds or dependency failures.
         public string Reason { get; }
         public bool IsValid => State == PlacementState.Valid;
     }
@@ -92,6 +92,7 @@ public class BuildManager : MonoBehaviour
     public bool CanUpgrade => _currentPhase == GamePhase.Preparation || allowUpgradeDuringCombat;
     public bool CanDemolish => _currentPhase == GamePhase.Preparation || allowDemolishDuringCombat;
     public bool CanRepair => _currentPhase == GamePhase.Preparation || allowRepairDuringCombat;
+    public int CurrentGold => economy != null ? economy.Gold : 0;
 
     // Convenience checks that also verify the building's state and gold balance.
     // Used by the UI to decide whether to render an action as interactable.
@@ -111,6 +112,54 @@ public class BuildManager : MonoBehaviour
         return economy != null && economy.CanAfford(upgradeData.upgradeCost);
     }
 
+    public bool CanBeginPlacement(BuildingData data, out string reason)
+    {
+        if (grid == null || economy == null)
+        {
+            reason = "Build system not ready";
+            return false;
+        }
+
+        if (data == null)
+        {
+            reason = "No building selected";
+            return false;
+        }
+
+        if (data.prefab == null)
+        {
+            reason = $"{data.buildingName} has no prefab";
+            return false;
+        }
+
+        if (!data.prefab.TryGetComponent<BuildingBase>(out _))
+        {
+            reason = $"{data.buildingName} prefab needs a BuildingBase component";
+            return false;
+        }
+
+        if (data.buyCost < 0)
+        {
+            reason = $"{data.buildingName} has an invalid build cost";
+            return false;
+        }
+
+        if (!CanBuild)
+        {
+            reason = "Building unavailable in this phase";
+            return false;
+        }
+
+        if (!economy.CanAfford(data.buyCost))
+        {
+            reason = $"Need {data.buyCost} gold";
+            return false;
+        }
+
+        reason = "Buildable";
+        return true;
+    }
+
     #endregion
 
     #region Placement Validation
@@ -128,7 +177,8 @@ public class BuildManager : MonoBehaviour
         if (data.prefab == null)
             return new PlacementValidation(PlacementState.MissingPrefab, null, $"{data.buildingName} has no prefab");
 
-        if (!data.prefab.TryGetComponent<BuildingBase>(out _))
+        GameObject placementPrefab = BuildingRotationHelper.ResolvePrefab(coords, data);
+        if (placementPrefab == null || !placementPrefab.TryGetComponent<BuildingBase>(out _))
             return new PlacementValidation(PlacementState.InvalidPrefab, null, $"{data.buildingName} prefab needs a BuildingBase component");
 
         if (data.buyCost < 0)
@@ -173,7 +223,10 @@ public class BuildManager : MonoBehaviour
         GridCell cell = validation.Cell;
 
         Vector3 worldPos = grid.GridToWorld(coords);
-        GameObject buildingObject = Instantiate(data.prefab, worldPos, Quaternion.identity);
+        GameObject spawnPrefab = BuildingRotationHelper.ResolvePrefab(coords, data);
+        Quaternion prefabBaseRot = spawnPrefab.transform.rotation;
+        Quaternion placementRotation = BuildingRotationHelper.ComputePlacementRotationForCell(coords, data) * prefabBaseRot;
+        GameObject buildingObject = Instantiate(spawnPrefab, worldPos, placementRotation);
 
         // GetComponent is safe here: GetPlacementValidation already verified the prefab.
         BuildingBase building = buildingObject.GetComponent<BuildingBase>();
@@ -368,7 +421,7 @@ public class BuildManager : MonoBehaviour
     private bool TrySpendGold(int cost, string context)
     {
         if (cost <= 0)
-            return true;  // Free actions always succeed.
+            return true; // Free actions always succeed.
 
         if (economy.SpendGold(cost))
             return true;

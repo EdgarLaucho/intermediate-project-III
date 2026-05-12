@@ -131,8 +131,8 @@ public sealed class BuildFeedbackController : MonoBehaviour
     private void Subscribe()
     {
         if (_subscribed) return;
-        ConstructionEvents.OnBuildingPlaced     += HandleBuildingPlaced;
-        ConstructionEvents.OnBuildingUpgraded   += HandleBuildingUpgraded;
+        ConstructionEvents.OnBuildingPlaced += HandleBuildingPlaced;
+        ConstructionEvents.OnBuildingUpgraded += HandleBuildingUpgraded;
         ConstructionEvents.OnBuildingDemolished += HandleBuildingDemolished;
         _subscribed = true;
     }
@@ -140,8 +140,8 @@ public sealed class BuildFeedbackController : MonoBehaviour
     private void Unsubscribe()
     {
         if (!_subscribed) return;
-        ConstructionEvents.OnBuildingPlaced     -= HandleBuildingPlaced;
-        ConstructionEvents.OnBuildingUpgraded   -= HandleBuildingUpgraded;
+        ConstructionEvents.OnBuildingPlaced -= HandleBuildingPlaced;
+        ConstructionEvents.OnBuildingUpgraded -= HandleBuildingUpgraded;
         ConstructionEvents.OnBuildingDemolished -= HandleBuildingDemolished;
         _subscribed = false;
     }
@@ -177,11 +177,11 @@ public sealed class BuildFeedbackController : MonoBehaviour
 
         _cellFlashes.Add(new CellFlash
         {
-            Center   = grid.GridToWorld(coords) + Vector3.up * yOffset,
+            Center = grid.GridToWorld(coords) + Vector3.up * yOffset,
             CellSize = grid.CellSize,
-            Age      = 0f,
+            Age = 0f,
             Duration = Mathf.Max(0.01f, duration),
-            Kind     = kind,
+            Kind = kind,
         });
     }
 
@@ -422,9 +422,9 @@ public sealed class BuildFeedbackController : MonoBehaviour
         mesh.vertices = new[]
         {
             new Vector3(-0.5f, 0f, -0.5f),
-            new Vector3( 0.5f, 0f, -0.5f),
-            new Vector3( 0.5f, 0f,  0.5f),
-            new Vector3(-0.5f, 0f,  0.5f),
+            new Vector3(0.5f, 0f, -0.5f),
+            new Vector3(0.5f, 0f, 0.5f),
+            new Vector3(-0.5f, 0f, 0.5f),
         };
         mesh.triangles = new[] { 0, 2, 1, 0, 3, 2 };
         mesh.RecalculateNormals();

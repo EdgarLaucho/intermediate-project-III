@@ -18,6 +18,8 @@ MonoBehaviour:
   refundPercentage: 0.5
   repairCostPerHP: 0.45
   baseMaxHealth: 140
+  autoOrientRadially: 1
+  placementYawOffset: 0
   maxLevel: 2
   upgradeLevels:
   - upgradeCost: 45
@@ -28,6 +30,8 @@ MonoBehaviour:
     bonusRange: 0
     bonusArmor: 1
     bonusThornsDamage: 4
+    bonusProjectilesPerAttack: 0
+    visualPrefabOverride: {fileID: 0}
     specialLabel: Sharper thorns
   - upgradeCost: 95
     bonusMaxHealth: 90
@@ -37,6 +41,8 @@ MonoBehaviour:
     bonusRange: 0
     bonusArmor: 1
     bonusThornsDamage: 6
+    bonusProjectilesPerAttack: 0
+    visualPrefabOverride: {fileID: 0}
     specialLabel: Bleeding thorns
   role: 1
   armor: 0

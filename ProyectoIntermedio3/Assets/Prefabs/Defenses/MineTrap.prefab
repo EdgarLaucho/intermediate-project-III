@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1000000000000000062}
-  - component: {fileID: 1000000000000000063}
+  - component: {fileID: 1008625599071808306}
   - component: {fileID: 1000000000000000065}
   m_Layer: 0
   m_Name: MineTrap
@@ -34,7 +34,7 @@ Transform:
   - {fileID: 1000000000000000101}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1000000000000000063
+--- !u!114 &1008625599071808306
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -43,9 +43,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1000000000000000061}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ac5d4e19a05a0f240b332c43111374a9, type: 3}
+  m_Script: {fileID: 11500000, guid: d2913dd0349b2c14e8fbd82f944dbb4a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TD.Construction.Trap
+  m_EditorClassIdentifier: Assembly-CSharp::MineTrap
 --- !u!114 &1000000000000000065
 MonoBehaviour:
   m_ObjectHideFlags: 0

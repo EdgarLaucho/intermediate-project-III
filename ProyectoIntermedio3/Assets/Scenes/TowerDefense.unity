@@ -1329,7 +1329,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1841829050}
   m_Enabled: 1
-  serializedVersion: 13
+  serializedVersion: 12
   m_Type: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 2
@@ -1381,7 +1381,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShapeRadius: 0
+  m_ShadowRadius: 0
   m_ShadowAngle: 0
   m_LightUnit: 1
   m_LuxAtDistance: 1
@@ -1508,9 +1508,6 @@ MonoBehaviour:
   fadeSpeed: 14
   pulseSpeed: 2.4
   pulseAmount: 0.06
-  currentRingRotationSpeed: 17
-  upgradeRingRotationSpeed: -13
-  invalidJitterDegrees: 2.2
 --- !u!1 &2103000000
 GameObject:
   m_ObjectHideFlags: 0

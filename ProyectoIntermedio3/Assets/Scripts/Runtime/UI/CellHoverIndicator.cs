@@ -12,67 +12,68 @@ public class CellHoverIndicator : MonoBehaviour
     #region Inspector Fields
 
     [SerializeField] private GridManager grid;
-    [SerializeField] private UIDocument  uiDocument;   // optional — only needed for tooltip
+    [SerializeField] private UIDocument uiDocument; // optional — only needed for tooltip
 
     [Header("Colors")]
     [SerializeField] private Color buildableColor = new Color(1.00f, 0.66f, 0.12f, 0.26f); // orange
-    [SerializeField] private Color occupiedColor  = new Color(0.24f, 0.88f, 1.00f, 0.30f); // cyan
-    [SerializeField] private Color invalidColor   = new Color(1.00f, 0.12f, 0.10f, 0.32f); // red
-    [SerializeField] private Color noGoldColor    = new Color(1.00f, 0.78f, 0.12f, 0.30f); // yellow
-    [SerializeField] private Color phaseColor     = new Color(0.55f, 0.58f, 0.66f, 0.24f); // grey
-    [SerializeField] private Color outlineColor   = new Color(1.00f, 1.00f, 1.00f, 0.70f); // white border
+    [SerializeField] private Color occupiedColor = new Color(0.24f, 0.88f, 1.00f, 0.30f); // cyan
+    [SerializeField] private Color invalidColor = new Color(1.00f, 0.12f, 0.10f, 0.32f); // red
+    [SerializeField] private Color noGoldColor = new Color(1.00f, 0.78f, 0.12f, 0.30f); // yellow
+    [SerializeField] private Color phaseColor = new Color(0.55f, 0.58f, 0.66f, 0.24f); // grey
+    [SerializeField] private Color outlineColor = new Color(1.00f, 1.00f, 1.00f, 0.70f); // white border
     [SerializeField] private Color validPlacementColor = new Color(0.28f, 1.00f, 0.46f, 0.26f);
-    [SerializeField] private Color validAccentColor    = new Color(0.66f, 1.00f, 0.68f, 0.82f);
+    [SerializeField] private Color validAccentColor = new Color(0.66f, 1.00f, 0.68f, 0.82f);
 
     [Header("Pulse")]
-    [SerializeField] private float pulseSpeed     = 5f;
-    [SerializeField] private float pulseAmplitude = 0.14f;   // how much alpha oscillates
+    [SerializeField] private float pulseSpeed = 5f;
+    [SerializeField] private float pulseAmplitude = 0.14f; // how much alpha oscillates
 
     [Header("Feel")]
     [SerializeField] private float reticleRotationSpeed = 34f;
-    [SerializeField] private float scanPulseSpeed       = 2.8f;
+    [SerializeField] private float scanPulseSpeed = 2.8f;
 
     #endregion
 
     #region Runtime State
 
-    private Mesh     _fillMesh;      // solid XZ quad
-    private Mesh     _borderMesh;    // hollow XZ border (4 thin quads)
-    private Mesh     _cornerMesh;
-    private Mesh     _hatchMesh;
+    private Mesh _fillMesh; // solid XZ quad
+    private Mesh _borderMesh; // hollow XZ border (4 thin quads)
+    private Mesh _cornerMesh;
+    private Mesh _hatchMesh;
     private Material _fillMat;
     private Material _borderMat;
     private Material _accentMat;
     private Material _hatchMat;
 
-    private bool        _visible;
-    private Color       _currentColor;
-    private Color       _currentBorderColor;
-    private Color       _currentAccentColor;
-    private Vector3     _currentCenter;
-    private float       _currentCellSize;
-    private bool        _drawBorder;
-    private bool        _drawCorners;
-    private bool        _drawHatch;
-    private bool        _drawReticle;
+    private bool _visible;
+    private Color _currentColor;
+    private Color _currentBorderColor;
+    private Color _currentAccentColor;
+    private Vector3 _currentCenter;
+    private float _currentCellSize;
+    private bool _drawBorder;
+    private bool _drawCorners;
+    private bool _drawHatch;
+    private bool _drawReticle;
     private Vector2Int? _lastCoords;
 
     // Bounce on cell-change
-    private float       _bounceT = 999f;
-    private const float BounceDur  = 0.13f;
+    private float _bounceT = 999f;
+    private const float BounceDur = 0.13f;
     private const float BounceOver = 0.10f;
     private const float BounceStartScale = 0.96f;
 
     // Tooltip
     private VisualElement _tooltip;
-    private Label         _tooltipLabel;
-    private GridCell      _tooltipCell;
+    private Label _tooltipLabel;
+    private GridCell _tooltipCell;
     private BuildManager.PlacementValidation? _tooltipPlacement;
-    private BuildingBase  _observedTooltipBuilding;
-    private int           _lastTooltipHealth = int.MinValue;
-    private int           _lastTooltipMaxHealth = int.MinValue;
-    private int           _lastTooltipLevel = int.MinValue;
-    private bool          _lastTooltipMaxLevel;
+    private BuildingBase _observedTooltipBuilding;
+    private int _lastTooltipHealth = int.MinValue;
+    private int _lastTooltipMaxHealth = int.MinValue;
+    private int _lastTooltipLevel = int.MinValue;
+    private bool _lastTooltipMaxLevel;
+    private bool _suppressTooltip;
 
     #endregion
 
@@ -80,16 +81,20 @@ public class CellHoverIndicator : MonoBehaviour
 
     private void OnEnable()
     {
-        ConstructionEvents.OnCellHovered  += OnCellHovered;
-        ConstructionEvents.OnCellLost     += Hide;
+        ConstructionEvents.OnCellHovered += OnCellHovered;
+        ConstructionEvents.OnCellLost += Hide;
         ConstructionEvents.OnPlacementEnded += Hide;
+        ConstructionEvents.OnPaintPlacementPreviewUpdated += SuppressTooltip;
+        ConstructionEvents.OnPaintPlacementPreviewEnded += UnsuppressTooltip;
     }
 
     private void OnDisable()
     {
-        ConstructionEvents.OnCellHovered  -= OnCellHovered;
-        ConstructionEvents.OnCellLost     -= Hide;
+        ConstructionEvents.OnCellHovered -= OnCellHovered;
+        ConstructionEvents.OnCellLost -= Hide;
         ConstructionEvents.OnPlacementEnded -= Hide;
+        ConstructionEvents.OnPaintPlacementPreviewUpdated -= SuppressTooltip;
+        ConstructionEvents.OnPaintPlacementPreviewEnded -= UnsuppressTooltip;
         StopObservingTooltipBuilding();
     }
 
@@ -100,27 +105,27 @@ public class CellHoverIndicator : MonoBehaviour
 
     private void Start()
     {
-        _fillMesh   = BuildFillMesh();
+        _fillMesh = BuildFillMesh();
         _borderMesh = BuildBorderMesh();
         _cornerMesh = BuildCornerMesh();
-        _hatchMesh  = BuildHatchMesh();
-        _fillMat    = BuildMaterial(new Color(1f, 0.6f, 0f, 0.75f));
-        _borderMat  = BuildMaterial(outlineColor);
-        _accentMat  = BuildMaterial(validAccentColor);
-        _hatchMat   = BuildMaterial(invalidColor);
+        _hatchMesh = BuildHatchMesh();
+        _fillMat = BuildMaterial(new Color(1f, 0.6f, 0f, 0.75f));
+        _borderMat = BuildMaterial(outlineColor);
+        _accentMat = BuildMaterial(validAccentColor);
+        _hatchMat = BuildMaterial(invalidColor);
         BuildTooltip();
     }
 
     private void OnDestroy()
     {
-        if (_fillMesh   != null) Destroy(_fillMesh);
+        if (_fillMesh != null) Destroy(_fillMesh);
         if (_borderMesh != null) Destroy(_borderMesh);
         if (_cornerMesh != null) Destroy(_cornerMesh);
-        if (_hatchMesh  != null) Destroy(_hatchMesh);
-        if (_fillMat    != null) Destroy(_fillMat);
-        if (_borderMat  != null) Destroy(_borderMat);
-        if (_accentMat  != null) Destroy(_accentMat);
-        if (_hatchMat   != null) Destroy(_hatchMat);
+        if (_hatchMesh != null) Destroy(_hatchMesh);
+        if (_fillMat != null) Destroy(_fillMat);
+        if (_borderMat != null) Destroy(_borderMat);
+        if (_accentMat != null) Destroy(_accentMat);
+        if (_hatchMat != null) Destroy(_hatchMat);
         StopObservingTooltipBuilding();
         _tooltip?.RemoveFromHierarchy();
     }
@@ -142,14 +147,14 @@ public class CellHoverIndicator : MonoBehaviour
         }
 
         // ── Pulse alpha ───────────────────────────────────────────────────────
-        float alpha  = _currentColor.a
+        float alpha = _currentColor.a
                      * (1f + Mathf.Sin(Time.unscaledTime * pulseSpeed) * pulseAmplitude);
-        Color fillC  = _currentColor; fillC.a = Mathf.Clamp01(alpha);
+        Color fillC = _currentColor; fillC.a = Mathf.Clamp01(alpha);
 
         SetMaterialColor(_fillMat, fillC);
 
         // ── Draw fill ─────────────────────────────────────────────────────────
-        float   fillScale  = _currentCellSize * 0.88f * bounce;
+        float fillScale = _currentCellSize * 0.88f * bounce;
         Matrix4x4 fillMatrix = Matrix4x4.TRS(_currentCenter, Quaternion.identity, new Vector3(fillScale, 1f, fillScale));
         Graphics.DrawMesh(_fillMesh, fillMatrix, _fillMat, 0);
 
@@ -197,7 +202,8 @@ public class CellHoverIndicator : MonoBehaviour
             Graphics.DrawMesh(_borderMesh, borderMatrix, _borderMat, 0);
         }
 
-        PositionTooltip();
+        if (!_suppressTooltip)
+            PositionTooltip();
     }
 
     #endregion
@@ -238,18 +244,18 @@ public class CellHoverIndicator : MonoBehaviour
         }
 
         bool isNewCell = !_lastCoords.HasValue || _lastCoords.Value != coords;
-        _lastCoords      = coords;
-        _currentColor    = ResolveFillColor(cell, placement);
+        _lastCoords = coords;
+        _currentColor = ResolveFillColor(cell, placement);
         _currentBorderColor = ResolveBorderColor(cell, placement);
         _currentAccentColor = ResolveAccentColor(cell, placement);
-        _drawBorder      = cell.IsOccupied || (placement.HasValue && !placement.Value.IsValid);
-        _drawCorners     = !cell.IsOccupied && (!placement.HasValue || placement.Value.IsValid);
-        _drawHatch       = placement.HasValue && !placement.Value.IsValid;
-        _drawReticle     = !cell.IsOccupied && (!placement.HasValue || placement.Value.State == BuildManager.PlacementState.Valid);
-        _currentCenter   = worldCenter + Vector3.up * 0.06f;
+        _drawBorder = cell.IsOccupied || (placement.HasValue && !placement.Value.IsValid);
+        _drawCorners = !cell.IsOccupied && (!placement.HasValue || placement.Value.IsValid);
+        _drawHatch = placement.HasValue && !placement.Value.IsValid;
+        _drawReticle = !cell.IsOccupied && (!placement.HasValue || placement.Value.State == BuildManager.PlacementState.Valid);
+        _currentCenter = worldCenter + Vector3.up * 0.06f;
         _currentCellSize = cellSize;
-        _visible         = true;
-        _tooltipCell     = cell;
+        _visible = true;
+        _tooltipCell = cell;
         _tooltipPlacement = placement;
         bool changedObservedBuilding = cell.CurrentBuilding != _observedTooltipBuilding;
         ObserveTooltipBuilding(cell, placement);
@@ -258,18 +264,31 @@ public class CellHoverIndicator : MonoBehaviour
         {
             if (isNewCell) _bounceT = 0f;
             SetTooltipContent(cell, placement);
-            ShowTooltip();
+            if (!_suppressTooltip)
+                ShowTooltip();
         }
     }
 
     public void Hide()
     {
-        _visible    = false;
+        _visible = false;
         _lastCoords = null;
         _tooltipCell = null;
         _tooltipPlacement = null;
+        _suppressTooltip = false;
         StopObservingTooltipBuilding();
         HideTooltip();
+    }
+
+    private void SuppressTooltip(PaintPlacementPreviewArgs args)
+    {
+        _suppressTooltip = true;
+        HideTooltip();
+    }
+
+    private void UnsuppressTooltip()
+    {
+        _suppressTooltip = false;
     }
 
     #endregion
@@ -280,12 +299,12 @@ public class CellHoverIndicator : MonoBehaviour
     private static Mesh BuildFillMesh()
     {
         var mesh = new Mesh { name = "CellHoverFill" };
-        mesh.vertices  = new Vector3[] {
-            new(-0.5f, 0f, -0.5f), new( 0.5f, 0f, -0.5f),
-            new( 0.5f, 0f,  0.5f), new(-0.5f, 0f,  0.5f),
+        mesh.vertices = new Vector3[] {
+            new(-0.5f, 0f, -0.5f), new(0.5f, 0f, -0.5f),
+            new(0.5f, 0f, 0.5f), new(-0.5f, 0f, 0.5f),
         };
-        mesh.triangles = new int[] { 0, 2, 1,  0, 3, 2 };
-        mesh.uv        = new Vector2[] {
+        mesh.triangles = new int[] { 0, 2, 1, 0, 3, 2 };
+        mesh.uv = new Vector2[] {
             new(0,0), new(1,0), new(1,1), new(0,1)
         };
         mesh.RecalculateNormals();
@@ -295,31 +314,31 @@ public class CellHoverIndicator : MonoBehaviour
     // Four thin XZ quads forming a hollow border ring (no center fill).
     private static Mesh BuildBorderMesh()
     {
-        const float t = 0.055f;   // border thickness (fraction of cell)
-        float i = 0.5f - t;       // inner half-extent
+        const float t = 0.055f; // border thickness (fraction of cell)
+        float i = 0.5f - t; // inner half-extent
 
         var verts = new Vector3[16];
-        var tris  = new int[24];
+        var tris = new int[24];
 
         // Bottom strip
-        SetStrip(verts, tris, 0,  0,
-            new Vector3(-0.5f, 0f, -0.5f), new Vector3( 0.5f, 0f, -0.5f),
-            new Vector3( 0.5f, 0f,  -i  ), new Vector3(-0.5f, 0f,  -i  ));
+        SetStrip(verts, tris, 0, 0,
+            new Vector3(-0.5f, 0f, -0.5f), new Vector3(0.5f, 0f, -0.5f),
+            new Vector3(0.5f, 0f, -i), new Vector3(-0.5f, 0f, -i));
         // Top strip
-        SetStrip(verts, tris, 4,  6,
-            new Vector3(-0.5f, 0f,  i  ), new Vector3( 0.5f, 0f,  i  ),
-            new Vector3( 0.5f, 0f, 0.5f), new Vector3(-0.5f, 0f, 0.5f));
+        SetStrip(verts, tris, 4, 6,
+            new Vector3(-0.5f, 0f, i), new Vector3(0.5f, 0f, i),
+            new Vector3(0.5f, 0f, 0.5f), new Vector3(-0.5f, 0f, 0.5f));
         // Left strip
         SetStrip(verts, tris, 8, 12,
-            new Vector3(-0.5f, 0f, -i), new Vector3(-i,    0f, -i),
-            new Vector3(-i,    0f,  i), new Vector3(-0.5f, 0f,  i));
+            new Vector3(-0.5f, 0f, -i), new Vector3(-i, 0f, -i),
+            new Vector3(-i, 0f, i), new Vector3(-0.5f, 0f, i));
         // Right strip
         SetStrip(verts, tris, 12, 18,
-            new Vector3(i,    0f, -i), new Vector3(0.5f, 0f, -i),
-            new Vector3(0.5f, 0f,  i), new Vector3(i,    0f,  i));
+            new Vector3(i, 0f, -i), new Vector3(0.5f, 0f, -i),
+            new Vector3(0.5f, 0f, i), new Vector3(i, 0f, i));
 
         var mesh = new Mesh { name = "CellHoverBorder" };
-        mesh.vertices  = verts;
+        mesh.vertices = verts;
         mesh.triangles = tris;
         mesh.RecalculateNormals();
         return mesh;
@@ -400,10 +419,10 @@ public class CellHoverIndicator : MonoBehaviour
                                  int vBase, int tBase,
                                  Vector3 a, Vector3 b, Vector3 c, Vector3 d)
     {
-        verts[vBase]     = a; verts[vBase + 1] = b;
+        verts[vBase] = a; verts[vBase + 1] = b;
         verts[vBase + 2] = c; verts[vBase + 3] = d;
-        tris[tBase]     = vBase;     tris[tBase + 1] = vBase + 2; tris[tBase + 2] = vBase + 1;
-        tris[tBase + 3] = vBase;     tris[tBase + 4] = vBase + 3; tris[tBase + 5] = vBase + 2;
+        tris[tBase] = vBase; tris[tBase + 1] = vBase + 2; tris[tBase + 2] = vBase + 1;
+        tris[tBase + 3] = vBase; tris[tBase + 4] = vBase + 3; tris[tBase + 5] = vBase + 2;
     }
 
     #endregion
@@ -456,27 +475,27 @@ public class CellHoverIndicator : MonoBehaviour
         if (uiDocument == null) return;
 
         _tooltip = new VisualElement();
-        _tooltip.style.position                = Position.Absolute;
-        _tooltip.style.backgroundColor         = new StyleColor(new Color(0.03f, 0.05f, 0.10f, 0.88f));
-        _tooltip.style.borderTopLeftRadius     = 4;
-        _tooltip.style.borderTopRightRadius    = 4;
-        _tooltip.style.borderBottomLeftRadius  = 4;
+        _tooltip.style.position = Position.Absolute;
+        _tooltip.style.backgroundColor = new StyleColor(new Color(0.03f, 0.05f, 0.10f, 0.88f));
+        _tooltip.style.borderTopLeftRadius = 4;
+        _tooltip.style.borderTopRightRadius = 4;
+        _tooltip.style.borderBottomLeftRadius = 4;
         _tooltip.style.borderBottomRightRadius = 4;
-        _tooltip.style.paddingLeft   = 8;
-        _tooltip.style.paddingRight  = 8;
-        _tooltip.style.paddingTop    = 5;
+        _tooltip.style.paddingLeft = 8;
+        _tooltip.style.paddingRight = 8;
+        _tooltip.style.paddingTop = 5;
         _tooltip.style.paddingBottom = 5;
         _tooltip.style.borderLeftWidth = 3;
         _tooltip.style.borderLeftColor = new StyleColor(buildableColor);
-        _tooltip.style.display         = DisplayStyle.None;
-        _tooltip.pickingMode           = PickingMode.Ignore;
+        _tooltip.style.display = DisplayStyle.None;
+        _tooltip.pickingMode = PickingMode.Ignore;
 
         _tooltipLabel = new Label();
-        _tooltipLabel.style.fontSize                = 12;
-        _tooltipLabel.style.color                   = new StyleColor(new Color(0.92f, 0.95f, 1.00f));
+        _tooltipLabel.style.fontSize = 12;
+        _tooltipLabel.style.color = new StyleColor(new Color(0.92f, 0.95f, 1.00f));
         _tooltipLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-        _tooltipLabel.style.whiteSpace              = WhiteSpace.Normal;
-        _tooltipLabel.pickingMode                   = PickingMode.Ignore;
+        _tooltipLabel.style.whiteSpace = WhiteSpace.Normal;
+        _tooltipLabel.pickingMode = PickingMode.Ignore;
 
         _tooltip.Add(_tooltipLabel);
         uiDocument.rootVisualElement.Add(_tooltip);
@@ -489,25 +508,25 @@ public class CellHoverIndicator : MonoBehaviour
         if (placement.HasValue && !placement.Value.IsValid)
         {
             Color c = TooltipColorFor(placement.Value.State);
-            _tooltipLabel.text             = placement.Value.Reason;
-            _tooltipLabel.style.color      = new StyleColor(c);
+            _tooltipLabel.text = placement.Value.Reason;
+            _tooltipLabel.style.color = new StyleColor(c);
             _tooltip.style.borderLeftColor = new StyleColor(c);
             return;
         }
 
         if (cell.IsOccupied && cell.CurrentBuilding != null)
         {
-            var    b     = cell.CurrentBuilding;
+            var b = cell.CurrentBuilding;
             string level = b.IsMaxLevel ? "MAX" : $"Lv {b.CurrentLevel + 1}";
-            _tooltipLabel.text             = $"{b.Data.buildingName}  {level}\nHP  {b.CurrentHealth} / {b.MaxHealth}";
-            _tooltipLabel.style.color      = new StyleColor(new Color(0.30f, 0.92f, 1.00f));
+            _tooltipLabel.text = $"{b.Data.buildingName}  {level}\nHP  {b.CurrentHealth} / {b.MaxHealth}";
+            _tooltipLabel.style.color = new StyleColor(new Color(0.30f, 0.92f, 1.00f));
             _tooltip.style.borderLeftColor = new StyleColor(occupiedColor);
             CacheTooltipBuildingState(b);
         }
         else
         {
-            _tooltipLabel.text             = "Buildable";
-            _tooltipLabel.style.color      = new StyleColor(new Color(1.00f, 0.80f, 0.20f));
+            _tooltipLabel.text = "Buildable";
+            _tooltipLabel.style.color = new StyleColor(new Color(1.00f, 0.80f, 0.20f));
             _tooltip.style.borderLeftColor = new StyleColor(buildableColor);
             ResetTooltipBuildingState();
         }
@@ -582,7 +601,7 @@ public class CellHoverIndicator : MonoBehaviour
 
     private void RefreshTooltipFromTrackedCell()
     {
-        if (_tooltipCell == null || !_visible) return;
+        if (_tooltipCell == null || !_visible || _suppressTooltip) return;
 
         SetTooltipContent(_tooltipCell, _tooltipPlacement);
         ShowTooltip();
@@ -616,26 +635,26 @@ public class CellHoverIndicator : MonoBehaviour
         if (uiDocument?.rootVisualElement?.panel == null) return;
         if (Mouse.current == null) return;
 
-        Vector2 screen    = Mouse.current.position.ReadValue();
+        Vector2 screen = Mouse.current.position.ReadValue();
         screen.y = Screen.height - screen.y;
-        Vector2 panel     = RuntimePanelUtils.ScreenToPanel(uiDocument.rootVisualElement.panel, screen);
-        float   tipH      = Mathf.Max(_tooltip.resolvedStyle.height, 36f);
-        float   tipW      = Mathf.Max(_tooltip.resolvedStyle.width,  90f);
-        Rect    panelRect = uiDocument.rootVisualElement.panel.visualTree.layout;
+        Vector2 panel = RuntimePanelUtils.ScreenToPanel(uiDocument.rootVisualElement.panel, screen);
+        float tipH = Mathf.Max(_tooltip.resolvedStyle.height, 36f);
+        float tipW = Mathf.Max(_tooltip.resolvedStyle.width, 90f);
+        Rect panelRect = uiDocument.rootVisualElement.panel.visualTree.layout;
 
         const float offsetX = 20f;
         const float offsetY = 16f;
 
         float left = panel.x + offsetX;
-        float top  = panel.y + offsetY;
+        float top = panel.y + offsetY;
 
         // Flip left if tooltip would overflow right edge.
-        if (left + tipW > panelRect.width)  left = panel.x - tipW - offsetX * 0.5f;
+        if (left + tipW > panelRect.width) left = panel.x - tipW - offsetX * 0.5f;
         // Flip up if tooltip would overflow bottom edge.
-        if (top  + tipH > panelRect.height) top  = panel.y - tipH - offsetY * 0.5f;
+        if (top + tipH > panelRect.height) top = panel.y - tipH - offsetY * 0.5f;
 
-        _tooltip.style.left = Mathf.Clamp(left, 0f, Mathf.Max(0f, panelRect.width  - tipW));
-        _tooltip.style.top  = Mathf.Clamp(top,  0f, Mathf.Max(0f, panelRect.height - tipH));
+        _tooltip.style.left = Mathf.Clamp(left, 0f, Mathf.Max(0f, panelRect.width - tipW));
+        _tooltip.style.top = Mathf.Clamp(top, 0f, Mathf.Max(0f, panelRect.height - tipH));
     }
 
     private void ShowTooltip() { if (_tooltip != null) _tooltip.style.display = DisplayStyle.Flex; }
@@ -680,13 +699,13 @@ public class CellHoverIndicator : MonoBehaviour
     {
         return state switch
         {
-            BuildManager.PlacementState.Valid            => validPlacementColor,
-            BuildManager.PlacementState.Occupied         => invalidColor,
+            BuildManager.PlacementState.Valid => validPlacementColor,
+            BuildManager.PlacementState.Occupied => invalidColor,
             BuildManager.PlacementState.InsufficientGold => noGoldColor,
-            BuildManager.PlacementState.InvalidPhase     => phaseColor,
-            BuildManager.PlacementState.NotBuildable     => invalidColor,
-            BuildManager.PlacementState.OutOfBounds      => invalidColor,
-            _                                             => cell.IsOccupied ? occupiedColor : invalidColor,
+            BuildManager.PlacementState.InvalidPhase => phaseColor,
+            BuildManager.PlacementState.NotBuildable => invalidColor,
+            BuildManager.PlacementState.OutOfBounds => invalidColor,
+            _ => cell.IsOccupied ? occupiedColor : invalidColor,
         };
     }
 
@@ -695,9 +714,9 @@ public class CellHoverIndicator : MonoBehaviour
         return state switch
         {
             BuildManager.PlacementState.InsufficientGold => new Color(1.00f, 0.82f, 0.24f),
-            BuildManager.PlacementState.InvalidPhase     => new Color(0.74f, 0.78f, 0.88f),
-            BuildManager.PlacementState.Valid            => new Color(1.00f, 0.80f, 0.20f),
-            _                                             => new Color(1.00f, 0.34f, 0.28f),
+            BuildManager.PlacementState.InvalidPhase => new Color(0.74f, 0.78f, 0.88f),
+            BuildManager.PlacementState.Valid => new Color(1.00f, 0.80f, 0.20f),
+            _ => new Color(1.00f, 0.34f, 0.28f),
         };
     }
 

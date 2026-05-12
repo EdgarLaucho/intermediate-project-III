@@ -3,7 +3,7 @@
 public interface IEconomyService
 {
     // Queries
-    int  Gold      { get; }
+    int Gold { get; }
     bool CanAfford(int cost);
     bool SpendGold(int cost);
     void AddGold(int amount);

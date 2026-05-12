@@ -173,7 +173,7 @@ public class BuildingHealthBar : MonoBehaviour
     #endregion
 
     #region Camera & Scale
-    private void FaceTargetCamera()    {
+    private void FaceTargetCamera() {
         if (!faceCamera) return;
 
         Camera cameraToUse = ResolveCamera();
