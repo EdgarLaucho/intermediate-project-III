@@ -7,8 +7,10 @@ public class EnemySO : ScriptableObject
     public int health;
     public float speed;
     
-    [Header("Layers")]
-    public LayerMask targetLayer;
+    [Header("Target Priority")]
+    public LayerMask foodTableLayer;
+    public LayerMask turretLayer;
+    public LayerMask playerLayer;
     
     [Header("Detection")]
     public float turretDetectionRange = 5f;
