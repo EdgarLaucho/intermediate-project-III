@@ -9,6 +9,7 @@ public class BaseEnemyAI : MonoBehaviour
     protected NavMeshAgent agent;
     protected Transform currentTarget;
     protected IDamageable2 currentDamageable;
+    protected bool hasCompletedObjective;
 
     protected float attackTimer;
 
@@ -30,6 +31,11 @@ public class BaseEnemyAI : MonoBehaviour
 
     protected virtual void Update()
     {
+        if (hasCompletedObjective)
+        {
+            agent.isStopped = true;
+            return;
+        }
         if (!HasValidTargets())
         {
             currentState = EnemyState.Idle;
@@ -170,6 +176,18 @@ public class BaseEnemyAI : MonoBehaviour
             currentDamageable.TakeDamage(enemySO.damage);
 
             Debug.Log($"{gameObject.name} attacked {currentTarget.name}");
+            if (currentDamageable.isDead)
+            {
+                if (currentTarget.gameObject.layer == LayerMask.NameToLayer("Player") ||
+                    currentTarget.gameObject.layer == LayerMask.NameToLayer("FoodTable"))
+                {
+                    hasCompletedObjective = true;
+                    currentState = EnemyState.Idle;
+                    currentTarget = null;
+                    currentDamageable = null;
+                    agent.isStopped = true;
+                }
+            }
         }
     }
     
@@ -186,7 +204,9 @@ public class BaseEnemyAI : MonoBehaviour
     protected virtual void EvaluateTargets()
     {
         if (currentTarget != null && 
-            currentTarget.gameObject.layer == LayerMask.NameToLayer("Player"))
+            currentTarget.gameObject.layer == LayerMask.NameToLayer("Player") &&
+            currentDamageable != null &&
+            !currentDamageable.isDead)
         {
             return;
         }
@@ -257,28 +277,20 @@ public class BaseEnemyAI : MonoBehaviour
     
     protected virtual bool HasValidTargets()
     {
-        Collider[] foodTables = Physics.OverlapSphere(transform.position, 100f, enemySO.foodTableLayer);
+        Collider[] foodTables = Physics.OverlapSphere(
+            transform.position,
+            100f,
+            enemySO.foodTableLayer
+        );
 
         foreach (Collider table in foodTables)
         {
             IDamageable2 damageable = table.GetComponentInParent<IDamageable2>();
-            if (damageable != null && !damageable.isDead) return true;
-        }
 
-        Collider[] turrets = Physics.OverlapSphere(transform.position, 100f, enemySO.turretLayer);
-
-        foreach (Collider turret in turrets)
-        {
-            IDamageable2 damageable = turret.GetComponentInParent<IDamageable2>();
-            if (damageable != null && !damageable.isDead) return true;
-        }
-
-        Collider[] players = Physics.OverlapSphere(transform.position, 100f, enemySO.playerLayer);
-
-        foreach (Collider player in players)
-        {
-            IDamageable2 damageable = player.GetComponentInParent<IDamageable2>();
-            if (damageable != null && !damageable.isDead) return true;
+            if (damageable != null && !damageable.isDead)
+            {
+                return true;
+            }
         }
 
         return false;
