@@ -203,6 +203,7 @@ public class BaseEnemyAI : MonoBehaviour
 
     protected virtual void EvaluateTargets()
     {
+        // If already chasing player, ignore everything else
         if (currentTarget != null && 
             currentTarget.gameObject.layer == LayerMask.NameToLayer("Player") &&
             currentDamageable != null &&
@@ -210,38 +211,13 @@ public class BaseEnemyAI : MonoBehaviour
         {
             return;
         }
-        //Search for nearby turret
-        Collider[] turrets =
-            Physics.OverlapSphere(transform.position,
-                                  enemySO.turretDetectionRange,
-                               enemySO.turretLayer);
-        Debug.Log("Turrets found: " + turrets.Length);
 
-        foreach (Collider turret in turrets)
-        {
-            IDamageable2 damageable = turret.GetComponentInParent<IDamageable2>();
-
-            if (damageable == null || damageable.isDead)
-            {
-                continue;
-            }
-
-            if (currentTarget != turret.transform)
-            {
-                currentTarget = turret.transform;
-                currentDamageable = damageable;
-
-                currentState = EnemyState.AttackingTurret;
-            }
-
-            return;
-        }
-        
-        //Search for nearby Player
-        Collider[] players = Physics.OverlapSphere(transform.position,
-                                                  enemySO.playerDetectionRange,
-                                               enemySO.playerLayer);
-        Debug.Log("Players found: " + players.Length);
+        // Search for nearby Player first
+        Collider[] players = Physics.OverlapSphere(
+            transform.position,
+            enemySO.playerDetectionRange,
+            enemySO.playerLayer
+        );
 
         foreach (Collider playerCollider in players)
         {
@@ -261,16 +237,41 @@ public class BaseEnemyAI : MonoBehaviour
                 currentState = EnemyState.ChasingPlayer;
 
                 Debug.Log("Changing target to PLAYER");
-
                 return;
             }
         }
-        
+
+        // Search for nearby turret after player chance
+        Collider[] turrets = Physics.OverlapSphere(
+            transform.position,
+            enemySO.turretDetectionRange,
+            enemySO.turretLayer
+        );
+
+        foreach (Collider turret in turrets)
+        {
+            IDamageable2 damageable = turret.GetComponentInParent<IDamageable2>();
+
+            if (damageable == null || damageable.isDead)
+            {
+                continue;
+            }
+
+            if (currentTarget != turret.transform)
+            {
+                currentTarget = turret.transform;
+                currentDamageable = damageable;
+                currentState = EnemyState.AttackingTurret;
+            }
+
+            return;
+        }
+
         if (currentTarget != null && currentTarget.gameObject.layer == LayerMask.NameToLayer("FoodTable"))
         {
             return;
         }
-        
+
         currentState = EnemyState.MovingToTarget;
         FindFoodTable();
     }
