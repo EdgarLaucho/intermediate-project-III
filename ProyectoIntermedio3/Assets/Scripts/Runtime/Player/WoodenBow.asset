@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f187b578ff90d9d44b12aa9041c82c24, type: 3}
+  m_Name: WoodenBow
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponData
+  weaponName: Wooden Bow
+  damage: 1
+  attackRate: 1
+  attackRange: 5
+  projectilePrefab: {fileID: 6634830010108146841, guid: 6fa877f14d1dbcf4c888b807cb64607d, type: 3}

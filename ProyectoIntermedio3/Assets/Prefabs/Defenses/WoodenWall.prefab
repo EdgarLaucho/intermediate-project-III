@@ -72,7 +72,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.8171949, y: 0.6707699, z: 0.8171949}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1551476481462128684}
@@ -105,8 +105,8 @@ Transform:
   m_GameObject: {fileID: 1393346047082256512}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.079, y: 0, z: 0.147}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0.9971, y: 0, z: 0.143}
+  m_LocalScale: {x: 0.92425174, y: 0.6497791, z: 0.81667}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1000000000000000101}
@@ -236,3 +236,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3800428466ddfb548ae907253596d92a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TD.UI.BuildingHealthBar
+  hideWhenFullHealth: 1
+  fullHealthLingerTime: 0.65
+  targetCamera: {fileID: 0}
+  faceCamera: 1
+  keepUpright: 0
+  scaleWithDistance: 1
+  referenceDistance: 10
+  minScale: 0.85
+  maxScale: 1.05
