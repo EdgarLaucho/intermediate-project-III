@@ -119,6 +119,63 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1001 &44042245
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.7635459
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.040001266
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -8.763451
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.9856707
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.16868146
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 19.422
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8453503596017176242, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_Name
+      value: FattyMissileG03 Variant
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
 --- !u!1 &177446872
 GameObject:
   m_ObjectHideFlags: 0
@@ -739,6 +796,63 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ddd24417fb204974885a725af49b181a, type: 3}
+--- !u!1001 &1721612445
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -4.110257
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.039999865
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -10.011989
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.9856707
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.16868146
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 19.422
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8453503596017176242, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_Name
+      value: FattyMissileG03 Variant (2)
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
 --- !u!1 &1749197806
 GameObject:
   m_ObjectHideFlags: 0
@@ -885,6 +999,63 @@ MonoBehaviour:
   m_MinRegionArea: 2
   m_NavMeshData: {fileID: 23800000, guid: c71fb3e0b8ce4a046a0c2b16ccde7f5b, type: 2}
   m_BuildHeightMesh: 0
+--- !u!1001 &1834105177
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -4.4355497
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.040002245
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -5.4036746
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.9856707
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.16868146
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 19.422
+      objectReference: {fileID: 0}
+    - target: {fileID: 8450011481247346372, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8453503596017176242, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
+      propertyPath: m_Name
+      value: FattyMissileG03 Variant (1)
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 1b73250177435a74e8c5f7364422b5f0, type: 3}
 --- !u!1 &1841829050
 GameObject:
   m_ObjectHideFlags: 0
@@ -1026,3 +1197,6 @@ SceneRoots:
   - {fileID: 1512643716}
   - {fileID: 1453244086}
   - {fileID: 1114964986}
+  - {fileID: 44042245}
+  - {fileID: 1834105177}
+  - {fileID: 1721612445}
