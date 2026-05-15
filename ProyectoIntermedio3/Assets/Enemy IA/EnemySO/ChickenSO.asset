@@ -23,9 +23,11 @@ MonoBehaviour:
   playerLayer:
     serializedVersion: 2
     m_Bits: 512
+  canAttackFoodTable: 0
+  canAttackTurrets: 0
+  canAttackPlayer: 0
   turretDetectionRange: 20
   playerDetectionRange: 10
-  playerAttackChance: 0
   damage: 10
   attackRange: 1.6
   attackCooldown: 0.1

@@ -12,10 +12,15 @@ public class EnemySO : ScriptableObject
     public LayerMask turretLayer;
     public LayerMask playerLayer;
     
+    [Header("Allowed Targets")]
+    public bool canAttackFoodTable = true;
+    public bool canAttackTurrets = true;
+    public bool canAttackPlayer = true;
+    
     [Header("Detection")]
     public float turretDetectionRange = 5f;
     public float playerDetectionRange = 4f;
-    [Range(0f, 1f)] public float playerAttackChance = 0.15f;
+    //[Range(0f, 1f)] public float playerAttackChance = 0.15f;
 
     [Header("Attack")] 
     public int damage;
