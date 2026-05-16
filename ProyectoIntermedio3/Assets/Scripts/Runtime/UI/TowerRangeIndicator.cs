@@ -1,8 +1,8 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 
-// Draws animated attack-range rings for tower focus, upgrade preview, and placement preview.
-// The indicator uses procedural meshes so it can scale cleanly to any tower range.
+// Draws cell-based attack/effect ranges for tower focus, upgrade preview, and placement preview.
+// The indicator uses procedural cell meshes so square grid ranges read as discrete tiles.
 [DisallowMultipleComponent]
 public sealed class TowerRangeIndicator : MonoBehaviour
 {
@@ -13,20 +13,16 @@ public sealed class TowerRangeIndicator : MonoBehaviour
 
     [Header("Visuals")]
     [SerializeField] private bool drawSubtleFill = true;
-    [SerializeField] private Color currentFillColor = new(0.22f, 0.72f, 1.00f, 0.045f);
-    [SerializeField] private Color currentRingColor = new(0.66f, 0.94f, 1.00f, 0.78f);
-    [SerializeField] private Color upgradeFillColor = new(0.48f, 1.00f, 0.36f, 0.032f);
-    [SerializeField] private Color upgradeRingColor = new(0.78f, 1.00f, 0.34f, 0.84f);
-    [SerializeField] private Color invalidRingColor = new(1.00f, 0.30f, 0.18f, 0.82f);
+    [SerializeField] private Color currentFillColor = new(0.22f, 0.72f, 1.00f, 0.070f);
+    [SerializeField] private Color currentRingColor = new(0.70f, 0.96f, 1.00f, 0.90f);
+    [SerializeField] private Color upgradeFillColor = new(0.48f, 1.00f, 0.36f, 0.055f);
+    [SerializeField] private Color upgradeRingColor = new(0.80f, 1.00f, 0.36f, 0.90f);
+    [SerializeField] private Color invalidRingColor = new(1.00f, 0.28f, 0.16f, 1.00f);
 
     [Header("Feel")]
     [SerializeField] private float fadeSpeed = 14f;
-    [SerializeField] private float pulseSpeed = 2.4f;
-    [SerializeField] private float pulseAmount = 0.09f;
-    [SerializeField] private float currentRingRotationSpeed = 17f;
-    [SerializeField] private float upgradeRingRotationSpeed = -13f;
-    [SerializeField] private float rangeEchoAmount = 0.055f;
-    [SerializeField] private float invalidJitterDegrees = 2.2f;
+    [SerializeField] private float pulseSpeed = 2.2f;
+    [SerializeField] private float pulseAmount = 0.035f;
 
     #endregion
 
@@ -38,24 +34,26 @@ public sealed class TowerRangeIndicator : MonoBehaviour
     private Material _ringMaterial;
 
     private Vector3 _center;
-    private float _currentRange;
-    private float _upgradeRange;
+    // Range stored as cell count (integer). Converted to world units on draw.
+    private int _currentRange;
+    private int _upgradeRange;
     private bool _hasUpgradeRange;
     private bool _isValid = true;
     private bool _requestedVisible;
     private float _visibility;
 
     // Placement preview is independent from Tower instances because the building may not exist yet.
-    private bool  _inPlacementMode;
-    private float _placementRange;
+    private bool _inPlacementMode;
+    private int _placementRange;
 
     #endregion
 
     #region Mesh Constants
 
-    private const int Segments = 96;
-    private const int DashCount = 36;
-    private const int DashSteps = 3;
+    // Unit cell mesh dimensions. Values below 0.5 leave a visible gap between cells.
+    private const float FillHalfExtent = 0.42f;
+    private const float OutlineOuterHalfExtent = 0.47f;
+    private const float OutlineInnerHalfExtent = 0.39f;
 
     #endregion
 
@@ -71,20 +69,20 @@ public sealed class TowerRangeIndicator : MonoBehaviour
 
     private void OnEnable()
     {
-        ConstructionEvents.OnTowerFocused        += OnTowerFocused;
+        ConstructionEvents.OnTowerFocused += OnTowerFocused;
         ConstructionEvents.OnTowerUpgradeHovered += OnTowerUpgradeHovered;
-        ConstructionEvents.OnPlacementStarted    += OnPlacementStarted;
-        ConstructionEvents.OnPlacementUpdated    += OnPlacementUpdated;
-        ConstructionEvents.OnPlacementEnded      += OnPlacementEnded;
+        ConstructionEvents.OnPlacementStarted += OnPlacementStarted;
+        ConstructionEvents.OnPlacementUpdated += OnPlacementUpdated;
+        ConstructionEvents.OnPlacementEnded += OnPlacementEnded;
     }
 
     private void OnDisable()
     {
-        ConstructionEvents.OnTowerFocused        -= OnTowerFocused;
+        ConstructionEvents.OnTowerFocused -= OnTowerFocused;
         ConstructionEvents.OnTowerUpgradeHovered -= OnTowerUpgradeHovered;
-        ConstructionEvents.OnPlacementStarted    -= OnPlacementStarted;
-        ConstructionEvents.OnPlacementUpdated    -= OnPlacementUpdated;
-        ConstructionEvents.OnPlacementEnded      -= OnPlacementEnded;
+        ConstructionEvents.OnPlacementStarted -= OnPlacementStarted;
+        ConstructionEvents.OnPlacementUpdated -= OnPlacementUpdated;
+        ConstructionEvents.OnPlacementEnded -= OnPlacementEnded;
     }
 
     #endregion
@@ -106,12 +104,19 @@ public sealed class TowerRangeIndicator : MonoBehaviour
 
     private void OnPlacementStarted(BuildingData data)
     {
-        if (data is TowerData td && td.towerStats.attackRange > 0f)
+        int previewRange = 0;
+
+        if (data is TowerData td && td.towerStats.attackRange > 0)
+            previewRange = td.towerStats.attackRange;
+        else if (data is TrapData trapData && trapData.role != TrapRole.Spikes && trapData.trapStats.effectRadius > 0)
+            previewRange = trapData.trapStats.effectRadius;
+
+        if (previewRange > 0)
         {
             _inPlacementMode = true;
-            _placementRange  = td.towerStats.attackRange;
+            _placementRange = previewRange;
             // Start hidden at origin until the first snapped placement position arrives.
-            Show(Vector3.zero, _placementRange, 0f, false, true);
+            Show(Vector3.zero, _placementRange, 0, false, true);
         }
         else
         {
@@ -124,10 +129,10 @@ public sealed class TowerRangeIndicator : MonoBehaviour
     {
         if (!_inPlacementMode) return;
         // Follow the snapped grid position every frame during placement preview.
-        _center           = args.WorldPos + Vector3.up * yOffset;
-        _currentRange     = _placementRange;
-        _isValid          = args.Validation.IsValid;
-        _requestedVisible = _currentRange > 0f;
+        _center = args.WorldPos + Vector3.up * yOffset;
+        _currentRange = _placementRange;
+        _isValid = args.Validation.IsValid;
+        _requestedVisible = _currentRange > 0;
     }
 
     private void OnPlacementEnded()
@@ -155,46 +160,38 @@ public sealed class TowerRangeIndicator : MonoBehaviour
     private void LateUpdate()
     {
         // Fade visibility instead of toggling instantly so range previews feel grounded.
-        float target = _requestedVisible && _currentRange > 0f ? 1f : 0f;
+        float target = _requestedVisible && _currentRange > 0 ? 1f : 0f;
         _visibility = Mathf.MoveTowards(_visibility, target, fadeSpeed * Time.unscaledDeltaTime);
         if (_visibility <= 0f) return;
 
         float time = Time.unscaledTime;
-        // Pulse controls alpha, breathe controls radius, echoWave controls the secondary ring.
         float pulse = 1f + Mathf.Sin(time * pulseSpeed) * pulseAmount;
         float alpha = Mathf.Clamp01(_visibility * pulse);
-        float breathe = 1f + Mathf.Sin(time * pulseSpeed * 0.57f) * pulseAmount * 0.35f;
-        float echoWave = 0.5f + 0.5f * Mathf.Sin(time * pulseSpeed * 0.82f);
-        // Invalid placement gets a small rotational shake so the warning reads quickly.
-        float invalidJitter = _isValid ? 0f : Mathf.Sin(time * 22f) * invalidJitterDegrees;
-        float currentRotation = time * currentRingRotationSpeed + invalidJitter;
-        float upgradeRotation = time * upgradeRingRotationSpeed;
 
-        if (_hasUpgradeRange && _upgradeRange > _currentRange + 0.05f)
+        if (_hasUpgradeRange && _upgradeRange > _currentRange)
         {
-            DrawFillIfEnabled(_upgradeRange * breathe, WithAlpha(upgradeFillColor, upgradeFillColor.a * alpha));
-            DrawRing(_upgradeRange * breathe, WithAlpha(upgradeRingColor, upgradeRingColor.a * alpha), upgradeRotation);
-            DrawRing(_upgradeRange * breathe * 0.985f, WithAlpha(upgradeRingColor, upgradeRingColor.a * alpha * 0.32f), -upgradeRotation * 0.42f);
+            DrawCellArea(
+                _upgradeRange,
+                _currentRange,
+                WithAlpha(upgradeFillColor, upgradeFillColor.a * alpha),
+                WithAlpha(upgradeRingColor, upgradeRingColor.a * alpha));
         }
 
         Color activeRingColor = _isValid ? currentRingColor : invalidRingColor;
-        float currentRange = _currentRange * breathe;
-        DrawFillIfEnabled(currentRange, WithAlpha(currentFillColor, currentFillColor.a * alpha));
-        DrawRing(currentRange, WithAlpha(activeRingColor, activeRingColor.a * alpha), currentRotation);
-        DrawRing(currentRange * 0.985f, WithAlpha(activeRingColor, activeRingColor.a * alpha * 0.36f), -currentRotation * 0.35f);
-
-        float echoScale = 1f + rangeEchoAmount * echoWave;
-        float echoAlpha = activeRingColor.a * alpha * (1f - echoWave) * 0.42f;
-        DrawRing(currentRange * echoScale, WithAlpha(activeRingColor, echoAlpha), currentRotation + 9f);
+        DrawCellArea(
+            _currentRange,
+            -1,
+            WithAlpha(currentFillColor, currentFillColor.a * alpha),
+            WithAlpha(activeRingColor, activeRingColor.a * alpha));
     }
 
     #endregion
 
     #region Public API
 
-    public void ShowBuildPreview(Vector3 worldCenter, float range, bool isValid)
+    public void ShowBuildPreview(Vector3 worldCenter, int range, bool isValid)
     {
-        Show(worldCenter, range, 0f, false, isValid);
+        Show(worldCenter, range, 0, false, isValid);
     }
 
     public void ShowCurrent(Tower tower)
@@ -220,10 +217,10 @@ public sealed class TowerRangeIndicator : MonoBehaviour
             return;
         }
 
-        float upgradeRange = 0f;
+        int upgradeRange = 0;
         bool hasUpgradeRange = includeUpgradePreview
             && tower.TryPreviewNextUpgrade(out _, out upgradeRange, out _)
-            && upgradeRange > tower.AttackRange + 0.05f;
+            && upgradeRange > tower.AttackRange;
 
         Show(tower.transform.position, tower.AttackRange, upgradeRange, hasUpgradeRange, true);
     }
@@ -238,121 +235,108 @@ public sealed class TowerRangeIndicator : MonoBehaviour
 
     #region State Helpers
 
-    private void Show(Vector3 worldCenter, float currentRange, float upgradeRange, bool hasUpgradeRange, bool isValid)
+    private void Show(Vector3 worldCenter, int currentRange, int upgradeRange, bool hasUpgradeRange, bool isValid)
     {
         _center = worldCenter + Vector3.up * yOffset;
-        _currentRange = Mathf.Max(0f, currentRange);
+        _currentRange = Mathf.Max(0, currentRange);
         _upgradeRange = Mathf.Max(_currentRange, upgradeRange);
         _hasUpgradeRange = hasUpgradeRange;
         _isValid = isValid;
-        _requestedVisible = _currentRange > 0f;
+        _requestedVisible = _currentRange > 0;
     }
 
     #endregion
 
     #region Drawing Helpers
 
-    private void DrawFillIfEnabled(float range, Color color)
+    // Draws every cell whose Chebyshev distance is <= outerRadius and > innerRadius.
+    // This lets upgrade previews show only newly gained cells instead of repainting everything.
+    private void DrawCellArea(int outerRadius, int innerRadius, Color fillColor, Color outlineColor)
     {
-        if (!drawSubtleFill || color.a <= 0.001f) return;
-        DrawDisc(range, color);
-    }
+        float cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
+        Vector3 scale = new Vector3(cellSize, 1f, cellSize);
 
-    private void DrawDisc(float range, Color color)
-    {
-        SetMaterialColor(_fillMaterial, color);
-        Matrix4x4 matrix = Matrix4x4.TRS(_center, Quaternion.identity, new Vector3(range * 2f, 1f, range * 2f));
-        Graphics.DrawMesh(_discMesh, matrix, _fillMaterial, 0);
-    }
+        bool drawFill = drawSubtleFill && fillColor.a > 0.001f;
+        bool drawOutline = outlineColor.a > 0.001f;
 
-    private void DrawRing(float range, Color color, float rotationDegrees)
-    {
-        SetMaterialColor(_ringMaterial, color);
-        Matrix4x4 matrix = Matrix4x4.TRS(_center + Vector3.up * 0.004f, Quaternion.Euler(0f, rotationDegrees, 0f), new Vector3(range * 2f, 1f, range * 2f));
-        Graphics.DrawMesh(_ringMesh, matrix, _ringMaterial, 0);
+        if (drawFill) SetMaterialColor(_fillMaterial, fillColor);
+        if (drawOutline) SetMaterialColor(_ringMaterial, outlineColor);
+
+        for (int x = -outerRadius; x <= outerRadius; x++)
+        {
+            for (int z = -outerRadius; z <= outerRadius; z++)
+            {
+                int distance = Mathf.Max(Mathf.Abs(x), Mathf.Abs(z));
+                if (distance > outerRadius || distance <= innerRadius) continue;
+
+                Vector3 cellCenter = _center + new Vector3(x * cellSize, 0f, z * cellSize);
+                if (drawFill)
+                {
+                    Graphics.DrawMesh(_discMesh,
+                        Matrix4x4.TRS(cellCenter, Quaternion.identity, scale),
+                        _fillMaterial, 0);
+                }
+
+                if (drawOutline)
+                {
+                    Graphics.DrawMesh(_ringMesh,
+                        Matrix4x4.TRS(cellCenter + Vector3.up * 0.004f, Quaternion.identity, scale),
+                        _ringMaterial, 0);
+                }
+            }
+        }
     }
 
     #endregion
 
     #region Mesh Builders
 
+    // Inset unit-cell fill. Scaled to GridManager.CellSize on draw.
     private static Mesh BuildDiscMesh()
     {
-        var vertices = new Vector3[Segments + 1];
-        var triangles = new int[Segments * 3];
-        vertices[0] = Vector3.zero;
-
-        for (int i = 0; i < Segments; i++)
+        var vertices = new Vector3[]
         {
-            float angle = i / (float)Segments * Mathf.PI * 2f;
-            vertices[i + 1] = new Vector3(Mathf.Cos(angle) * 0.5f, 0f, Mathf.Sin(angle) * 0.5f);
-        }
-
-        for (int i = 0; i < Segments; i++)
-        {
-            int next = i == Segments - 1 ? 1 : i + 2;
-            int index = i * 3;
-            triangles[index] = 0;
-            triangles[index + 1] = next;
-            triangles[index + 2] = i + 1;
-        }
-
-        var mesh = new Mesh { name = "TowerRangeDisc" };
+            new(-FillHalfExtent, 0f, -FillHalfExtent),
+            new(FillHalfExtent, 0f, -FillHalfExtent),
+            new(FillHalfExtent, 0f, FillHalfExtent),
+            new(-FillHalfExtent, 0f, FillHalfExtent),
+        };
+        var triangles = new int[] { 0, 2, 1, 0, 3, 2 };
+        var mesh = new Mesh { name = "RangeSquareFill" };
         mesh.vertices = vertices;
         mesh.triangles = triangles;
         mesh.RecalculateNormals();
         return mesh;
     }
 
+    // Inset unit-cell outline: a hollow border with a small gap between neighbouring cells.
+    // 8 vertices (4 outer + 4 inner), 8 triangles (2 per side).
     private static Mesh BuildRingMesh()
     {
-        const float outerRadius = 0.5f;
-        const float innerRadius = 0.484f;
-        const float dashFill = 0.66f;
+        const float o = OutlineOuterHalfExtent;
+        const float i = OutlineInnerHalfExtent;
 
-        // Each dash is a short curved strip built from paired outer/inner vertices.
-        int vertsPerDash = (DashSteps + 1) * 2;
-        int trisPerDash = DashSteps * 6;
-        var vertices = new Vector3[DashCount * vertsPerDash];
-        var triangles = new int[DashCount * trisPerDash];
-
-        for (int dash = 0; dash < DashCount; dash++)
+        var v = new Vector3[]
         {
-            float center = (dash + 0.5f) / DashCount * Mathf.PI * 2f;
-            float halfSpan = Mathf.PI * 2f / DashCount * dashFill * 0.5f;
-            int vertexBase = dash * vertsPerDash;
-            int triangleBase = dash * trisPerDash;
-
-            for (int step = 0; step <= DashSteps; step++)
-            {
-                float t = step / (float)DashSteps;
-                float angle = Mathf.Lerp(center - halfSpan, center + halfSpan, t);
-                float x = Mathf.Cos(angle);
-                float z = Mathf.Sin(angle);
-                vertices[vertexBase + step * 2] = new Vector3(x * outerRadius, 0f, z * outerRadius);
-                vertices[vertexBase + step * 2 + 1] = new Vector3(x * innerRadius, 0f, z * innerRadius);
-            }
-
-            for (int step = 0; step < DashSteps; step++)
-            {
-                int outer = vertexBase + step * 2;
-                int inner = outer + 1;
-                int nextOuter = outer + 2;
-                int nextInner = nextOuter + 1;
-                int index = triangleBase + step * 6;
-
-                triangles[index] = outer;
-                triangles[index + 1] = inner;
-                triangles[index + 2] = nextOuter;
-                triangles[index + 3] = inner;
-                triangles[index + 4] = nextInner;
-                triangles[index + 5] = nextOuter;
-            }
-        }
-
-        var mesh = new Mesh { name = "TowerRangeSegmentedRing" };
-        mesh.vertices = vertices;
-        mesh.triangles = triangles;
+            new(-o, 0f, -o), // 0 outer corners
+            new(o, 0f, -o), // 1
+            new(o, 0f, o), // 2
+            new(-o, 0f, o), // 3
+            new(-i, 0f, -i), // 4 inner corners
+            new(i, 0f, -i), // 5
+            new(i, 0f, i), // 6
+            new(-i, 0f, i), // 7
+        };
+        var t = new int[]
+        {
+            0, 1, 5, 0, 5, 4, // top side   (–Z)
+            1, 2, 6, 1, 6, 5, // right side (+X)
+            2, 3, 7, 2, 7, 6, // bottom side(+Z)
+            3, 0, 4, 3, 4, 7, // left side  (–X)
+        };
+        var mesh = new Mesh { name = "RangeSquareOutline" };
+        mesh.vertices = v;
+        mesh.triangles = t;
         mesh.RecalculateNormals();
         return mesh;
     }

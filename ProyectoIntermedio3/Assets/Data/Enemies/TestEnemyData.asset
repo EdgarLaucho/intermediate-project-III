@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TD.Data.EnemyData
   enemyName: Enemigo de Prueba
   goldReward: 5
-  baseHealth: 999999
+  baseHealth: 100
   baseDamage: 15
   moveSpeed: 1.8

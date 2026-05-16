@@ -15,7 +15,7 @@ public class GridManager : MonoBehaviour
     [Header("Grid Configuration")]
     [SerializeField] private int gridRadius = 3;
     // How many cells wide/tall the nexus footprint is. Centred on the origin.
-    [SerializeField] private Vector2Int nexusSize = new Vector2Int(2, 2);
+    [SerializeField] private Vector2Int nexusSize = new(2, 2);
     [SerializeField] private float cellSize = 1f;
 
     [Header("Scene References")]
@@ -27,6 +27,10 @@ public class GridManager : MonoBehaviour
 
     private Dictionary<Vector2Int, GridCell> cells = new();
 
+    // Tracks how many active CellBlockers are covering each cell.
+    // A cell stays non-buildable as long as its count is > 0.
+    private Dictionary<Vector2Int, int> _blockerCounts = new();
+
     // Cached nexus bounds (in grid coords) computed once during InitializeGrid.
     private Vector2Int nexusMin;
     private Vector2Int nexusMax;
@@ -37,6 +41,54 @@ public class GridManager : MonoBehaviour
 
     public float CellSize => cellSize;
     public IEnumerable<GridCell> GetAllCells() => cells.Values;
+
+    // Single-scene singleton. Set in Awake; cleared on destroy.
+    public static GridManager Instance { get; private set; }
+
+    // Marks each cell in the list as blocked. Multiple blockers can overlap:
+    // a cell only becomes buildable again when every blocker has been removed.
+    public void BlockCells(IReadOnlyList<Vector2Int> coords)
+    {
+        foreach (Vector2Int c in coords)
+        {
+            _blockerCounts.TryGetValue(c, out int count);
+            _blockerCounts[c] = count + 1;
+
+            if (cells.TryGetValue(c, out GridCell cell))
+                cell.IsBuildable = false;
+        }
+    }
+
+    // Releases the block added by one CellBlocker. When the ref-count reaches
+    // zero the cell becomes buildable again — unless it's a nexus cell or
+    // permanently non-buildable (outside the play ring).
+    public void UnblockCells(IReadOnlyList<Vector2Int> coords)
+    {
+        foreach (Vector2Int c in coords)
+        {
+            if (!_blockerCounts.TryGetValue(c, out int count)) continue;
+
+            int next = count - 1;
+            if (next <= 0)
+            {
+                _blockerCounts.Remove(c);
+
+                // Restore buildability only when no other blocker covers the cell
+                // and the cell is not permanently reserved (nexus footprint).
+                if (cells.TryGetValue(c, out GridCell cell) && !cell.IsOccupiedByNexus)
+                {
+                    // Re-evaluate distance to restore the original buildable state.
+                    int dx = Mathf.Max(0, Mathf.Max(nexusMin.x - c.x, c.x - nexusMax.x));
+                    int dy = Mathf.Max(0, Mathf.Max(nexusMin.y - c.y, c.y - nexusMax.y));
+                    cell.IsBuildable = Mathf.Max(dx, dy) <= gridRadius;
+                }
+            }
+            else
+            {
+                _blockerCounts[c] = next;
+            }
+        }
+    }
 
     public GridCell GetCell(Vector2Int coords)
     {
@@ -68,6 +120,7 @@ public class GridManager : MonoBehaviour
 
     private void Awake()
     {
+        Instance = this;
         InitializeGrid();
     }
 

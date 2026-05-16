@@ -113,10 +113,13 @@ public sealed class TowerShooter : MonoBehaviour
     #region Target Selection
 
     // Selects the target with the smallest squared distance inside AttackRange.
-    // OverlapSphereNonAlloc avoids a GC alloc; results are written into _hits.
+    // OverlapBoxNonAlloc uses Chebyshev (square) distance matching the grid layout;
+    // half-extent = (cellRadius + 0.5) * cellSize covers exactly the targeted cells.
     private ITargetable FindTarget()
     {
-        int count = Physics.OverlapSphereNonAlloc(transform.position, _tower.AttackRange, _hits, targetMask, QueryTriggerInteraction.Ignore);
+        float cs = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
+        float half = (_tower.AttackRange + 0.5f) * cs;
+        int count = Physics.OverlapBoxNonAlloc(transform.position, new Vector3(half, half, half), _hits, Quaternion.identity, targetMask, QueryTriggerInteraction.Ignore);
         ITargetable bestTarget = null;
         float bestDistanceSqr = float.MaxValue;
 
@@ -158,7 +161,7 @@ public sealed class TowerShooter : MonoBehaviour
     private void RotateToward(Vector3 targetPosition)
     {
         Vector3 direction = targetPosition - _resolvedAimPivot.position;
-        direction.y = 0f;  // Keep rotation horizontal – no pitch toward the target.
+        direction.y = 0f; // Keep rotation horizontal – no pitch toward the target.
         if (direction.sqrMagnitude <= 0.0001f) return;
 
         Quaternion targetRotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
@@ -203,7 +206,7 @@ public sealed class TowerShooter : MonoBehaviour
             if (projectilePrefab != null && target is Component)
                 SpawnProjectile(target, launchPoint);
             else
-                ApplyImpact(target);  // Instant-hit fallback when no projectile prefab is set.
+                ApplyImpact(target); // Instant-hit fallback when no projectile prefab is set.
         }
     }
 
@@ -237,7 +240,7 @@ public sealed class TowerShooter : MonoBehaviour
     // Instant-hit fallback: applies damage directly without spawning a projectile.
     private void ApplyImpact(ITargetable target)
     {
-        if (_tower.SplashRadius > 0.05f && target is Component targetComponent)
+        if (_tower.SplashRadius > 0 && target is Component targetComponent)
         {
             DamageSplash(targetComponent.transform.position);
             return;
@@ -250,7 +253,10 @@ public sealed class TowerShooter : MonoBehaviour
     private void DamageSplash(Vector3 center)
     {
         _splashTargets.Clear();
-        int count = Physics.OverlapSphereNonAlloc(center, _tower.SplashRadius, _hits, targetMask, QueryTriggerInteraction.Ignore);
+        Vector3 boxCenter = SnapToGridCenter(center);
+        float cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
+        float half = (_tower.SplashRadius + 0.5f) * cellSize;
+        int count = Physics.OverlapBoxNonAlloc(boxCenter, new Vector3(half, half, half), _hits, Quaternion.identity, targetMask, QueryTriggerInteraction.Ignore);
 
         for (int index = 0; index < count; index++)
         {
@@ -262,6 +268,12 @@ public sealed class TowerShooter : MonoBehaviour
             target.TakeDamage(_tower.AttackDamage);
             if (target.IsAlive) ApplySlow(target);
         }
+    }
+
+    private static Vector3 SnapToGridCenter(Vector3 worldPosition)
+    {
+        GridManager grid = GridManager.Instance;
+        return grid != null ? grid.GridToWorld(grid.WorldToGrid(worldPosition)) : worldPosition;
     }
 
     private void ApplySlow(ITargetable target)
@@ -306,7 +318,7 @@ public sealed class TowerShooter : MonoBehaviour
     private Transform[] ResolveShootPoints(Transform searchRoot)
     {
         if (_launchSockets != null && _launchSockets.ShootPointCount > 0)
-            return null;  // TowerLaunchSockets will be used directly; no array needed.
+            return null; // TowerLaunchSockets will be used directly; no array needed.
 
         Transform[] visualShootPoints = TowerLaunchSockets.FindChildrenRecursive(searchRoot, DefaultShootPointName);
         if (visualShootPoints.Length > 0) return visualShootPoints;

@@ -14,12 +14,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemySO
   health: 50
   speed: 3.5
-  targetLayer:
+  foodTableLayer:
     serializedVersion: 2
     m_Bits: 8
-  turretDetectionRange: 5
-  playerDetectionRange: 4
-  playerAttackChance: 0.15
+  turretLayer:
+    serializedVersion: 2
+    m_Bits: 256
+  playerLayer:
+    serializedVersion: 2
+    m_Bits: 512
+  canAttackFoodTable: 1
+  canAttackTurrets: 0
+  canAttackPlayer: 0
+  turretDetectionRange: 20
+  playerDetectionRange: 10
   damage: 10
   attackRange: 1.6
   attackCooldown: 3

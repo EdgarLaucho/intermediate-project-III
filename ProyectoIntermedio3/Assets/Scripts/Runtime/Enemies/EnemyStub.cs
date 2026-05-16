@@ -17,9 +17,9 @@ public class EnemyStub : MonoBehaviour, ITargetable, ISlowable
     #region IDamageable / ITargetable Properties
 
     [field: SerializeField, ReadOnly]
-    public int  CurrentHealth { get; private set; }
-    public int  MaxHealth     { get; private set; }
-    public bool IsAlive       => CurrentHealth > 0;
+    public int CurrentHealth { get; private set; }
+    public int MaxHealth { get; private set; }
+    public bool IsAlive => CurrentHealth > 0;
 
     // Damage this enemy deals on contact with a building (read by collision handlers).
     public int ContactDamage => data != null ? data.baseDamage : 0;
@@ -33,7 +33,7 @@ public class EnemyStub : MonoBehaviour, ITargetable, ISlowable
     public float MoveSpeedMultiplier => Time.time < _slowEndTime ? 1f - _strongestSlow : 1f;
 
     // Convenience: actual units/second after the slow is factored in.
-    public float EffectiveMoveSpeed  => data != null ? data.moveSpeed * MoveSpeedMultiplier : 0f;
+    public float EffectiveMoveSpeed => data != null ? data.moveSpeed * MoveSpeedMultiplier : 0f;
 
     #endregion
 
@@ -95,7 +95,7 @@ public class EnemyStub : MonoBehaviour, ITargetable, ISlowable
 
         // Take whichever is stronger / lasts longer — never weaken an existing slow.
         _strongestSlow = Mathf.Max(_strongestSlow, Mathf.Clamp01(slowPercent));
-        _slowEndTime   = Mathf.Max(_slowEndTime,   Time.time + duration);
+        _slowEndTime = Mathf.Max(_slowEndTime, Time.time + duration);
     }
 
     #endregion

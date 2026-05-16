@@ -31,9 +31,9 @@ public class BuildPreview : MonoBehaviour
 
     #region Constants
 
-    private const float SnapDuration = 0.085f;  // Time to lerp ghost to a new cell.
-    private const float InvalidShakeDuration = 0.18f;   // Duration of the rejection shake.
-    private const float InvalidShakeDistance = 0.075f;  // Peak lateral offset during shake.
+    private const float SnapDuration = 0.085f; // Time to lerp ghost to a new cell.
+    private const float InvalidShakeDuration = 0.18f; // Duration of the rejection shake.
+    private const float InvalidShakeDistance = 0.075f; // Peak lateral offset during shake.
 
     #endregion
 
@@ -62,10 +62,11 @@ public class BuildPreview : MonoBehaviour
     private Vector3 _displayPosition;
     private Vector3 _snapFrom;
     private Vector3 _snapTo;
-    private float _snapT = SnapDuration;  // Start at end so no lerp on first frame.
-    private float _invalidT;              // Counts down from InvalidShakeDuration to 0.
+    private float _snapT = SnapDuration; // Start at end so no lerp on first frame.
+    private float _invalidT; // Counts down from InvalidShakeDuration to 0.
     private Vector3 _ghostBaseScale = Vector3.one;
     private Quaternion _ghostBaseRotation = Quaternion.identity;
+    private Quaternion _ghostPrefabRotation = Quaternion.identity; // prefab's own rotation, kept separate for radial override
     private Vector3 _highlightBaseScale = Vector3.one;
     private Quaternion _highlightBaseRotation = Quaternion.identity;
     private BuildManager.PlacementState _lastPlacementState = BuildManager.PlacementState.MissingData;
@@ -80,6 +81,7 @@ public class BuildPreview : MonoBehaviour
     private void Awake()
     {
         EnsureRangeIndicatorExists();
+        EnsurePaintPreviewExists();
 
         if (validMaterial == null) Debug.LogError("[BuildPreview] 'validMaterial' not assigned.");
         if (invalidMaterial == null) Debug.LogError("[BuildPreview] 'invalidMaterial' not assigned.");
@@ -93,6 +95,14 @@ public class BuildPreview : MonoBehaviour
             return;
 
         gameObject.AddComponent<TowerRangeIndicator>();
+    }
+
+    private void EnsurePaintPreviewExists()
+    {
+        if (FindFirstObjectByType<PaintPlacementPreviewRenderer>() != null)
+            return;
+
+        gameObject.AddComponent<PaintPlacementPreviewRenderer>();
     }
 
     private void OnEnable()
@@ -134,25 +144,19 @@ public class BuildPreview : MonoBehaviour
         if (data?.prefab == null) return;
 
         _ghost = Instantiate(data.prefab);
-        _ghost.name = "__BuildPreview_Ghost";
+        _ghost.name = "__BuildPreview_Ghost_" + data.prefab.name;
         _ghostBaseScale = _ghost.transform.localScale;
-        _ghostBaseRotation = _ghost.transform.rotation;
+        _ghostPrefabRotation = _ghost.transform.rotation;
+        _ghostBaseRotation = _ghostPrefabRotation;
         DisableColliders(_ghost);
         CacheGhostRenderers(_ghost);
+        _previewTower = null;
         _ghost.TryGetComponent<Tower>(out _previewTower);
 
         // Initialize the preview tower so TowerRangeIndicator can read its AttackRange.
         _previewTower?.Initialize(data);
 
-        if (cellHighlightPrefab != null)
-        {
-            _highlight = Instantiate(cellHighlightPrefab);
-            _highlight.name = "__BuildPreview_Highlight";
-            _highlightBaseScale = _highlight.transform.localScale;
-            _highlightBaseRotation = _highlight.transform.rotation;
-            _highlightRenderers.Clear();
-            _highlightRenderers.AddRange(_highlight.GetComponentsInChildren<Renderer>());
-        }
+        // Cell highlight plane removed.
 
         _hasLastCell = false;
         _snapT = SnapDuration;
@@ -189,6 +193,14 @@ public class BuildPreview : MonoBehaviour
             _snapT = 0f;
             _lastCell = coords;
             _hasLastCell = true;
+
+            // Swap to corner/normal prefab if the required visual changed for this cell.
+            GameObject neededPrefab = BuildingRotationHelper.ResolvePrefab(coords, _data);
+            if (_ghost == null || _ghost.name != "__BuildPreview_Ghost_" + neededPrefab.name)
+                RebuildGhost(neededPrefab);
+
+            // Recompute radial orientation so the ghost always shows the correct rotation.
+            _ghostBaseRotation = BuildingRotationHelper.ComputePlacementRotationForCell(coords, _data) * _ghostPrefabRotation;
         }
 
         if (changedCell || changedState)
@@ -229,14 +241,7 @@ public class BuildPreview : MonoBehaviour
             _ghost.transform.localScale = _ghostBaseScale * breath;
         }
 
-        if (_highlight != null)
-        {
-            float highlightPulse = 1f + Mathf.Sin(time * ghostBobSpeed * 1.4f) * 0.035f;
-            float spinDirection = validation.IsValid ? 1f : -1.45f;  // Reverses when invalid.
-            _highlight.transform.position = finalPosition + Vector3.up * 0.012f;
-            _highlight.transform.rotation = _highlightBaseRotation * Quaternion.Euler(0f, time * highlightSpinSpeed * spinDirection, 0f);
-            _highlight.transform.localScale = _highlightBaseScale * highlightPulse;
-        }
+
 
         if (_previewTower != null)
             ConstructionEvents.TowerFocused(_previewTower);
@@ -404,6 +409,25 @@ public class BuildPreview : MonoBehaviour
     private void DestroyGhost()
     {
         if (_ghost != null) { Destroy(_ghost); _ghost = null; }
+    }
+
+    // Destroys the current ghost and instantiates a new one from the given prefab.
+    // Used to swap between the normal wall mesh and the corner wall mesh.
+    private void RebuildGhost(GameObject prefab)
+    {
+        DestroyGhost();
+        _ghost = Instantiate(prefab);
+        _ghost.name = "__BuildPreview_Ghost_" + prefab.name;
+        _ghostBaseScale = _ghost.transform.localScale;
+        _ghostPrefabRotation = _ghost.transform.rotation;
+        _ghostBaseRotation = _ghostPrefabRotation;
+        DisableColliders(_ghost);
+        CacheGhostRenderers(_ghost);
+        _previewTower = null;
+        _ghost.TryGetComponent<Tower>(out _previewTower);
+        _previewTower?.Initialize(_data);
+        ApplyGhostVisual(new BuildManager.PlacementValidation(
+            _lastPlacementState, null, string.Empty));
     }
 
     private void DestroyHighlight()

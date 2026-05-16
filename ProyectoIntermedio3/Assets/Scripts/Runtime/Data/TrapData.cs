@@ -13,11 +13,12 @@ public struct TrapStatsData
     public int triggerDamage;
     public float cooldown;
     public int maxUses;
-    public float triggerRadius;
+    // Effect radius in grid cells. Spikes can leave this at 0; Mine/Tar use it for AOE.
+    public int effectRadius;
     public float effectDuration;
     [Range(0f, 1f)] public float slowPercent;
 
-    public bool HasValidValues => triggerDamage >= 0 && cooldown >= 0f && maxUses > 0 && triggerRadius >= 0f;
+    public bool HasValidValues => triggerDamage >= 0 && cooldown >= 0f && maxUses > 0 && effectRadius >= 0;
 }
 
 [CreateAssetMenu(fileName = "NewTrapData", menuName = "TD/Building Data/Trap")]
@@ -32,7 +33,7 @@ public class TrapData : BuildingData
         triggerDamage = 20,
         cooldown = 3f,
         maxUses = 5,
-        triggerRadius = 0.55f,
+        effectRadius = 0,
         effectDuration = 0f,
         slowPercent = 0f,
     };

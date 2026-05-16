@@ -28,21 +28,25 @@ MonoBehaviour:
     bonusRange: 0
     bonusArmor: 0
     bonusThornsDamage: 0
+    bonusProjectilesPerAttack: 0
+    visualPrefabOverride: {fileID: 0}
     specialLabel: Sharper spikes
   - upgradeCost: 65
     bonusMaxHealth: 15
     statMultiplier: 1.25
     fireRateMultiplier: 1
     bonusTrapUses: 3
-    bonusRange: 0.05
+    bonusRange: 0
     bonusArmor: 0
     bonusThornsDamage: 0
+    bonusProjectilesPerAttack: 0
+    visualPrefabOverride: {fileID: 0}
     specialLabel: Bleeding cuts
   role: 0
   trapStats:
     triggerDamage: 22
     cooldown: 0.25
     maxUses: 6
-    triggerRadius: 0.55
+    effectRadius: 0
     effectDuration: 0
     slowPercent: 0

@@ -9,12 +9,13 @@ public class Tower : BuildingBase
 
     public TowerRole Role { get; private set; }
     public DamageKind DamageKind { get; private set; }
-    public float AttackRange { get; private set; }
+    // Attack range in grid cells. Multiply by GridManager.Instance.CellSize for world units.
+    public int AttackRange { get; private set; }
     public int AttackDamage { get; private set; }
     public float FireRate { get; private set; }
     public float ProjectileSpeed { get; private set; }
     public int ProjectilesPerAttack { get; private set; } = 1;
-    public float SplashRadius { get; private set; }
+    public int SplashRadius { get; private set; }
     public float SlowPercent { get; private set; }
     public float SlowDuration { get; private set; }
 
@@ -24,7 +25,7 @@ public class Tower : BuildingBase
 
     // Returns what the stats will look like after the next upgrade without actually
     // applying it. Useful for showing upgrade tooltips in the UI.
-    public bool TryPreviewNextUpgrade(out int nextDamage, out float nextRange, out float nextFireRate)
+    public bool TryPreviewNextUpgrade(out int nextDamage, out int nextRange, out float nextFireRate)
     {
         nextDamage = AttackDamage;
         nextRange = AttackRange;
@@ -37,7 +38,7 @@ public class Tower : BuildingBase
         float statMultiplier = NormalizedMultiplier(upgradeData.statMultiplier);
         float fireRateMultiplier = NormalizedMultiplier(upgradeData.fireRateMultiplier);
         nextDamage = Mathf.RoundToInt(AttackDamage * statMultiplier);
-        nextRange = AttackRange * statMultiplier + upgradeData.bonusRange;
+        nextRange = Mathf.Max(1, AttackRange + upgradeData.bonusRange);
         nextFireRate = FireRate * fireRateMultiplier;
         return true;
     }
@@ -73,10 +74,9 @@ public class Tower : BuildingBase
     {
         float statMultiplier = NormalizedMultiplier(upgradeData.statMultiplier);
         AttackDamage = Mathf.RoundToInt(AttackDamage * statMultiplier);
-        AttackRange = AttackRange * statMultiplier + upgradeData.bonusRange;
+        AttackRange = Mathf.Max(1, AttackRange + upgradeData.bonusRange);
         FireRate = FireRate * NormalizedMultiplier(upgradeData.fireRateMultiplier);
         ProjectilesPerAttack = Mathf.Max(1, ProjectilesPerAttack + upgradeData.bonusProjectilesPerAttack);
-        SplashRadius = SplashRadius > 0f ? SplashRadius * statMultiplier + upgradeData.bonusRange : 0f;
     }
 
     #endregion

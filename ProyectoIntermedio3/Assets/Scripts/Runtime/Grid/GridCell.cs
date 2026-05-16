@@ -7,9 +7,9 @@ public class GridCell
 {
     #region Properties
 
-    public Vector2Int Coordinates       { get; }
-    public bool       IsBuildable       { get; set; }
-    public bool       IsOccupiedByNexus { get; set; }
+    public Vector2Int Coordinates { get; }
+    public bool IsBuildable { get; set; }
+    public bool IsOccupiedByNexus { get; set; }
     public bool IsOccupied => CurrentBuilding != null;
 
     public BuildingBase CurrentBuilding { get; private set; }
