@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 16ca2decb3a9efc4bb24eb79e1492e07, type: 3}
-  m_Name: ChickenSO
+  m_Name: PinguinSO 1
   m_EditorClassIdentifier: Assembly-CSharp::EnemySO
-  health: 50
-  speed: 3.5
+  health: 100
+  speed: 10
   foodTableLayer:
     serializedVersion: 2
     m_Bits: 8
@@ -23,12 +23,12 @@ MonoBehaviour:
   playerLayer:
     serializedVersion: 2
     m_Bits: 512
-  canAttackFoodTable: 1
-  canAttackTurrets: 0
+  canAttackFoodTable: 0
+  canAttackTurrets: 1
   canAttackPlayer: 0
   turretDetectionRange: 20
-  playerDetectionRange: 10
-  damage: 10
-  attackRange: 1.6
+  playerDetectionRange: 20
+  damage: 30
+  attackRange: 1.5
   attackCooldown: 3
   attackSound: {fileID: 0}

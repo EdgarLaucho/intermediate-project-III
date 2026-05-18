@@ -10,6 +10,7 @@ public class BaseEnemyAI : MonoBehaviour
     protected Transform currentTarget;
     protected IDamageable2 currentDamageable;
     protected bool hasCompletedObjective;
+    protected int currentTargetLayer;
 
     protected float attackTimer;
 
@@ -44,7 +45,11 @@ public class BaseEnemyAI : MonoBehaviour
             agent.isStopped = true;
             return;
         }
-        EvaluateTargets();
+        
+        if (currentState != EnemyState.Attacking)
+        {
+            EvaluateTargets();
+        }
         
         if (currentTarget == null || !currentTarget.gameObject.activeInHierarchy)
         {
@@ -95,11 +100,11 @@ public class BaseEnemyAI : MonoBehaviour
         float distance = Vector3.Distance(transform.position, currentTarget.position);
         if (distance > enemySO.attackRange)
         {
-            if (currentTarget.gameObject.layer == LayerMask.NameToLayer("Player"))
+            if (currentTargetLayer == LayerMask.NameToLayer("Player"))
             {
                 currentState = EnemyState.ChasingPlayer;
             }
-            else if (currentTarget.gameObject.layer == LayerMask.NameToLayer("Turret"))
+            else if (currentTargetLayer == LayerMask.NameToLayer("Turret"))
             {
                 currentState = EnemyState.AttackingTurret;
             }
@@ -147,6 +152,7 @@ public class BaseEnemyAI : MonoBehaviour
 
         currentTarget = closestTable.transform;
         currentDamageable = closestTable.GetComponentInParent<IDamageable2>();
+        currentTargetLayer = LayerMask.NameToLayer("FoodTable");
     }
     protected virtual void MoveToTarget()
     {
@@ -178,14 +184,17 @@ public class BaseEnemyAI : MonoBehaviour
             Debug.Log($"{gameObject.name} attacked {currentTarget.name}");
             if (currentDamageable.isDead)
             {
-                if (currentTarget.gameObject.layer == LayerMask.NameToLayer("Player") ||
-                    currentTarget.gameObject.layer == LayerMask.NameToLayer("FoodTable"))
+                int deadTargetLayer = currentTargetLayer;
+
+                currentState = EnemyState.Idle;
+                currentTarget = null;
+                currentDamageable = null;
+                agent.isStopped = true;
+
+                if (deadTargetLayer == LayerMask.NameToLayer("FoodTable")||
+                deadTargetLayer == LayerMask.NameToLayer("Player"))
                 {
                     hasCompletedObjective = true;
-                    currentState = EnemyState.Idle;
-                    currentTarget = null;
-                    currentDamageable = null;
-                    agent.isStopped = true;
                 }
             }
         }
@@ -203,37 +212,75 @@ public class BaseEnemyAI : MonoBehaviour
 
     protected virtual void EvaluateTargets()
     {
-        // If already chasing player, ignore everything else
-        if (currentTarget != null && 
-            currentTarget.gameObject.layer == LayerMask.NameToLayer("Player") &&
+        // Si ya está atacando una torreta viva, NO cambia de objetivo
+        if (enemySO.canAttackTurrets &&
+            currentTarget != null &&
+            currentTargetLayer == LayerMask.NameToLayer("Turret") &&
             currentDamageable != null &&
             !currentDamageable.isDead)
         {
+            currentState = EnemyState.AttackingTurret;
             return;
         }
 
-        // Search for nearby Player first
-        Collider[] players = Physics.OverlapSphere(
-            transform.position,
-            enemySO.playerDetectionRange,
-            enemySO.playerLayer
-        );
-
-        foreach (Collider playerCollider in players)
+        // Si ya está persiguiendo un player vivo, NO cambia de objetivo
+        if (enemySO.canAttackPlayer &&
+            currentTarget != null &&
+            currentTargetLayer == LayerMask.NameToLayer("Player") &&
+            currentDamageable != null &&
+            !currentDamageable.isDead)
         {
-            IDamageable2 damageable = playerCollider.GetComponentInParent<IDamageable2>();
+            currentState = EnemyState.ChasingPlayer;
+            return;
+        }
 
-            if (damageable == null || damageable.isDead)
+        // Primero busca torretas si puede atacarlas
+        // Esto permite que deje la mesa si aparece una torreta cerca
+        if (enemySO.canAttackTurrets)
+        {
+            Collider[] turrets = Physics.OverlapSphere(
+                transform.position,
+                enemySO.turretDetectionRange,
+                enemySO.turretLayer
+            );
+
+            foreach (Collider turret in turrets)
             {
-                continue;
+                IDamageable2 damageable = turret.GetComponentInParent<IDamageable2>();
+
+                if (damageable == null || damageable.isDead)
+                    continue;
+
+                currentTarget = turret.transform;
+                currentDamageable = damageable;
+                currentTargetLayer = LayerMask.NameToLayer("Turret");
+                currentState = EnemyState.AttackingTurret;
+
+                Debug.Log("Changing target to TURRET");
+                return;
             }
+        }
 
-            bool shouldAttackPlayer = Random.value <= enemySO.playerAttackChance;
+        // Luego busca player si puede atacarlo
+        // Ya NO hay probabilidad, si lo detecta lo ataca
+        if (enemySO.canAttackPlayer)
+        {
+            Collider[] players = Physics.OverlapSphere(
+                transform.position,
+                enemySO.playerDetectionRange,
+                enemySO.playerLayer
+            );
 
-            if (shouldAttackPlayer)
+            foreach (Collider playerCollider in players)
             {
+                IDamageable2 damageable = playerCollider.GetComponentInParent<IDamageable2>();
+
+                if (damageable == null || damageable.isDead)
+                    continue;
+
                 currentTarget = playerCollider.transform;
                 currentDamageable = damageable;
+                currentTargetLayer = LayerMask.NameToLayer("Player");
                 currentState = EnemyState.ChasingPlayer;
 
                 Debug.Log("Changing target to PLAYER");
@@ -241,56 +288,79 @@ public class BaseEnemyAI : MonoBehaviour
             }
         }
 
-        // Search for nearby turret after player chance
-        Collider[] turrets = Physics.OverlapSphere(
-            transform.position,
-            enemySO.turretDetectionRange,
-            enemySO.turretLayer
-        );
-
-        foreach (Collider turret in turrets)
+        // Finalmente va a la mesa si puede atacarla
+        if (enemySO.canAttackFoodTable)
         {
-            IDamageable2 damageable = turret.GetComponentInParent<IDamageable2>();
-
-            if (damageable == null || damageable.isDead)
+            if (currentTarget != null &&
+                currentTargetLayer == LayerMask.NameToLayer("FoodTable") &&
+                currentDamageable != null &&
+                !currentDamageable.isDead)
             {
-                continue;
+                return;
             }
 
-            if (currentTarget != turret.transform)
-            {
-                currentTarget = turret.transform;
-                currentDamageable = damageable;
-                currentState = EnemyState.AttackingTurret;
-            }
-
+            currentState = EnemyState.MovingToTarget;
+            FindFoodTable();
             return;
         }
 
-        if (currentTarget != null && currentTarget.gameObject.layer == LayerMask.NameToLayer("FoodTable"))
-        {
-            return;
-        }
-
-        currentState = EnemyState.MovingToTarget;
-        FindFoodTable();
+        // Si no puede atacar nada
+        currentTarget = null;
+        currentDamageable = null;
+        currentState = EnemyState.Idle;
+        agent.isStopped = true;
     }
     
     protected virtual bool HasValidTargets()
     {
-        Collider[] foodTables = Physics.OverlapSphere(
-            transform.position,
-            100f,
-            enemySO.foodTableLayer
-        );
-
-        foreach (Collider table in foodTables)
+        if (enemySO.canAttackFoodTable)
         {
-            IDamageable2 damageable = table.GetComponentInParent<IDamageable2>();
+            Collider[] foodTables = Physics.OverlapSphere(
+                transform.position,
+                100f,
+                enemySO.foodTableLayer
+            );
 
-            if (damageable != null && !damageable.isDead)
+            foreach (Collider table in foodTables)
             {
-                return true;
+                IDamageable2 damageable = table.GetComponentInParent<IDamageable2>();
+
+                if (damageable != null && !damageable.isDead)
+                    return true;
+            }
+        }
+
+        if (enemySO.canAttackTurrets)
+        {
+            Collider[] turrets = Physics.OverlapSphere(
+                transform.position,
+                enemySO.turretDetectionRange,
+                enemySO.turretLayer
+            );
+
+            foreach (Collider turret in turrets)
+            {
+                IDamageable2 damageable = turret.GetComponentInParent<IDamageable2>();
+
+                if (damageable != null && !damageable.isDead)
+                    return true;
+            }
+        }
+
+        if (enemySO.canAttackPlayer)
+        {
+            Collider[] players = Physics.OverlapSphere(
+                transform.position,
+                enemySO.playerDetectionRange,
+                enemySO.playerLayer
+            );
+
+            foreach (Collider player in players)
+            {
+                IDamageable2 damageable = player.GetComponentInParent<IDamageable2>();
+
+                if (damageable != null && !damageable.isDead)
+                    return true;
             }
         }
 
