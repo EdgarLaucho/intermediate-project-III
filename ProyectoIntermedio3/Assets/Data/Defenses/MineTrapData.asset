@@ -14,15 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TD.Data.TrapData
   buildingName: Mina Explosiva
   prefab: {fileID: 1000000000000000061, guid: a1f0c9e76b9a4b4fb2e8e8d47a100007, type: 3}
-  buyCost: 65
+  buyCost: 60
   refundPercentage: 0.25
   repairCostPerHP: 0.75
   baseMaxHealth: 35
+  autoOrientRadially: 0
+  placementYawOffset: 0
+  allowPaintPlacement: 0
   maxLevel: 2
   upgradeLevels:
-  - upgradeCost: 55
+  - upgradeCost: 50
     bonusMaxHealth: 10
-    statMultiplier: 1.25
+    statMultiplier: 1.22
     fireRateMultiplier: 1
     bonusTrapUses: 0
     bonusRange: 0
@@ -33,7 +36,7 @@ MonoBehaviour:
     specialLabel: Bigger charge
   - upgradeCost: 105
     bonusMaxHealth: 10
-    statMultiplier: 1.25
+    statMultiplier: 1.22
     fireRateMultiplier: 1
     bonusTrapUses: 1
     bonusRange: 1
@@ -44,7 +47,7 @@ MonoBehaviour:
     specialLabel: Burning blast
   role: 2
   trapStats:
-    triggerDamage: 75
+    triggerDamage: 85
     cooldown: 0
     maxUses: 1
     effectRadius: 1

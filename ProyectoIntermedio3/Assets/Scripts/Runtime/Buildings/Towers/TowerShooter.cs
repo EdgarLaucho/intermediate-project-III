@@ -34,8 +34,12 @@ public sealed class TowerShooter : MonoBehaviour
 
     // Pre-allocated overlap buffer to avoid heap allocations every frame.
     private readonly Collider[] _hits = new Collider[64];
+    // Secondary buffer reused for cannon splash-evaluation queries.
+    private readonly Collider[] _clusterHits = new Collider[64];
     // Reused by the instant-hit splash path (no projectile).
     private readonly HashSet<ITargetable> _splashTargets = new();
+    // Reused while scoring clustered targets for cannon towers.
+    private readonly HashSet<ITargetable> _clusterTargets = new();
     private Tower _tower;
     private BuildingVisualController _visualController;
     private TowerLaunchSockets _launchSockets;
@@ -122,6 +126,8 @@ public sealed class TowerShooter : MonoBehaviour
         int count = Physics.OverlapBoxNonAlloc(transform.position, new Vector3(half, half, half), _hits, Quaternion.identity, targetMask, QueryTriggerInteraction.Ignore);
         ITargetable bestTarget = null;
         float bestDistanceSqr = float.MaxValue;
+        int bestClusterSize = int.MinValue;
+        float bestIcePriority = float.MinValue;
 
         for (int index = 0; index < count; index++)
         {
@@ -132,10 +138,42 @@ public sealed class TowerShooter : MonoBehaviour
             if (target == null || !target.IsAlive) continue;
 
             float distanceSqr = (hit.transform.position - transform.position).sqrMagnitude;
-            if (distanceSqr >= bestDistanceSqr) continue;
+            switch (_tower.Role)
+            {
+                case TowerRole.Cannon:
+                {
+                    int clusterSize = EstimateClusterSize(hit.transform.position);
+                    if (clusterSize > bestClusterSize
+                        || (clusterSize == bestClusterSize && distanceSqr < bestDistanceSqr))
+                    {
+                        bestClusterSize = clusterSize;
+                        bestDistanceSqr = distanceSqr;
+                        bestTarget = target;
+                    }
+                    break;
+                }
+                case TowerRole.Ice:
+                {
+                    float icePriority = EvaluateIcePriority(target, distanceSqr);
+                    bool isBetter = icePriority > bestIcePriority + 0.0001f
+                        || (Mathf.Abs(icePriority - bestIcePriority) <= 0.0001f && distanceSqr < bestDistanceSqr);
+                    if (isBetter)
+                    {
+                        bestIcePriority = icePriority;
+                        bestDistanceSqr = distanceSqr;
+                        bestTarget = target;
+                    }
+                    break;
+                }
+                default:
+                {
+                    if (distanceSqr >= bestDistanceSqr) continue;
 
-            bestDistanceSqr = distanceSqr;
-            bestTarget = target;
+                    bestDistanceSqr = distanceSqr;
+                    bestTarget = target;
+                    break;
+                }
+            }
         }
 
         return bestTarget;
@@ -281,6 +319,44 @@ public sealed class TowerShooter : MonoBehaviour
         if (_tower.SlowPercent <= 0f || _tower.SlowDuration <= 0f) return;
         if (target is ISlowable slowable)
             slowable.ApplySlow(_tower.SlowPercent, _tower.SlowDuration);
+    }
+
+    // Cannon towers are most valuable when they splash multiple enemies at once.
+    // When no splash radius is configured, fall back to single-target behaviour.
+    private int EstimateClusterSize(Vector3 center)
+    {
+        if (_tower == null || _tower.SplashRadius <= 0)
+            return 1;
+
+        _clusterTargets.Clear();
+        Vector3 boxCenter = SnapToGridCenter(center);
+        float cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
+        float half = (_tower.SplashRadius + 0.5f) * cellSize;
+        int count = Physics.OverlapBoxNonAlloc(boxCenter, new Vector3(half, half, half), _clusterHits, Quaternion.identity, targetMask, QueryTriggerInteraction.Ignore);
+
+        for (int index = 0; index < count; index++)
+        {
+            Collider hit = _clusterHits[index];
+            if (hit == null) continue;
+
+            ITargetable target = hit.GetComponentInParent<ITargetable>();
+            if (target != null && target.IsAlive)
+                _clusterTargets.Add(target);
+        }
+
+        return Mathf.Max(1, _clusterTargets.Count);
+    }
+
+    // Ice towers prefer enemies that are still moving at (or near) full speed so
+    // they spread the slow across the wave instead of overcommitting to one target.
+    private static float EvaluateIcePriority(ITargetable target, float distanceSqr)
+    {
+        float unslowedPriority = 0f;
+        if (target is ISlowable slowable)
+            unslowedPriority = Mathf.Clamp01(slowable.MoveSpeedMultiplier);
+
+        // Prioritise fresh targets first, then use distance as a gentle tie-breaker.
+        return unslowedPriority * 1000f - distanceSqr;
     }
 
     #endregion
