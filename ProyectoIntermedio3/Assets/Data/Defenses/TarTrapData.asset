@@ -18,11 +18,14 @@ MonoBehaviour:
   refundPercentage: 0.35
   repairCostPerHP: 0.6
   baseMaxHealth: 50
+  autoOrientRadially: 0
+  placementYawOffset: 0
+  allowPaintPlacement: 0
   maxLevel: 2
   upgradeLevels:
   - upgradeCost: 35
     bonusMaxHealth: 15
-    statMultiplier: 1.05
+    statMultiplier: 1.08
     fireRateMultiplier: 1
     bonusTrapUses: 1
     bonusRange: 0
@@ -33,7 +36,7 @@ MonoBehaviour:
     specialLabel: Thicker tar
   - upgradeCost: 80
     bonusMaxHealth: 20
-    statMultiplier: 1.08
+    statMultiplier: 1.1
     fireRateMultiplier: 1
     bonusTrapUses: 2
     bonusRange: 1
@@ -45,8 +48,8 @@ MonoBehaviour:
   role: 1
   trapStats:
     triggerDamage: 0
-    cooldown: 1
-    maxUses: 1
+    cooldown: 0.75
+    maxUses: 2
     effectRadius: 1
-    effectDuration: 5
-    slowPercent: 0.45
+    effectDuration: 4.5
+    slowPercent: 0.5

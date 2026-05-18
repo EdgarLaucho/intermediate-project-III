@@ -44,6 +44,19 @@ public class Wall : BuildingBase
         base.TakeDamage(Mathf.Max(1, amount - Armor));
     }
 
+    // Used by enemy attack logic that knows which attacker caused the hit.
+    // Thorn walls punish the attacker after the wall absorbs the incoming strike.
+    public void TakeContactHit(IDamageable attacker, int amount)
+    {
+        TakeDamage(amount);
+
+        if (attacker == null || !attacker.IsAlive) return;
+        if (ThornsDamage <= 0 || Role != WallRole.Thorned) return;
+        if (ReferenceEquals(attacker, this)) return;
+
+        attacker.TakeDamage(ThornsDamage);
+    }
+
     #endregion
 
     #region Upgrade Handling

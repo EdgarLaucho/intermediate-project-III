@@ -18,11 +18,14 @@ MonoBehaviour:
   refundPercentage: 0.35
   repairCostPerHP: 0.6
   baseMaxHealth: 40
+  autoOrientRadially: 0
+  placementYawOffset: 0
+  allowPaintPlacement: 0
   maxLevel: 2
   upgradeLevels:
   - upgradeCost: 30
     bonusMaxHealth: 10
-    statMultiplier: 1.25
+    statMultiplier: 1.2
     fireRateMultiplier: 1
     bonusTrapUses: 2
     bonusRange: 0
@@ -33,7 +36,7 @@ MonoBehaviour:
     specialLabel: Sharper spikes
   - upgradeCost: 65
     bonusMaxHealth: 15
-    statMultiplier: 1.25
+    statMultiplier: 1.2
     fireRateMultiplier: 1
     bonusTrapUses: 3
     bonusRange: 0
@@ -44,9 +47,9 @@ MonoBehaviour:
     specialLabel: Bleeding cuts
   role: 0
   trapStats:
-    triggerDamage: 22
+    triggerDamage: 24
     cooldown: 0.25
-    maxUses: 6
+    maxUses: 7
     effectRadius: 0
     effectDuration: 0
     slowPercent: 0

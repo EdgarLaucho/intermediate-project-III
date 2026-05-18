@@ -14,16 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TD.Data.TowerData
   buildingName: Torre de Canon
   prefab: {fileID: 1000000000000000011, guid: a1f0c9e76b9a4b4fb2e8e8d47a100002, type: 3}
-  buyCost: 90
+  buyCost: 95
   refundPercentage: 0.5
   repairCostPerHP: 0.55
   baseMaxHealth: 150
+  autoOrientRadially: 0
+  placementYawOffset: 0
+  allowPaintPlacement: 0
   maxLevel: 2
   upgradeLevels:
-  - upgradeCost: 70
+  - upgradeCost: 75
     bonusMaxHealth: 40
-    statMultiplier: 1.2
-    fireRateMultiplier: 1.05
+    statMultiplier: 1.22
+    fireRateMultiplier: 1.06
     bonusTrapUses: 0
     bonusRange: 0
     bonusArmor: 0
@@ -31,9 +34,9 @@ MonoBehaviour:
     bonusProjectilesPerAttack: 0
     visualPrefabOverride: {fileID: 0}
     specialLabel: Bigger shells
-  - upgradeCost: 130
+  - upgradeCost: 135
     bonusMaxHealth: 70
-    statMultiplier: 1.22
+    statMultiplier: 1.2
     fireRateMultiplier: 1.08
     bonusTrapUses: 0
     bonusRange: 1
@@ -45,9 +48,9 @@ MonoBehaviour:
   role: 1
   damageKind: 1
   towerStats:
-    attackRange: 2
-    attackDamage: 28
-    fireRate: 0.55
+    attackRange: 3
+    attackDamage: 34
+    fireRate: 0.5
     projectileSpeed: 8
     projectilesPerAttack: 1
     splashRadius: 1

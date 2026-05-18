@@ -707,7 +707,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TD.Grid.GridRenderer
   grid: {fileID: 1696980423}
-  cellInset: 0.04
+  markerScale: 0.52
   yOffset: 0.02
   buildableMaterial: {fileID: 2100000, guid: 23a2577e2a172b2499217e7e316b6287, type: 2}
   nexusMaterial: {fileID: 2100000, guid: 2716efd12550e6941b733f1018a67ec7, type: 2}
@@ -1562,6 +1562,66 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3503514499178140695, guid: 7565fad9ecc429d4f8b0d1b00e7a2c76, type: 3}
   m_PrefabInstance: {fileID: 2654423895665248921}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &1249914247602899340
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1000000000000000001, guid: a1f0c9e76b9a4b4fb2e8e8d47a100001, type: 3}
+      propertyPath: m_Name
+      value: MissilTower
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000000002, guid: a1f0c9e76b9a4b4fb2e8e8d47a100001, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000000002, guid: a1f0c9e76b9a4b4fb2e8e8d47a100001, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000000002, guid: a1f0c9e76b9a4b4fb2e8e8d47a100001, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000000002, guid: a1f0c9e76b9a4b4fb2e8e8d47a100001, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000000002, guid: a1f0c9e76b9a4b4fb2e8e8d47a100001, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000000002, guid: a1f0c9e76b9a4b4fb2e8e8d47a100001, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000000002, guid: a1f0c9e76b9a4b4fb2e8e8d47a100001, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000000002, guid: a1f0c9e76b9a4b4fb2e8e8d47a100001, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000000002, guid: a1f0c9e76b9a4b4fb2e8e8d47a100001, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000000002, guid: a1f0c9e76b9a4b4fb2e8e8d47a100001, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2889546637995442001, guid: a1f0c9e76b9a4b4fb2e8e8d47a100001, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 0}
+  m_SourcePrefab: {fileID: 100100000, guid: a1f0c9e76b9a4b4fb2e8e8d47a100001, type: 3}
 --- !u!1001 &2654423895665248921
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1672,3 +1732,4 @@ SceneRoots:
   - {fileID: 1674897852}
   - {fileID: 966836878}
   - {fileID: 2103000001}
+  - {fileID: 1249914247602899340}
