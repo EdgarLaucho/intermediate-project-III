@@ -4,24 +4,34 @@ public class ExplosiveProjectile : Projectile
 {
     [SerializeField] private float explosionRadius = 3f;
 
+    [SerializeField] private LayerMask damageLayers;
+
     protected override void HitTarget()
     {
         Collider[] hits = Physics.OverlapSphere(
             transform.position,
             explosionRadius,
-            LayerMask.GetMask("Enemy"));
+            damageLayers);
 
         foreach (Collider hit in hits)
         {
-            EnemyDummy enemy =
-                hit.GetComponent<EnemyDummy>();
+            IDamageable damageable = hit.GetComponent<IDamageable>();
 
-            if (enemy != null)
+            if (damageable != null)
             {
-                enemy.TakeDamage(damage);
+                damageable.TakeDamage(damage);
             }
         }
 
         Destroy(gameObject);
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+
+        Gizmos.DrawWireSphere(
+            transform.position,
+            explosionRadius);
     }
 }

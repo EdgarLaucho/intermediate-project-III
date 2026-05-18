@@ -1283,11 +1283,15 @@ GameObject:
   - component: {fileID: 6127395625895404759}
   - component: {fileID: 281700445225418413}
   - component: {fileID: 3124517710786506953}
+  - component: {fileID: 4227690375498876009}
   - component: {fileID: 2547945516176996483}
   - component: {fileID: 7375611175253077062}
+  - component: {fileID: 1292513753205296487}
   - component: {fileID: 8552479791936106043}
-  - component: {fileID: 892902724725644116}
-  - component: {fileID: 306075432490488653}
+  - component: {fileID: 4568379442998236797}
+  - component: {fileID: 2068907337501307210}
+  - component: {fileID: 7536291386188499425}
+  - component: {fileID: 6568025490499100292}
   m_Layer: 0
   m_Name: Peasant Nolant Blue(Free Version)
   m_TagString: Untagged
@@ -1362,6 +1366,29 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 0
+--- !u!136 &4227690375498876009
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6792327054025522797}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.3
+  m_Height: 2
+  m_Direction: 1
+  m_Center: {x: 0, y: 1, z: 0}
 --- !u!195 &2547945516176996483
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -1397,6 +1424,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   grid: {fileID: 0}
+  constructionPresenter: {fileID: 0}
+  enemyLayer:
+    serializedVersion: 2
+    m_Bits: 0
+--- !u!114 &1292513753205296487
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6792327054025522797}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5c76f88ced02334d9ab154160f3f858, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerBuildController
+  grid: {fileID: 0}
+  buildManager: {fileID: 0}
+  buildDuration: 2
 --- !u!114 &8552479791936106043
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1409,7 +1455,45 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f26c67dafdfb1fb4f988edfb3ca71820, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimationController
---- !u!114 &892902724725644116
+--- !u!114 &4568379442998236797
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6792327054025522797}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a63c6fdbee424194a8949d5b667f386d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Health
+  maxHealth: 100
+--- !u!114 &2068907337501307210
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6792327054025522797}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d214719c666d51f46a74b774caff3b2c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PickupCollector
+--- !u!114 &7536291386188499425
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6792327054025522797}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3eb43ff554c465540a2eec55af4a0a12, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerWeaponController
+  startingWeapon: {fileID: 0}
+--- !u!114 &6568025490499100292
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1425,20 +1509,8 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   shootPoint: {fileID: 0}
+  detectionRadius: 10
   rotationSpeed: 12
---- !u!114 &306075432490488653
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6792327054025522797}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3eb43ff554c465540a2eec55af4a0a12, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerWeapon
-  startingWeapon: {fileID: 0}
 --- !u!1 &7060605132943402213
 GameObject:
   m_ObjectHideFlags: 0

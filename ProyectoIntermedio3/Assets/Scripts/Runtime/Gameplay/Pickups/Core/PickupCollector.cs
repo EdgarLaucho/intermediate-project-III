@@ -1,0 +1,14 @@
+using UnityEngine;
+
+public class PickupCollector : MonoBehaviour
+{
+    private void OnTriggerEnter(Collider other)
+    {
+        IPickable item = other.GetComponent<IPickable>();
+
+        if (item != null)
+        {
+            item.PickUp(gameObject);
+        }
+    }
+}

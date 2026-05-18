@@ -1,6 +1,10 @@
+using System;
 using UnityEngine;
 using UnityEngine.AI;
-public class BaseEnemyAI : MonoBehaviour
+
+
+
+public class BaseEnemyAI : MonoBehaviour, IDamageable
 {
     [Header("References")] 
     [SerializeField] protected EnemySO enemySO;
@@ -8,18 +12,27 @@ public class BaseEnemyAI : MonoBehaviour
     protected EnemyState currentState;
     protected NavMeshAgent agent;
     protected Transform currentTarget;
-    protected IDamageable2 currentDamageable;
+    protected IDamageable currentDamageable;
     protected bool hasCompletedObjective;
     protected int currentTargetLayer;
 
     protected float attackTimer;
-
+    
+    
+    
+    public int CurrentHealth { get; private set; }
+    public int MaxHealth { get; private set; }
+    public bool IsAlive => CurrentHealth > 0;
+    public event Action<IDamageable> OnDeath;
+    public event Action OnHealthChanged;
     protected virtual void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
         agent.updateRotation = false;
         if (enemySO!=null)
         {
+            MaxHealth = enemySO.health;
+            CurrentHealth = MaxHealth;
             agent.speed = enemySO.speed;
         }
     }
@@ -75,6 +88,27 @@ public class BaseEnemyAI : MonoBehaviour
                 break;
         }
     }
+    
+    public void Initialize()
+    {
+        MaxHealth = enemySO.health;
+        CurrentHealth = MaxHealth;
+
+        hasCompletedObjective = false;
+        currentState = EnemyState.Idle;
+        currentTarget = null;
+        currentDamageable = null;
+        attackTimer = 0f;
+
+        if (agent != null)
+        {
+            agent.isStopped = false;
+            agent.speed = enemySO.speed;
+        }
+
+        FindFoodTable();
+    }
+    
     //State Enemy
     protected virtual void HandleIdle()
     {
@@ -151,7 +185,7 @@ public class BaseEnemyAI : MonoBehaviour
         }
 
         currentTarget = closestTable.transform;
-        currentDamageable = closestTable.GetComponentInParent<IDamageable2>();
+        currentDamageable = closestTable.GetComponentInParent<IDamageable>();
         currentTargetLayer = LayerMask.NameToLayer("FoodTable");
     }
     protected virtual void MoveToTarget()
@@ -171,7 +205,7 @@ public class BaseEnemyAI : MonoBehaviour
             attackTimer = 0f;
             
             
-            if (currentDamageable == null || currentDamageable.isDead)
+            if (currentDamageable == null || !currentDamageable.IsAlive)
             {
                 currentState = EnemyState.Idle;
                 currentTarget = null;
@@ -182,7 +216,7 @@ public class BaseEnemyAI : MonoBehaviour
             currentDamageable.TakeDamage(enemySO.damage);
 
             Debug.Log($"{gameObject.name} attacked {currentTarget.name}");
-            if (currentDamageable.isDead)
+            if (!currentDamageable.IsAlive)
             {
                 int deadTargetLayer = currentTargetLayer;
 
@@ -217,7 +251,7 @@ public class BaseEnemyAI : MonoBehaviour
             currentTarget != null &&
             currentTargetLayer == LayerMask.NameToLayer("Turret") &&
             currentDamageable != null &&
-            !currentDamageable.isDead)
+            currentDamageable.IsAlive)
         {
             currentState = EnemyState.AttackingTurret;
             return;
@@ -228,7 +262,7 @@ public class BaseEnemyAI : MonoBehaviour
             currentTarget != null &&
             currentTargetLayer == LayerMask.NameToLayer("Player") &&
             currentDamageable != null &&
-            !currentDamageable.isDead)
+            currentDamageable.IsAlive)
         {
             currentState = EnemyState.ChasingPlayer;
             return;
@@ -246,9 +280,9 @@ public class BaseEnemyAI : MonoBehaviour
 
             foreach (Collider turret in turrets)
             {
-                IDamageable2 damageable = turret.GetComponentInParent<IDamageable2>();
+                IDamageable damageable = turret.GetComponentInParent<IDamageable>();
 
-                if (damageable == null || damageable.isDead)
+                if (damageable == null || !damageable.IsAlive)
                     continue;
 
                 currentTarget = turret.transform;
@@ -273,9 +307,9 @@ public class BaseEnemyAI : MonoBehaviour
 
             foreach (Collider playerCollider in players)
             {
-                IDamageable2 damageable = playerCollider.GetComponentInParent<IDamageable2>();
+                IDamageable damageable = playerCollider.GetComponentInParent<IDamageable>();
 
-                if (damageable == null || damageable.isDead)
+                if (damageable == null || !damageable.IsAlive)
                     continue;
 
                 currentTarget = playerCollider.transform;
@@ -294,7 +328,7 @@ public class BaseEnemyAI : MonoBehaviour
             if (currentTarget != null &&
                 currentTargetLayer == LayerMask.NameToLayer("FoodTable") &&
                 currentDamageable != null &&
-                !currentDamageable.isDead)
+                currentDamageable.IsAlive)
             {
                 return;
             }
@@ -323,9 +357,9 @@ public class BaseEnemyAI : MonoBehaviour
 
             foreach (Collider table in foodTables)
             {
-                IDamageable2 damageable = table.GetComponentInParent<IDamageable2>();
+                IDamageable damageable = table.GetComponentInParent<IDamageable>();
 
-                if (damageable != null && !damageable.isDead)
+                if (damageable != null && damageable.IsAlive)
                     return true;
             }
         }
@@ -340,9 +374,9 @@ public class BaseEnemyAI : MonoBehaviour
 
             foreach (Collider turret in turrets)
             {
-                IDamageable2 damageable = turret.GetComponentInParent<IDamageable2>();
+                IDamageable damageable = turret.GetComponentInParent<IDamageable>();
 
-                if (damageable != null && !damageable.isDead)
+                if (damageable != null && damageable.IsAlive)
                     return true;
             }
         }
@@ -357,13 +391,48 @@ public class BaseEnemyAI : MonoBehaviour
 
             foreach (Collider player in players)
             {
-                IDamageable2 damageable = player.GetComponentInParent<IDamageable2>();
+                IDamageable damageable = player.GetComponentInParent<IDamageable>();
 
-                if (damageable != null && !damageable.isDead)
+                if (damageable != null && damageable.IsAlive)
                     return true;
             }
         }
 
         return false;
+    }
+
+    
+    public void TakeDamage(int amount)
+    {
+        if (!IsAlive)
+            return;
+        
+        CurrentHealth= Mathf.Max(0,CurrentHealth-amount);
+        OnHealthChanged?.Invoke();
+        Debug.Log($"{gameObject.name} received{amount} damage. Health: {CurrentHealth}");
+
+        if (!IsAlive)
+        {
+            Die();
+        }
+    }
+
+    public void Heal(int amount)
+    {
+        if (!IsAlive)
+            return;
+        
+        CurrentHealth = Mathf.Min(MaxHealth,CurrentHealth+amount);
+        OnHealthChanged?.Invoke();
+    }
+
+    protected void Die()
+    {
+        Debug.Log($"{gameObject.name} died");
+        
+        EnemyEvents.EnemyDied(enemySO.goldReward);
+        OnDeath?.Invoke(this);
+        
+        
     }
 }

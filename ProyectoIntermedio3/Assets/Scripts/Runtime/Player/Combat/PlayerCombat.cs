@@ -7,99 +7,143 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private LayerMask enemyLayer;
     [SerializeField] private Transform shootPoint;
 
-    [Header("Rotation")]
+    [Header("Settings")]
+    [SerializeField] private float detectionRadius = 10f;
     [SerializeField] private float rotationSpeed = 12f;
 
-    private NavMeshAgent _agent;
-    private PlayerWeapon _weapon;
-    private Transform _currentTarget;
+    private NavMeshAgent agent;
+    private PlayerWeaponController weaponController;
 
-    private float _attackTimer;
+    private Transform currentTarget;
+
+    private bool hasManualTarget;
+
+    private float attackTimer;
 
     private void Awake()
     {
-        _agent = GetComponent<NavMeshAgent>();
-        _weapon = GetComponent<PlayerWeapon>();
-    }
+        agent = GetComponent<NavMeshAgent>();
 
-    private void OnEnable()
-    {
-        InputEvents.OnPrimaryPressed += HandlePrimaryPressed;
-    }
-
-    private void OnDisable()
-    {
-        InputEvents.OnPrimaryPressed -= HandlePrimaryPressed;
+        weaponController =
+            GetComponent<PlayerWeaponController>();
     }
 
     private void Update()
     {
+        ValidateTarget();
+
+        if (!hasManualTarget)
+        {
+            FindAutomaticTarget();
+        }
+
         HandleCombat();
     }
 
-    private void HandlePrimaryPressed()
+    public void SetTarget(Transform newTarget)
     {
-        Ray ray = Camera.main.ScreenPointToRay(
-            UnityEngine.InputSystem.Mouse.current.position.ReadValue());
+        currentTarget = newTarget;
 
-        if (Physics.Raycast(ray, out RaycastHit hit, 100f, enemyLayer))
+        hasManualTarget = true;
+    }
+
+    private void ValidateTarget()
+    {
+        if (currentTarget == null)
         {
-            _currentTarget = hit.transform;
+            hasManualTarget = false;
+            return;
         }
+
+        IDamageable damageable =
+            currentTarget.GetComponent<IDamageable>();
+
+        if (damageable == null || !damageable.IsAlive)
+        {
+            currentTarget = null;
+            hasManualTarget = false;
+        }
+    }
+
+    private void FindAutomaticTarget()
+    {
+        Collider[] hits = Physics.OverlapSphere(
+            transform.position,
+            detectionRadius,
+            enemyLayer);
+
+        if (hits.Length <= 0)
+        {
+            currentTarget = null;
+            return;
+        }
+
+        float closestDistance = float.MaxValue;
+
+        Transform closestTarget = null;
+
+        foreach (Collider hit in hits)
+        {
+            float distance = Vector3.Distance(
+                transform.position,
+                hit.transform.position);
+
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                closestTarget = hit.transform;
+            }
+        }
+
+        currentTarget = closestTarget;
     }
 
     private void HandleCombat()
     {
-        if (_currentTarget == null)
+        if (currentTarget == null)
             return;
 
-        if (_weapon == null)
-            return;
+        WeaponData weapon =
+            weaponController.CurrentWeapon;
 
-        if (_weapon.CurrentWeapon == null)
-        {
-            _agent.SetDestination(_currentTarget.position);
+        if (weapon == null)
             return;
-        }
 
         float distance = Vector3.Distance(
             transform.position,
-            _currentTarget.position);
+            currentTarget.position);
 
-        if (distance > _weapon.CurrentWeapon.attackRange)
+        if (distance > weapon.attackRange)
         {
-            Vector3 direction =
-                (_currentTarget.position - transform.position).normalized;
+            agent.SetDestination(
+                currentTarget.position);
 
-            Vector3 targetPosition =
-                _currentTarget.position - direction * 1.5f;
-
-            _agent.SetDestination(targetPosition);
+            return;
         }
-        else
-        {
-            _agent.ResetPath();
 
-            RotateTowardsTarget();
+        agent.ResetPath();
 
-            _attackTimer -= Time.deltaTime;
+        RotateTowardsTarget();
 
-            if (_attackTimer <= 0f)
-            {
-                Attack();
-                _attackTimer = 1f / _weapon.CurrentWeapon.attackRate;
-            }
-        }
+        attackTimer -= Time.deltaTime;
+
+        if (attackTimer > 0f)
+            return;
+
+        Attack(weapon);
+
+        attackTimer = 1f / weapon.attackRate;
     }
 
     private void RotateTowardsTarget()
     {
-        Vector3 direction = (
-            _currentTarget.position - transform.position).normalized;
+        Vector3 direction =
+            (currentTarget.position - transform.position).normalized;
 
         direction.y = 0f;
 
-        Quaternion targetRotation = Quaternion.LookRotation(direction);
+        Quaternion targetRotation =
+            Quaternion.LookRotation(direction);
 
         transform.rotation = Quaternion.Slerp(
             transform.rotation,
@@ -107,21 +151,15 @@ public class PlayerCombat : MonoBehaviour
             rotationSpeed * Time.deltaTime);
     }
 
-    private void Attack()
+    private void Attack(WeaponData weapon)
     {
-        if (_currentTarget == null)
-            return;
-
-        WeaponData weapon =
-            _weapon.CurrentWeapon;
-
         Projectile projectile = Instantiate(
             weapon.projectilePrefab,
             shootPoint.position,
             Quaternion.identity);
 
         projectile.Initialize(
-            _currentTarget,
+            currentTarget,
             weapon.damage);
     }
 }

@@ -3,9 +3,12 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "EnemySO", menuName = "Scriptable Objects/EnemySO")]
 public class EnemySO : ScriptableObject
 {
+    [Header("Economy")]
+    public int goldReward = 5;
+    
     [Header("Stats")] 
-    public int health;
-    public float speed;
+    public int health =100;
+    public float speed =3f;
     
     [Header("Target Priority")]
     public LayerMask foodTableLayer;
@@ -20,10 +23,9 @@ public class EnemySO : ScriptableObject
     [Header("Detection")]
     public float turretDetectionRange = 5f;
     public float playerDetectionRange = 4f;
-    //[Range(0f, 1f)] public float playerAttackChance = 0.15f;
 
     [Header("Attack")] 
-    public int damage;
+    public int damage=1;
     public float attackRange = 1f;
     public float attackCooldown = 1f;
     
