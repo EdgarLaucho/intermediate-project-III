@@ -17,13 +17,20 @@ public static class InputEvents
 
     #endregion
 
+    #region Camera Events
+
+    public static event Action<Vector2> OnMoveCamera; // WASD / arrow keys camera movement.
+    public static event Action OnToggleCameraFollow; // Y / Toggle camera follow mode.
+
+    #endregion
+
     #region Button Events
 
-    public static event Action OnPrimaryPressed; // Left-click / confirm.
-    public static event Action OnPrimaryHeld; // Fired every frame left button is held.
-    public static event Action OnPrimaryReleased; // Left button released.
-    public static event Action OnSecondaryPressed; // Right-click / context menu.
-    public static event Action OnTertiaryPressed; // Middle-click / duplicate building.
+    public static event Action<Vector3> OnPrimaryPressed; // Left-click / confirm.
+    public static event Action<Vector3> OnPrimaryHeld; // Fired every frame left button is held.
+    public static event Action<Vector3> OnPrimaryReleased; // Left button released.
+    public static event Action<Vector3> OnSecondaryPressed; // Right-click / context menu.
+    public static event Action<Vector3> OnTertiaryPressed; // Middle-click / duplicate building.
     public static event Action OnCancelPressed; // Escape / cancel current action.
 
     #endregion
@@ -32,13 +39,16 @@ public static class InputEvents
 
     public static void WorldPointerMoved(Vector3 worldPos, Vector2Int gridCoords)
         => OnWorldPointerMoved?.Invoke(worldPos, gridCoords);
-
     public static void WorldPointerLost() => OnWorldPointerLost?.Invoke();
-    public static void PrimaryPressed() => OnPrimaryPressed?.Invoke();
-    public static void PrimaryHeld() => OnPrimaryHeld?.Invoke();
-    public static void PrimaryReleased() => OnPrimaryReleased?.Invoke();
-    public static void SecondaryPressed() => OnSecondaryPressed?.Invoke();
-    public static void TertiaryPressed() => OnTertiaryPressed?.Invoke();
+
+    public static void MoveCamera(Vector2 direction) => OnMoveCamera?.Invoke(direction);
+    public static void ToggleCameraFollow() => OnToggleCameraFollow?.Invoke();
+
+    public static void PrimaryPressed(Vector3 worldPos) => OnPrimaryPressed?.Invoke(worldPos);
+    public static void PrimaryHeld(Vector3 worldPos) => OnPrimaryHeld?.Invoke(worldPos);
+    public static void PrimaryReleased(Vector3 worldPos) => OnPrimaryReleased?.Invoke(worldPos);
+    public static void SecondaryPressed(Vector3 worldPos) => OnSecondaryPressed?.Invoke(worldPos);
+    public static void TertiaryPressed(Vector3 worldPos) => OnTertiaryPressed?.Invoke(worldPos);
     public static void CancelPressed() => OnCancelPressed?.Invoke();
 
     #endregion

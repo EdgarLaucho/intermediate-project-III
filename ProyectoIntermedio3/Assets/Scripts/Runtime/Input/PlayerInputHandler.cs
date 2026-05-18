@@ -1,55 +1,154 @@
+using Game;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerInputHandler : MonoBehaviour
 {
+    [Header("References")]
     [SerializeField] private GridManager grid;
     [SerializeField] private Camera gameplayCamera;
 
     [Header("Configuration")]
     [SerializeField] private LayerMask groundLayer;
 
+    private GameInput _input;
     private Camera _cam;
+
+    #region Unity Lifecycle
 
     private void Awake()
     {
-        _cam = gameplayCamera != null ? gameplayCamera : Camera.main;
+        _input = new GameInput();
+
+        _cam = gameplayCamera != null
+            ? gameplayCamera
+            : Camera.main;
+    }
+
+    private void OnEnable()
+    {
+        _input.Enable();
+
+        RegisterGameplayInputs();
+    }
+
+    private void OnDisable()
+    {
+        UnregisterGameplayInputs();
+
+        _input.Disable();
     }
 
     private void Update()
     {
-        HandleCancelInput();
-        HandlePointerInput();
-        HandleClickInput();
+        HandlePointerMovement();
     }
 
-    private void HandleCancelInput()
+    #endregion
+
+    #region Input Registration
+
+    private void RegisterGameplayInputs()
     {
-        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-            InputEvents.CancelPressed();
+        _input.Gameplay.MoveCamera.performed += OnMoveCamera;
+        _input.Gameplay.MoveCamera.canceled += OnMoveCamera;
+
+        _input.Gameplay.ToggleCameraFollow.performed += OnToggleCameraFollow;
+
+        _input.Gameplay.PrimaryClick.performed += OnPrimaryClick;
+        _input.Gameplay.PrimaryClick.canceled += OnPrimaryRelease;
+
+        _input.Gameplay.SecondaryClick.performed += OnSecondaryClick;
+
+        _input.Gameplay.Cancel.performed += OnCancel;
     }
 
-    private void HandlePointerInput()
+    private void UnregisterGameplayInputs()
+    {
+        _input.Gameplay.MoveCamera.performed -= OnMoveCamera;
+        _input.Gameplay.MoveCamera.canceled -= OnMoveCamera;
+
+        _input.Gameplay.ToggleCameraFollow.performed -= OnToggleCameraFollow;
+
+        _input.Gameplay.PrimaryClick.performed -= OnPrimaryClick;
+        _input.Gameplay.PrimaryClick.canceled -= OnPrimaryRelease;
+
+        _input.Gameplay.SecondaryClick.performed -= OnSecondaryClick;
+
+        _input.Gameplay.Cancel.performed -= OnCancel;
+    }
+
+    #endregion
+
+    #region Camera Input
+
+    private void OnMoveCamera(InputAction.CallbackContext ctx)
+    {
+        Vector2 moveDirection = ctx.ReadValue<Vector2>();
+
+        InputEvents.MoveCamera(moveDirection);
+    }
+
+    private void OnToggleCameraFollow(InputAction.CallbackContext ctx)
+    {
+        InputEvents.ToggleCameraFollow();
+    }
+
+    #endregion
+
+    #region Mouse Buttons
+
+    private void OnPrimaryClick(InputAction.CallbackContext ctx)
     {
         if (TryGetGroundHit(out Vector3 worldPos))
         {
-            Vector2Int gridCoords = grid != null ? grid.WorldToGrid(worldPos) : Vector2Int.zero;
+            InputEvents.PrimaryPressed(worldPos);
+        }
+    }
+
+    private void OnPrimaryRelease(InputAction.CallbackContext ctx)
+    {
+        if (TryGetGroundHit(out Vector3 worldPos))
+        {
+            InputEvents.PrimaryReleased(worldPos);
+        }
+    }
+
+    private void OnSecondaryClick(InputAction.CallbackContext ctx)
+    {
+        if (TryGetGroundHit(out Vector3 worldPos))
+        {
+            InputEvents.SecondaryPressed(worldPos);
+        }
+    }
+
+    #endregion
+
+    #region General Input
+
+    private void OnCancel(InputAction.CallbackContext ctx)
+    {
+        InputEvents.CancelPressed();
+    }
+
+    #endregion
+
+    #region Pointer Logic
+
+    private void HandlePointerMovement()
+    {
+        if (TryGetGroundHit(out Vector3 worldPos))
+        {
+            Vector2Int gridCoords = grid != null
+                ? grid.WorldToGrid(worldPos)
+                : Vector2Int.zero;
+
             InputEvents.WorldPointerMoved(worldPos, gridCoords);
         }
         else
         {
             InputEvents.WorldPointerLost();
         }
-    }
-
-    private void HandleClickInput()
-    {
-        if (Mouse.current == null) return;
-        if (Mouse.current.leftButton.wasPressedThisFrame) InputEvents.PrimaryPressed();
-        if (Mouse.current.leftButton.isPressed) InputEvents.PrimaryHeld();
-        if (Mouse.current.leftButton.wasReleasedThisFrame) InputEvents.PrimaryReleased();
-        if (Mouse.current.rightButton.wasPressedThisFrame) InputEvents.SecondaryPressed();
-        if (Mouse.current.middleButton.wasPressedThisFrame) InputEvents.TertiaryPressed();
     }
 
     private bool TryGetGroundHit(out Vector3 worldPos)
@@ -62,10 +161,14 @@ public class PlayerInputHandler : MonoBehaviour
 
         Ray ray = _cam.ScreenPointToRay(Mouse.current.position.ReadValue());
 
-        float gridPlaneY = grid != null ? grid.GridToWorld(Vector2Int.zero).y : 0f;
+        float gridPlaneY = grid != null
+            ? grid.GridToWorld(Vector2Int.zero).y
+            : 0f;
+
         if (Mathf.Abs(ray.direction.y) > 0.0001f)
         {
             float t = (gridPlaneY - ray.origin.y) / ray.direction.y;
+
             if (t > 0f)
             {
                 worldPos = ray.origin + ray.direction * t;
@@ -82,4 +185,7 @@ public class PlayerInputHandler : MonoBehaviour
         worldPos = Vector3.zero;
         return false;
     }
+
+    #endregion
+
 }

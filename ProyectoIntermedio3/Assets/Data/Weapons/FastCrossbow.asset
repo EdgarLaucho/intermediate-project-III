@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f187b578ff90d9d44b12aa9041c82c24, type: 3}
+  m_Name: FastCrossbow
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponData
+  weaponName: Fast Crossbow
+  damage: 2
+  attackRate: 3
+  attackRange: 6
+  projectilePrefab: {fileID: 6634830010108146841, guid: e8634adbc34d1394ea7d16fe06351b55, type: 3}
