@@ -19,6 +19,7 @@ public sealed class ConstructionPresenter : MonoBehaviour
     #region State
 
     private enum State { Idle, Placing, MenuOpen }
+    public bool IsPlacing => _state == State.Placing || _state == State.MenuOpen;
     private enum ActionId { Repair, Upgrade, Demolish, Back }
 
     private State _state;
@@ -115,7 +116,7 @@ public sealed class ConstructionPresenter : MonoBehaviour
         }
     }
 
-    private void OnPrimaryPressed()
+    private void OnPrimaryPressed(Vector3 worldPos)
     {
         if (_state != State.Placing) return;
 
@@ -125,25 +126,25 @@ public sealed class ConstructionPresenter : MonoBehaviour
             ConfirmPlacement();
     }
 
-    private void OnPrimaryHeld()
+    private void OnPrimaryHeld(Vector3 worldPos)
     {
         if (_state == State.Placing && _isPainting)
             AppendPaintCellsThrough(_hoveredCell);
     }
 
-    private void OnPrimaryReleased()
+    private void OnPrimaryReleased(Vector3 worldPos)
     {
         if (_isPainting)
             CommitPaintStroke();
     }
 
-    private void OnSecondaryPressed()
+    private void OnSecondaryPressed(Vector3 worldPos)
     {
         if (_state == State.Placing) { CancelToIdle(); return; }
         if (_state == State.Idle && _hasPointer) OpenContextMenu(_hoveredCell);
     }
 
-    private void OnTertiaryPressed()
+    private void OnTertiaryPressed(Vector3 worldPos)
     {
         if (_state != State.Idle || !_hasPointer) return;
         TryDuplicateHoveredBuilding();
@@ -239,7 +240,9 @@ public sealed class ConstructionPresenter : MonoBehaviour
     {
         if (_selectedBuilding == null) { CancelToIdle(); return; }
 
-        BuildManager.PlacementValidation validation = construction.GetPlacementValidation(_hoveredCell, _selectedBuilding);
+        BuildManager.PlacementValidation validation = 
+            construction.GetPlacementValidation(_hoveredCell, _selectedBuilding);
+
         if (!validation.IsValid)
         {
             // Re-broadcast the updated state so BuildPreview shows the rejection shake.
@@ -249,8 +252,8 @@ public sealed class ConstructionPresenter : MonoBehaviour
             return;
         }
 
-        if (construction.TryBuild(_hoveredCell, _selectedBuilding))
-            CancelToIdle();
+        GameplayEvents.BuildRequested(_hoveredCell, _selectedBuilding);
+        CancelToIdle();
     }
 
     private void CancelToIdle()

@@ -1,9 +1,9 @@
 using System;
 using UnityEngine;
 
-public class EnemyDummy : MonoBehaviour, IDamageable
+public class Health : MonoBehaviour, IDamageable
 {
-    [SerializeField] private int maxHealth = 5;
+    [SerializeField] private int maxHealth = 100;
 
     private int currentHealth;
 
@@ -19,16 +19,18 @@ public class EnemyDummy : MonoBehaviour, IDamageable
         currentHealth = maxHealth;
     }
 
-    public void TakeDamage(int damage)
+    public void TakeDamage(int amount)
     {
         if (!IsAlive)
             return;
 
-        currentHealth -= damage;
+        currentHealth -= amount;
+
+        currentHealth = Mathf.Max(currentHealth, 0);
 
         OnHealthChanged?.Invoke();
 
-        Debug.Log($"{gameObject.name} recibió {damage} daño");
+        Debug.Log($"{gameObject.name} took {amount} damage.");
 
         if (currentHealth <= 0)
         {
@@ -38,12 +40,24 @@ public class EnemyDummy : MonoBehaviour, IDamageable
 
     public void Heal(int amount)
     {
+        if (!IsAlive)
+            return;
+
+        currentHealth += amount;
+
+        currentHealth = Mathf.Min(currentHealth, maxHealth);
+
+        OnHealthChanged?.Invoke();
+
+        Debug.Log($"{gameObject.name} healed {amount} HP.");
     }
 
     private void Die()
     {
+        Debug.Log($"{gameObject.name} died.");
+
         OnDeath?.Invoke(this);
 
-        Destroy(gameObject);
+        gameObject.SetActive(false);
     }
 }

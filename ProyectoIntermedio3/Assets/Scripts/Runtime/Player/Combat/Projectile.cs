@@ -28,11 +28,9 @@ public class Projectile : MonoBehaviour
 
     protected virtual void Move()
     {
-        Vector3 direction =
-            (target.position - transform.position).normalized;
+        Vector3 direction = (target.position - transform.position).normalized;
 
-        transform.position +=
-            direction * speed * Time.deltaTime;
+        transform.position += direction * speed * Time.deltaTime;
 
         transform.LookAt(target);
 
@@ -48,12 +46,11 @@ public class Projectile : MonoBehaviour
 
     protected virtual void HitTarget()
     {
-        EnemyDummy enemy =
-            target.GetComponent<EnemyDummy>();
+        IDamageable damageable = target.GetComponent<IDamageable>();
 
-        if (enemy != null)
+        if (damageable != null)
         {
-            enemy.TakeDamage(damage);
+            damageable.TakeDamage(damage);
         }
 
         Destroy(gameObject);
