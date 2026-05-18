@@ -7,6 +7,8 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField] private EnemyPoolDataSO[] enemiesPoolData;
     [SerializeField] private EnemySpawnPoint[] spawnPoints;
 
+    private Dictionary<BaseEnemyAI, EnemyType> enemyTypes =
+        new Dictionary<BaseEnemyAI, EnemyType>();
     private Dictionary<EnemyType, ObjectPool<BaseEnemyAI>> pools = 
         new Dictionary<EnemyType, ObjectPool<BaseEnemyAI>>();
 
@@ -30,22 +32,27 @@ public class EnemySpawner : MonoBehaviour
     private BaseEnemyAI CreateEnemy(EnemyPoolDataSO data)
     {
         BaseEnemyAI enemy = Instantiate(data.prefab);
+        enemyTypes[enemy] = data.EnemyType;
         enemy.gameObject.SetActive(false);
         return enemy;
     }
 
     private void OnTakeEnemy(BaseEnemyAI enemy)
     {
+        enemy.OnDeath -= HandleEnemyDeath;
+        enemy.OnDeath += HandleEnemyDeath;
         enemy.gameObject.SetActive(true);
     }
 
     private void OnReturnEnemy(BaseEnemyAI enemy)
     {
+        enemy.OnDeath -= HandleEnemyDeath;
         enemy.gameObject.SetActive(false);
     }
 
     private void OnDestroyEnemy(BaseEnemyAI enemy)
     {
+        enemyTypes.Remove(enemy);
         Destroy(enemy.gameObject);
     }
 
@@ -60,6 +67,7 @@ public class EnemySpawner : MonoBehaviour
         BaseEnemyAI enemy = pools[enemyType].Get();
         enemy.transform.position = position;
         enemy.transform.rotation = Quaternion.identity;
+        enemy.Initialize();
         return enemy;
     }
 
@@ -95,5 +103,21 @@ public class EnemySpawner : MonoBehaviour
             validPoints[Random.Range(0, validPoints.Count)];
 
         return SpawnEnemy(enemyType, selectedPoint.Position);
+    }
+
+    private void HandleEnemyDeath(IDamageable damageable)
+    {
+        BaseEnemyAI enemy = damageable as BaseEnemyAI;
+
+        if (enemy == null)
+            return;
+
+        if (!enemyTypes.ContainsKey(enemy))
+        {
+            enemy.gameObject.SetActive(false);
+            return;
+        }
+
+        ReturnEnemy(enemyTypes[enemy], enemy);
     }
 }
