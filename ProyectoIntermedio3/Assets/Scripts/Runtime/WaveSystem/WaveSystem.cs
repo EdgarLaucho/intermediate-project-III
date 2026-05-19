@@ -4,14 +4,23 @@ using System.Collections.Generic;
 
 public class WaveSystem : MonoBehaviour
 {
+    [Header("References")]
+    [SerializeField] private EnemySpawner enemySpawner;
+
+    [Header("Wave Settings")]
     public List<Wave> waves;
-    public Transform spawnPoint;
     public float timeBetweenWaves = 5f;
 
     private int currentWaveIndex = 0;
+    private int currentEnemiesAlive = 0;
 
     void Start()
     {
+        if (enemySpawner == null)
+        {
+            enemySpawner = FindFirstObjectByType<EnemySpawner>();
+        }
+
         StartCoroutine(SpawnWave());
     }
 
@@ -20,28 +29,50 @@ public class WaveSystem : MonoBehaviour
         while (currentWaveIndex < waves.Count)
         {
             Wave currentWave = waves[currentWaveIndex];
-            Debug.Log("Wave number: " + currentWave.waveName);
+            Debug.Log("WAVE OF: " + currentWave.waveName);
+
+            currentEnemiesAlive = 0;
 
             for (int i = 0; i < currentWave.enemyCount; i++)
             {
-                SpawnEnemy(currentWave.enemyPrefab);
+                SpawnEnemyFromPool(currentWave.enemyType);
                 yield return new WaitForSeconds(1f / currentWave.rate);
             }
 
-            while (GameObject.FindGameObjectsWithTag("Enemy").Length > 0)
+            while (currentEnemiesAlive > 0)
             {
-                yield return new WaitForSeconds(1f);
+                yield return new WaitForSeconds(0.5f);
             }
+
+            Debug.Log($"YOU SURVIVED TO {currentWave.waveName} !");
 
             currentWaveIndex++;
             yield return new WaitForSeconds(timeBetweenWaves);
         }
 
-        Debug.Log("YOU WON!");
+        Debug.Log("YOU WON THE GAME!");
     }
 
-    void SpawnEnemy(GameObject enemyPrefab)
+    private void SpawnEnemyFromPool(EnemyType type)
     {
-        Instantiate(enemyPrefab, spawnPoint.position, spawnPoint.rotation);
+        BaseEnemyAI enemy = enemySpawner.SpawnEnemyFromPoint(type);
+
+        if (enemy != null)
+        {
+            currentEnemiesAlive++;
+
+            enemy.OnDeath -= OnEnemyCharacterDied;
+            enemy.OnDeath += OnEnemyCharacterDied;
+        }
+    }
+
+    private void OnEnemyCharacterDied(IDamageable damageable)
+    {
+        if (damageable is BaseEnemyAI enemy)
+        {
+            enemy.OnDeath -= OnEnemyCharacterDied;
+        }
+
+        currentEnemiesAlive--;
     }
 }
