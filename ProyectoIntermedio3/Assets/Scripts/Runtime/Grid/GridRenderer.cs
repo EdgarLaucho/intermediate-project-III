@@ -1,14 +1,9 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-// Builds and updates a single multi-submesh Mesh that visualises the entire grid.
-// Three submeshes correspond to the three materials (buildable / nexus / occupied)
-// so Unity can shade each cell type differently with one draw call per material.
-//
-// The mesh is rebuilt from scratch whenever a building is placed or demolished.
-// For the small grids in this project that is fine; for larger grids a per-cell
-// dirty-flag approach would reduce the rebuild cost.
-[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
+// Builds simple per-cell sprite markers to visualise the grid.
+// The grid is intentionally object-based instead of procedural mesh-based so the
+// visual language stays easy to understand and tune from code.
 public class GridRenderer : MonoBehaviour
 {
     #region Inspector Fields
@@ -16,8 +11,7 @@ public class GridRenderer : MonoBehaviour
     [SerializeField] private GridManager grid;
 
     [Header("Layout")]
-    // Shrinks each cell quad inward from its edge, creating visible gaps between cells.
-    [SerializeField] private float cellInset = 0.04f;
+    [SerializeField] private float markerScale = 0.52f;
     // Lifts the grid mesh slightly above the terrain to prevent z-fighting.
     [SerializeField] private float yOffset = 0.02f;
 
@@ -30,9 +24,8 @@ public class GridRenderer : MonoBehaviour
 
     #region Runtime State
 
-    private MeshFilter _mf;
-    private MeshRenderer _mr;
-    private Mesh _mesh;
+    private readonly List<GameObject> _markers = new();
+    private Sprite _cellSprite;
 
     // Prevents double-subscription: OnEnable can fire before Start in some cases.
     private bool _subscribed;
@@ -43,8 +36,13 @@ public class GridRenderer : MonoBehaviour
 
     private void Awake()
     {
-        _mf = GetComponent<MeshFilter>();
-        _mr = GetComponent<MeshRenderer>();
+        _cellSprite = CreateCellSprite();
+
+        if (TryGetComponent(out MeshFilter meshFilter))
+            meshFilter.sharedMesh = null;
+
+        if (TryGetComponent(out MeshRenderer meshRenderer))
+            meshRenderer.enabled = false;
     }
 
     private void Start()
@@ -58,7 +56,7 @@ public class GridRenderer : MonoBehaviour
         if (buildableMaterial == null || nexusMaterial == null || occupiedMaterial == null)
             Debug.LogError("[GridRenderer] One or more materials are not assigned in the Inspector.");
 
-        RebuildMesh();
+        RebuildGrid();
         Subscribe();
     }
 
@@ -68,10 +66,13 @@ public class GridRenderer : MonoBehaviour
     private void OnDestroy()
     {
         Unsubscribe();
-        // Meshes created via `new Mesh()` are not automatically cleaned up by Unity;
-        // destroy it explicitly to avoid a memory leak.
-        if (_mesh != null)
-            Destroy(_mesh);
+        ClearMarkers();
+
+        if (_cellSprite != null)
+            Destroy(_cellSprite.texture);
+
+        if (_cellSprite != null)
+            Destroy(_cellSprite);
     }
 
     #endregion
@@ -94,186 +95,122 @@ public class GridRenderer : MonoBehaviour
         _subscribed = false;
     }
 
-    private void OnBuildingPlaced(BuildingActionArgs _) => RebuildMesh();
-    private void OnBuildingDemolished(Vector2Int _) => RebuildMesh();
+    private void OnBuildingPlaced(BuildingActionArgs _) => RebuildGrid();
+    private void OnBuildingDemolished(Vector2Int _) => RebuildGrid();
 
     #endregion
 
-    #region Mesh Rebuilding
+    #region Grid Rebuilding
 
-    private void RebuildMesh()
+    private void RebuildGrid()
     {
-        // `half` is the inset half-extent of each cell quad.
-        float half = grid.CellSize * 0.5f - cellInset;
-
-        // Separate vertex/triangle lists per submesh so material indices map cleanly:
-        // bv/bt = buildable (submesh 0), nv/nt = nexus (1), ov/ot = occupied (2).
-        var bv = new List<Vector3>(); var bt = new List<int>();
-        var nv = new List<Vector3>(); var nt = new List<int>();
-        var ov = new List<Vector3>(); var ot = new List<int>();
+        ClearMarkers();
 
         foreach (var cell in grid.GetAllCells())
         {
             Vector3 c = grid.GridToWorld(cell.Coordinates) + Vector3.up * yOffset;
 
             if (cell.IsOccupiedByNexus)
-                AddNexusCell(cell, c, half, nv, nt);
+                AddMarker(cell, c, nexusMaterial, "Nexus");
             else if (cell.IsOccupied && cell.IsBuildable)
-                AddQuad(c, half, ov, ot);
+                AddMarker(cell, c, occupiedMaterial, "Occupied");
             else if (cell.IsBuildable)
-                AddBuildableCell(c, half, bv, bt);
+                AddMarker(cell, c, buildableMaterial, "Buildable");
             // Out-of-range cells are intentionally skipped (not rendered).
         }
+    }
 
-        // The three vertex lists will be merged into one array. Triangle indices
-        // within nv and ov are local to their own lists, so they must be shifted
-        // by the number of vertices that precede them in the merged array.
-        OffsetTriangles(nt, bv.Count);
-        OffsetTriangles(ot, bv.Count + nv.Count);
+    private void AddMarker(GridCell cell, Vector3 center, Material sourceMaterial, string category)
+    {
+        GameObject marker = new($"Grid {category} {cell.Coordinates.x},{cell.Coordinates.y}");
+        marker.transform.SetParent(transform, false);
+        marker.transform.position = center;
+        marker.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
 
-        var allVerts = new List<Vector3>(bv.Count + nv.Count + ov.Count);
-        allVerts.AddRange(bv);
-        allVerts.AddRange(nv);
-        allVerts.AddRange(ov);
+        float size = grid.CellSize * markerScale;
+        marker.transform.localScale = new Vector3(size, size, 1f);
 
-        var mesh = new Mesh { name = "GridMesh" };
-        mesh.SetVertices(allVerts);
-        mesh.subMeshCount = 3;
-        mesh.SetTriangles(bt, 0);
-        mesh.SetTriangles(nt, 1);
-        mesh.SetTriangles(ot, 2);
-        mesh.RecalculateNormals();
-        mesh.RecalculateBounds();
+        var renderer = marker.AddComponent<SpriteRenderer>();
+        renderer.sprite = _cellSprite;
+        renderer.color = ResolveMaterialColor(sourceMaterial, Color.white);
+        renderer.sortingOrder = -20;
 
-        if (_mesh != null) Destroy(_mesh);
-        _mesh = mesh;
-        _mf.sharedMesh = _mesh;
-        _mr.materials = new[] { buildableMaterial, nexusMaterial, occupiedMaterial };
+        _markers.Add(marker);
+    }
+
+    private void ClearMarkers()
+    {
+        for (int i = _markers.Count - 1; i >= 0; i--)
+        {
+            if (_markers[i] != null)
+                Destroy(_markers[i]);
+        }
+
+        _markers.Clear();
     }
 
     #endregion
 
-    #region Cell Shape Helpers
+    #region Sprite Helpers
 
-    // Empty buildable cell: renders as corner brackets rather than a solid quad so
-    // the grid looks light. Built from a small central dot plus 8 thin rects
-    // (two arms per corner — one horizontal, one vertical).
-    private static void AddBuildableCell(Vector3 center, float half, List<Vector3> verts, List<int> tris)
+    private static Sprite CreateCellSprite()
     {
-        float centralHalf = half * 0.30f;
-        float cornerThickness = half * 0.085f;
-        float cornerLength = half * 0.34f;
-        float inner = half - cornerThickness;
-        float cornerStart = half - cornerLength;
+        const int size = 64;
+        var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
+        {
+            name = "GridCellMarkerTexture",
+            filterMode = FilterMode.Bilinear,
+            wrapMode = TextureWrapMode.Clamp,
+        };
 
-        // Central dot.
-        AddQuad(center, centralHalf, verts, tris);
+        var pixels = new Color32[size * size];
+        Vector2 center = new((size - 1) * 0.5f, (size - 1) * 0.5f);
+        float half = size * 0.34f;
+        float borderStart = size * 0.24f;
+        float cornerRadius = size * 0.075f;
 
-        // Four corners, two rects each.
-        AddRect(center, -half, -cornerStart, inner, half, verts, tris);
-        AddRect(center, -half, -inner, cornerStart, half, verts, tris);
-        AddRect(center, cornerStart, half, inner, half, verts, tris);
-        AddRect(center, inner, half, cornerStart, half, verts, tris);
-        AddRect(center, -half, -cornerStart, -half, -inner, verts, tris);
-        AddRect(center, -half, -inner, -half, -cornerStart, verts, tris);
-        AddRect(center, cornerStart, half, -half, -inner, verts, tris);
-        AddRect(center, inner, half, -half, -cornerStart, verts, tris);
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                Vector2 p = new(x, y);
+                Vector2 q = Abs(p - center) - new Vector2(half - cornerRadius, half - cornerRadius);
+                float outside = Length(Max(q, Vector2.zero)) - cornerRadius;
+                float edgeFade = Mathf.Clamp01(1f - outside / 2.2f);
+                float border = Mathf.SmoothStep(0f, 1f, Mathf.Abs(Mathf.Max(Mathf.Abs(p.x - center.x), Mathf.Abs(p.y - center.y)) - borderStart) / 5.5f);
+                float centerGlow = Mathf.Clamp01(1f - Vector2.Distance(p, center) / (size * 0.42f));
+                byte alpha = (byte)Mathf.RoundToInt(255f * edgeFade * Mathf.Lerp(0.54f, 1f, border) * Mathf.Lerp(0.82f, 1f, centerGlow));
+                pixels[y * size + x] = new Color32(255, 255, 255, alpha);
+            }
+        }
+
+        texture.SetPixels32(pixels);
+        texture.Apply(false, true);
+
+        return Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
     }
 
-    // Nexus cell: only draws border edges that face outward (where the neighbouring
-    // cell is not also a nexus cell). This produces a clean outer frame around the
-    // whole nexus footprint with no internal dividers between adjacent nexus tiles.
-    private void AddNexusCell(GridCell cell, Vector3 center, float half,
-                              List<Vector3> verts, List<int> tris)
+    private static Color ResolveMaterialColor(Material material, Color fallback)
     {
-        float edgeThickness = half * 0.12f;
-        float inner = half - edgeThickness;
-
-        bool westOpen = !IsNexusCell(cell.Coordinates + Vector2Int.left);
-        bool eastOpen = !IsNexusCell(cell.Coordinates + Vector2Int.right);
-        bool southOpen = !IsNexusCell(cell.Coordinates + Vector2Int.down);
-        bool northOpen = !IsNexusCell(cell.Coordinates + Vector2Int.up);
-
-        if (northOpen) AddRect(center, -half, half, inner, half, verts, tris);
-        if (southOpen) AddRect(center, -half, half, -half, -inner, verts, tris);
-        if (westOpen) AddRect(center, -half, -inner, -half, half, verts, tris);
-        if (eastOpen) AddRect(center, inner, half, -half, half, verts, tris);
-
-        AddNexusGlyph(center, half, verts, tris);
+        if (material == null) return fallback;
+        if (material.HasProperty("_BaseColor")) return material.GetColor("_BaseColor");
+        if (material.HasProperty("_Color")) return material.GetColor("_Color");
+        return fallback;
     }
 
-    private bool IsNexusCell(Vector2Int coords)
+    private static Vector2 Abs(Vector2 value)
     {
-        GridCell neighbor = grid.GetCell(coords);
-        return neighbor != null && neighbor.IsOccupiedByNexus;
+        return new Vector2(Mathf.Abs(value.x), Mathf.Abs(value.y));
     }
 
-    // Decorative glyph drawn on every nexus cell: a small diamond at the centre
-    // plus four short tick marks pointing outward along the cardinal axes.
-    private static void AddNexusGlyph(Vector3 center, float half,
-                                      List<Vector3> verts, List<int> tris)
+    private static Vector2 Max(Vector2 value, Vector2 min)
     {
-        float diamondRadius = half * 0.20f;
-        AddDiamond(center, diamondRadius, verts, tris);
-
-        float tickHalfLength = half * 0.20f;
-        float tickGap = half * 0.30f;
-        float tickThickness = half * 0.030f;
-
-        // Left and right horizontal ticks.
-        AddRect(center, -tickGap - tickHalfLength, -tickGap, -tickThickness, tickThickness, verts, tris);
-        AddRect(center, tickGap, tickGap + tickHalfLength, -tickThickness, tickThickness, verts, tris);
-        // Bottom and top vertical ticks.
-        AddRect(center, -tickThickness, tickThickness, -tickGap - tickHalfLength, -tickGap, verts, tris);
-        AddRect(center, -tickThickness, tickThickness, tickGap, tickGap + tickHalfLength, verts, tris);
+        return new Vector2(Mathf.Max(value.x, min.x), Mathf.Max(value.y, min.y));
     }
 
-    #endregion
-
-    #region Primitive Helpers
-
-    // Axis-aligned square quad centred on `center`, extending `half` in each direction.
-    private static void AddQuad(Vector3 center, float half, List<Vector3> verts, List<int> tris)
+    private static float Length(Vector2 value)
     {
-        int baseIdx = verts.Count;
-        verts.Add(center + new Vector3(-half, 0f, -half));
-        verts.Add(center + new Vector3(-half, 0f, half));
-        verts.Add(center + new Vector3(half, 0f, half));
-        verts.Add(center + new Vector3(half, 0f, -half));
-        tris.Add(baseIdx); tris.Add(baseIdx + 1); tris.Add(baseIdx + 2);
-        tris.Add(baseIdx); tris.Add(baseIdx + 2); tris.Add(baseIdx + 3);
-    }
-
-    // Axis-aligned rectangle with explicit min/max extents on X and Z.
-    private static void AddRect(Vector3 center, float minX, float maxX, float minZ, float maxZ,
-                                List<Vector3> verts, List<int> tris)
-    {
-        int baseIdx = verts.Count;
-        verts.Add(center + new Vector3(minX, 0f, minZ));
-        verts.Add(center + new Vector3(minX, 0f, maxZ));
-        verts.Add(center + new Vector3(maxX, 0f, maxZ));
-        verts.Add(center + new Vector3(maxX, 0f, minZ));
-        tris.Add(baseIdx); tris.Add(baseIdx + 1); tris.Add(baseIdx + 2);
-        tris.Add(baseIdx); tris.Add(baseIdx + 2); tris.Add(baseIdx + 3);
-    }
-
-    // Flat diamond (rotated square) with four vertices on the cardinal axes.
-    private static void AddDiamond(Vector3 center, float radius, List<Vector3> verts, List<int> tris)
-    {
-        int baseIdx = verts.Count;
-        verts.Add(center + new Vector3(0f, 0f, radius));
-        verts.Add(center + new Vector3(radius, 0f, 0f));
-        verts.Add(center + new Vector3(0f, 0f, -radius));
-        verts.Add(center + new Vector3(-radius, 0f, 0f));
-        tris.Add(baseIdx); tris.Add(baseIdx + 1); tris.Add(baseIdx + 2);
-        tris.Add(baseIdx); tris.Add(baseIdx + 2); tris.Add(baseIdx + 3);
-    }
-
-    // Shifts all triangle indices in a list by `offset`. Required when separate
-    // per-submesh vertex lists are merged into one shared vertex array.
-    private static void OffsetTriangles(List<int> tris, int offset)
-    {
-        for (int i = 0; i < tris.Count; i++) tris[i] += offset;
+        return Mathf.Sqrt(value.x * value.x + value.y * value.y);
     }
 
     #endregion

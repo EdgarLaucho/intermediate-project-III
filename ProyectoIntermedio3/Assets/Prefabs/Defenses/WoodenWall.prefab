@@ -10,7 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 1000000000000000072}
   - component: {fileID: 1000000000000000073}
-  m_Layer: 0
+  - component: {fileID: 126215522458438240}
+  - component: {fileID: 2177468990775465852}
+  m_Layer: 8
   m_Name: WoodenWall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -46,6 +48,43 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7584a7d1ae4b8434fb1e717b703bc6b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TD.Construction.Wall
+--- !u!208 &126215522458438240
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000000000000000071}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 1, y: 0.5, z: 1}
+  m_MoveThreshold: 0.1
+  m_Carve: 1
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 0.5, z: 0}
+  m_TimeToStationary: 0.5
+--- !u!65 &2177468990775465852
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000000000000000071}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2, y: 1, z: 2}
+  m_Center: {x: 0, y: 0.5, z: 0}
 --- !u!1 &1000000000000000100
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,32 +1,29 @@
 using UnityEngine;
-using UnityEngine.UIElements;
 using UnityEngine.InputSystem;
-using UnityEngine.Rendering;
+using UnityEngine.UIElements;
 
 // Draws a colored overlay on the grid cell currently under the cursor.
-// Empty buildable cell: orange fill quad. Cell with building: cyan fill + border outline.
-// Uses Graphics.DrawMesh every frame — no prefab needed, works with any URP setup.
-// The optional UIDocument is only needed to show the tooltip overlay.
+// The visuals use generated sprites, matching GridRenderer's simpler object-based approach.
 public class CellHoverIndicator : MonoBehaviour
 {
     #region Inspector Fields
 
     [SerializeField] private GridManager grid;
-    [SerializeField] private UIDocument uiDocument; // optional — only needed for tooltip
+    [SerializeField] private UIDocument uiDocument; // optional, only needed for tooltip
 
     [Header("Colors")]
-    [SerializeField] private Color buildableColor = new Color(1.00f, 0.66f, 0.12f, 0.26f); // orange
-    [SerializeField] private Color occupiedColor = new Color(0.24f, 0.88f, 1.00f, 0.30f); // cyan
-    [SerializeField] private Color invalidColor = new Color(1.00f, 0.12f, 0.10f, 0.32f); // red
-    [SerializeField] private Color noGoldColor = new Color(1.00f, 0.78f, 0.12f, 0.30f); // yellow
-    [SerializeField] private Color phaseColor = new Color(0.55f, 0.58f, 0.66f, 0.24f); // grey
-    [SerializeField] private Color outlineColor = new Color(1.00f, 1.00f, 1.00f, 0.70f); // white border
-    [SerializeField] private Color validPlacementColor = new Color(0.28f, 1.00f, 0.46f, 0.26f);
-    [SerializeField] private Color validAccentColor = new Color(0.66f, 1.00f, 0.68f, 0.82f);
+    [SerializeField] private Color buildableColor = new(1.00f, 0.66f, 0.12f, 0.26f);
+    [SerializeField] private Color occupiedColor = new(0.24f, 0.88f, 1.00f, 0.30f);
+    [SerializeField] private Color invalidColor = new(1.00f, 0.12f, 0.10f, 0.32f);
+    [SerializeField] private Color noGoldColor = new(1.00f, 0.78f, 0.12f, 0.30f);
+    [SerializeField] private Color phaseColor = new(0.55f, 0.58f, 0.66f, 0.24f);
+    [SerializeField] private Color outlineColor = new(1.00f, 1.00f, 1.00f, 0.70f);
+    [SerializeField] private Color validPlacementColor = new(0.28f, 1.00f, 0.46f, 0.26f);
+    [SerializeField] private Color validAccentColor = new(0.66f, 1.00f, 0.68f, 0.82f);
 
     [Header("Pulse")]
     [SerializeField] private float pulseSpeed = 5f;
-    [SerializeField] private float pulseAmplitude = 0.14f; // how much alpha oscillates
+    [SerializeField] private float pulseAmplitude = 0.14f;
 
     [Header("Feel")]
     [SerializeField] private float reticleRotationSpeed = 34f;
@@ -36,14 +33,15 @@ public class CellHoverIndicator : MonoBehaviour
 
     #region Runtime State
 
-    private Mesh _fillMesh; // solid XZ quad
-    private Mesh _borderMesh; // hollow XZ border (4 thin quads)
-    private Mesh _cornerMesh;
-    private Mesh _hatchMesh;
-    private Material _fillMat;
-    private Material _borderMat;
-    private Material _accentMat;
-    private Material _hatchMat;
+    private Sprite _fillSprite;
+    private Sprite _borderSprite;
+    private Sprite _focusSprite;
+    private Sprite _hatchSprite;
+    private SpriteRenderer _fillRenderer;
+    private SpriteRenderer _borderRenderer;
+    private SpriteRenderer _focusRenderer;
+    private SpriteRenderer _hatchRenderer;
+    private SpriteRenderer _reticleRenderer;
 
     private bool _visible;
     private Color _currentColor;
@@ -52,18 +50,16 @@ public class CellHoverIndicator : MonoBehaviour
     private Vector3 _currentCenter;
     private float _currentCellSize;
     private bool _drawBorder;
-    private bool _drawCorners;
+    private bool _drawFocusMarker;
     private bool _drawHatch;
     private bool _drawReticle;
     private Vector2Int? _lastCoords;
 
-    // Bounce on cell-change
     private float _bounceT = 999f;
     private const float BounceDur = 0.13f;
     private const float BounceOver = 0.10f;
     private const float BounceStartScale = 0.96f;
 
-    // Tooltip
     private VisualElement _tooltip;
     private Label _tooltipLabel;
     private GridCell _tooltipCell;
@@ -105,38 +101,35 @@ public class CellHoverIndicator : MonoBehaviour
 
     private void Start()
     {
-        _fillMesh = BuildFillMesh();
-        _borderMesh = BuildBorderMesh();
-        _cornerMesh = BuildCornerMesh();
-        _hatchMesh = BuildHatchMesh();
-        _fillMat = BuildMaterial(new Color(1f, 0.6f, 0f, 0.75f));
-        _borderMat = BuildMaterial(outlineColor);
-        _accentMat = BuildMaterial(validAccentColor);
-        _hatchMat = BuildMaterial(invalidColor);
+        _fillSprite = CreateRoundedBoxSprite("CellHoverFillSprite", 0.34f, 0.08f, false);
+        _borderSprite = CreateRoundedBoxSprite("CellHoverBorderSprite", 0.44f, 0.08f, true);
+        _focusSprite = CreateDiamondBorderSprite();
+        _hatchSprite = CreateHatchSprite();
+        _fillRenderer = CreateLayer("Cell Hover Fill", _fillSprite, 20);
+        _hatchRenderer = CreateLayer("Cell Hover Hatch", _hatchSprite, 21);
+        _reticleRenderer = CreateLayer("Cell Hover Reticle", _borderSprite, 22);
+        _focusRenderer = CreateLayer("Cell Hover Focus", _focusSprite, 23);
+        _borderRenderer = CreateLayer("Cell Hover Border", _borderSprite, 24);
+        SetVisualsVisible(false);
         BuildTooltip();
     }
 
     private void OnDestroy()
     {
-        if (_fillMesh != null) Destroy(_fillMesh);
-        if (_borderMesh != null) Destroy(_borderMesh);
-        if (_cornerMesh != null) Destroy(_cornerMesh);
-        if (_hatchMesh != null) Destroy(_hatchMesh);
-        if (_fillMat != null) Destroy(_fillMat);
-        if (_borderMat != null) Destroy(_borderMat);
-        if (_accentMat != null) Destroy(_accentMat);
-        if (_hatchMat != null) Destroy(_hatchMat);
+        DestroySprite(_fillSprite);
+        DestroySprite(_borderSprite);
+        DestroySprite(_focusSprite);
+        DestroySprite(_hatchSprite);
         StopObservingTooltipBuilding();
         _tooltip?.RemoveFromHierarchy();
     }
 
     private void Update()
     {
-        if (!_visible || _fillMesh == null || _fillMat == null) return;
+        if (!_visible || _fillRenderer == null) return;
 
         RefreshTooltipIfNeeded();
 
-        // ── Bounce scale ──────────────────────────────────────────────────────
         float bounce = 1f;
         if (_bounceT < BounceDur)
         {
@@ -146,61 +139,34 @@ public class CellHoverIndicator : MonoBehaviour
                    + Mathf.Sin(t * Mathf.PI) * BounceOver;
         }
 
-        // ── Pulse alpha ───────────────────────────────────────────────────────
         float alpha = _currentColor.a
-                     * (1f + Mathf.Sin(Time.unscaledTime * pulseSpeed) * pulseAmplitude);
-        Color fillC = _currentColor; fillC.a = Mathf.Clamp01(alpha);
-
-        SetMaterialColor(_fillMat, fillC);
-
-        // ── Draw fill ─────────────────────────────────────────────────────────
-        float fillScale = _currentCellSize * 0.88f * bounce;
-        Matrix4x4 fillMatrix = Matrix4x4.TRS(_currentCenter, Quaternion.identity, new Vector3(fillScale, 1f, fillScale));
-        Graphics.DrawMesh(_fillMesh, fillMatrix, _fillMat, 0);
+                      * (1f + Mathf.Sin(Time.unscaledTime * pulseSpeed) * pulseAmplitude);
+        Color fillColor = _currentColor;
+        fillColor.a = Mathf.Clamp01(alpha);
 
         float scanPulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * scanPulseSpeed);
-        Color accentColor = _currentAccentColor;
+        DrawLayer(_fillRenderer, true, _currentCenter, _currentCellSize * 0.88f * bounce, fillColor, 0f);
 
-        if (_drawHatch && _hatchMesh != null && _hatchMat != null)
-        {
-            Color hatchColor = _currentBorderColor;
-            hatchColor.a = Mathf.Clamp01(hatchColor.a * (0.42f + scanPulse * 0.18f));
-            SetMaterialColor(_hatchMat, hatchColor);
-            float hatchScale = _currentCellSize * 0.78f * bounce;
-            Matrix4x4 hatchMatrix = Matrix4x4.TRS(_currentCenter + Vector3.up * 0.003f, Quaternion.identity, new Vector3(hatchScale, 1f, hatchScale));
-            Graphics.DrawMesh(_hatchMesh, hatchMatrix, _hatchMat, 0);
-        }
+        Color hatchColor = _currentBorderColor;
+        hatchColor.a = Mathf.Clamp01(hatchColor.a * (0.42f + scanPulse * 0.18f));
+        DrawLayer(_hatchRenderer, _drawHatch, _currentCenter + Vector3.up * 0.003f,
+            _currentCellSize * 0.78f * bounce, hatchColor, 0f);
 
-        if (_drawReticle && _borderMesh != null && _accentMat != null)
-        {
-            accentColor.a = Mathf.Clamp01(_currentAccentColor.a * (0.16f + scanPulse * 0.16f));
-            SetMaterialColor(_accentMat, accentColor);
-            float reticleScale = _currentCellSize * Mathf.Lerp(0.38f, 0.50f, scanPulse) * bounce;
-            Quaternion reticleRotation = Quaternion.Euler(0f, Time.unscaledTime * reticleRotationSpeed, 0f);
-            Matrix4x4 reticleMatrix = Matrix4x4.TRS(_currentCenter + Vector3.up * 0.006f, reticleRotation, new Vector3(reticleScale, 1f, reticleScale));
-            Graphics.DrawMesh(_borderMesh, reticleMatrix, _accentMat, 0);
-        }
+        Color reticleColor = _currentAccentColor;
+        reticleColor.a = Mathf.Clamp01(_currentAccentColor.a * (0.16f + scanPulse * 0.16f));
+        DrawLayer(_reticleRenderer, _drawReticle, _currentCenter + Vector3.up * 0.006f,
+            _currentCellSize * Mathf.Lerp(0.38f, 0.50f, scanPulse) * bounce, reticleColor,
+            Time.unscaledTime * reticleRotationSpeed);
 
-        if (_drawCorners && _cornerMesh != null && _accentMat != null)
-        {
-            accentColor = _currentAccentColor;
-            accentColor.a = Mathf.Clamp01(_currentAccentColor.a * (0.72f + scanPulse * 0.24f));
-            SetMaterialColor(_accentMat, accentColor);
-            float cornerScale = _currentCellSize * Mathf.Lerp(0.94f, 1.00f, scanPulse) * bounce;
-            Matrix4x4 cornerMatrix = Matrix4x4.TRS(_currentCenter + Vector3.up * 0.009f, Quaternion.identity, new Vector3(cornerScale, 1f, cornerScale));
-            Graphics.DrawMesh(_cornerMesh, cornerMatrix, _accentMat, 0);
-        }
+        Color focusColor = _currentAccentColor;
+        focusColor.a = Mathf.Clamp01(_currentAccentColor.a * (0.58f + scanPulse * 0.20f));
+        DrawLayer(_focusRenderer, _drawFocusMarker, _currentCenter + Vector3.up * 0.009f,
+            _currentCellSize * Mathf.Lerp(0.72f, 0.82f, scanPulse) * bounce, focusColor, 0f);
 
-        // ── Draw border if occupied ───────────────────────────────────────────
-        if (_drawBorder && _borderMesh != null && _borderMat != null)
-        {
-            Color borderColor = _currentBorderColor;
-            borderColor.a = Mathf.Clamp01(_currentBorderColor.a * (0.82f + scanPulse * 0.22f));
-            SetMaterialColor(_borderMat, borderColor);
-            float borderScale = _currentCellSize * 0.96f * bounce;
-            Matrix4x4 borderMatrix = Matrix4x4.TRS(_currentCenter + Vector3.up * 0.012f, Quaternion.identity, new Vector3(borderScale, 1f, borderScale));
-            Graphics.DrawMesh(_borderMesh, borderMatrix, _borderMat, 0);
-        }
+        Color borderColor = _currentBorderColor;
+        borderColor.a = Mathf.Clamp01(_currentBorderColor.a * (0.82f + scanPulse * 0.22f));
+        DrawLayer(_borderRenderer, _drawBorder, _currentCenter + Vector3.up * 0.012f,
+            _currentCellSize * 0.96f * bounce, borderColor, 0f);
 
         if (!_suppressTooltip)
             PositionTooltip();
@@ -249,12 +215,13 @@ public class CellHoverIndicator : MonoBehaviour
         _currentBorderColor = ResolveBorderColor(cell, placement);
         _currentAccentColor = ResolveAccentColor(cell, placement);
         _drawBorder = cell.IsOccupied || (placement.HasValue && !placement.Value.IsValid);
-        _drawCorners = !cell.IsOccupied && (!placement.HasValue || placement.Value.IsValid);
+        _drawFocusMarker = !cell.IsOccupied && (!placement.HasValue || placement.Value.IsValid);
         _drawHatch = placement.HasValue && !placement.Value.IsValid;
         _drawReticle = !cell.IsOccupied && (!placement.HasValue || placement.Value.State == BuildManager.PlacementState.Valid);
         _currentCenter = worldCenter + Vector3.up * 0.06f;
         _currentCellSize = cellSize;
         _visible = true;
+        SetVisualsVisible(true);
         _tooltipCell = cell;
         _tooltipPlacement = placement;
         bool changedObservedBuilding = cell.CurrentBuilding != _observedTooltipBuilding;
@@ -276,6 +243,7 @@ public class CellHoverIndicator : MonoBehaviour
         _tooltipCell = null;
         _tooltipPlacement = null;
         _suppressTooltip = false;
+        SetVisualsVisible(false);
         StopObservingTooltipBuilding();
         HideTooltip();
     }
@@ -293,177 +261,163 @@ public class CellHoverIndicator : MonoBehaviour
 
     #endregion
 
-    #region Mesh Builders
+    #region Sprite Visuals
 
-    // Flat XZ quad, size 1×1, centered at origin.
-    private static Mesh BuildFillMesh()
+    private SpriteRenderer CreateLayer(string layerName, Sprite sprite, int sortingOrder)
     {
-        var mesh = new Mesh { name = "CellHoverFill" };
-        mesh.vertices = new Vector3[] {
-            new(-0.5f, 0f, -0.5f), new(0.5f, 0f, -0.5f),
-            new(0.5f, 0f, 0.5f), new(-0.5f, 0f, 0.5f),
-        };
-        mesh.triangles = new int[] { 0, 2, 1, 0, 3, 2 };
-        mesh.uv = new Vector2[] {
-            new(0,0), new(1,0), new(1,1), new(0,1)
-        };
-        mesh.RecalculateNormals();
-        return mesh;
+        GameObject layer = new(layerName);
+        layer.transform.SetParent(transform, false);
+        var renderer = layer.AddComponent<SpriteRenderer>();
+        renderer.sprite = sprite;
+        renderer.sortingOrder = sortingOrder;
+        renderer.enabled = false;
+        return renderer;
     }
 
-    // Four thin XZ quads forming a hollow border ring (no center fill).
-    private static Mesh BuildBorderMesh()
+    private static void DrawLayer(SpriteRenderer renderer, bool visible, Vector3 position, float size, Color color, float yawDegrees)
     {
-        const float t = 0.055f; // border thickness (fraction of cell)
-        float i = 0.5f - t; // inner half-extent
+        if (renderer == null) return;
 
-        var verts = new Vector3[16];
-        var tris = new int[24];
+        renderer.enabled = visible;
+        if (!visible) return;
 
-        // Bottom strip
-        SetStrip(verts, tris, 0, 0,
-            new Vector3(-0.5f, 0f, -0.5f), new Vector3(0.5f, 0f, -0.5f),
-            new Vector3(0.5f, 0f, -i), new Vector3(-0.5f, 0f, -i));
-        // Top strip
-        SetStrip(verts, tris, 4, 6,
-            new Vector3(-0.5f, 0f, i), new Vector3(0.5f, 0f, i),
-            new Vector3(0.5f, 0f, 0.5f), new Vector3(-0.5f, 0f, 0.5f));
-        // Left strip
-        SetStrip(verts, tris, 8, 12,
-            new Vector3(-0.5f, 0f, -i), new Vector3(-i, 0f, -i),
-            new Vector3(-i, 0f, i), new Vector3(-0.5f, 0f, i));
-        // Right strip
-        SetStrip(verts, tris, 12, 18,
-            new Vector3(i, 0f, -i), new Vector3(0.5f, 0f, -i),
-            new Vector3(0.5f, 0f, i), new Vector3(i, 0f, i));
-
-        var mesh = new Mesh { name = "CellHoverBorder" };
-        mesh.vertices = verts;
-        mesh.triangles = tris;
-        mesh.RecalculateNormals();
-        return mesh;
+        renderer.color = color;
+        renderer.transform.position = position;
+        renderer.transform.rotation = Quaternion.Euler(90f, 0f, yawDegrees);
+        renderer.transform.localScale = new Vector3(size, size, 1f);
     }
 
-    private static Mesh BuildCornerMesh()
+    private void SetVisualsVisible(bool visible)
     {
-        const float halfExtent = 0.5f;
-        const float thickness = 0.035f;
-        const float length = 0.22f;
-        float inner = halfExtent - thickness;
-        float longEdge = halfExtent - length;
-
-        var verts = new System.Collections.Generic.List<Vector3>(32);
-        var tris = new System.Collections.Generic.List<int>(48);
-
-        AddRectXZ(verts, tris, longEdge, halfExtent, inner, halfExtent);
-        AddRectXZ(verts, tris, inner, halfExtent, longEdge, halfExtent);
-        AddRectXZ(verts, tris, -halfExtent, -longEdge, inner, halfExtent);
-        AddRectXZ(verts, tris, -halfExtent, -inner, longEdge, halfExtent);
-        AddRectXZ(verts, tris, longEdge, halfExtent, -halfExtent, -inner);
-        AddRectXZ(verts, tris, inner, halfExtent, -halfExtent, -longEdge);
-        AddRectXZ(verts, tris, -halfExtent, -longEdge, -halfExtent, -inner);
-        AddRectXZ(verts, tris, -halfExtent, -inner, -halfExtent, -longEdge);
-
-        var mesh = new Mesh { name = "CellHoverCorners" };
-        mesh.SetVertices(verts);
-        mesh.SetTriangles(tris, 0);
-        mesh.RecalculateNormals();
-        return mesh;
+        SetRendererVisible(_fillRenderer, visible);
+        SetRendererVisible(_hatchRenderer, visible && _drawHatch);
+        SetRendererVisible(_reticleRenderer, visible && _drawReticle);
+        SetRendererVisible(_focusRenderer, visible && _drawFocusMarker);
+        SetRendererVisible(_borderRenderer, visible && _drawBorder);
     }
 
-    private static Mesh BuildHatchMesh()
+    private static void SetRendererVisible(SpriteRenderer renderer, bool visible)
     {
-        var verts = new System.Collections.Generic.List<Vector3>(24);
-        var tris = new System.Collections.Generic.List<int>(36);
-        Vector3 direction = new Vector3(1f, 0f, 1f).normalized;
-        Vector3 perpendicular = new Vector3(-1f, 0f, 1f).normalized;
+        if (renderer != null)
+            renderer.enabled = visible;
+    }
 
-        for (int stripeIndex = -2; stripeIndex <= 2; stripeIndex++)
+    private static Sprite CreateRoundedBoxSprite(string spriteName, float halfSize, float cornerRadius, bool borderOnly)
+    {
+        const int size = 64;
+        var texture = CreateTexture(spriteName + "Texture", size);
+        var pixels = new Color32[size * size];
+        Vector2 center = new((size - 1) * 0.5f, (size - 1) * 0.5f);
+        float half = size * halfSize;
+        float radius = size * cornerRadius;
+        float borderStart = half - size * 0.08f;
+
+        for (int y = 0; y < size; y++)
         {
-            Vector3 center = perpendicular * (stripeIndex * 0.16f);
-            AddSlantedStrip(verts, tris, center, direction, perpendicular, 0.42f, 0.018f);
+            for (int x = 0; x < size; x++)
+            {
+                Vector2 p = new(x, y);
+                Vector2 q = Abs(p - center) - new Vector2(half - radius, half - radius);
+                float outside = Length(Max(q, Vector2.zero)) - radius;
+                float shapeAlpha = Mathf.Clamp01(1f - outside / 2.2f);
+                float maxAxis = Mathf.Max(Mathf.Abs(p.x - center.x), Mathf.Abs(p.y - center.y));
+                float borderAlpha = Mathf.SmoothStep(0f, 1f, Mathf.Abs(maxAxis - borderStart) / 4.2f);
+                float alpha = borderOnly ? shapeAlpha * borderAlpha : shapeAlpha;
+                pixels[y * size + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(255f * alpha));
+            }
         }
 
-        var mesh = new Mesh { name = "CellHoverHatch" };
-        mesh.SetVertices(verts);
-        mesh.SetTriangles(tris, 0);
-        mesh.RecalculateNormals();
-        return mesh;
+        return FinishSprite(texture, pixels, spriteName, size);
     }
 
-    private static void AddRectXZ(System.Collections.Generic.List<Vector3> verts, System.Collections.Generic.List<int> tris,
-                                  float minX, float maxX, float minZ, float maxZ)
+    private static Sprite CreateDiamondBorderSprite()
     {
-        int baseIndex = verts.Count;
-        verts.Add(new Vector3(minX, 0f, minZ));
-        verts.Add(new Vector3(maxX, 0f, minZ));
-        verts.Add(new Vector3(maxX, 0f, maxZ));
-        verts.Add(new Vector3(minX, 0f, maxZ));
-        tris.Add(baseIndex); tris.Add(baseIndex + 2); tris.Add(baseIndex + 1);
-        tris.Add(baseIndex); tris.Add(baseIndex + 3); tris.Add(baseIndex + 2);
+        const int size = 64;
+        var texture = CreateTexture("CellHoverFocusTexture", size);
+        var pixels = new Color32[size * size];
+        Vector2 center = new((size - 1) * 0.5f, (size - 1) * 0.5f);
+        float outer = size * 0.31f;
+        float inner = size * 0.22f;
+
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                Vector2 p = new Vector2(x, y) - center;
+                float diamondDistance = Mathf.Abs(p.x) + Mathf.Abs(p.y);
+                float outerAlpha = Mathf.Clamp01(1f - Mathf.Abs(diamondDistance - outer) / 2.8f);
+                float innerCut = Mathf.SmoothStep(0f, 1f, Mathf.Abs(diamondDistance - inner) / 3.8f);
+                float alpha = outerAlpha * innerCut;
+                pixels[y * size + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(255f * alpha));
+            }
+        }
+
+        return FinishSprite(texture, pixels, "CellHoverFocusSprite", size);
     }
 
-    private static void AddSlantedStrip(System.Collections.Generic.List<Vector3> verts, System.Collections.Generic.List<int> tris,
-                                        Vector3 center, Vector3 direction, Vector3 perpendicular, float halfLength, float halfWidth)
+    private static Sprite CreateHatchSprite()
     {
-        int baseIndex = verts.Count;
-        verts.Add(center - direction * halfLength - perpendicular * halfWidth);
-        verts.Add(center + direction * halfLength - perpendicular * halfWidth);
-        verts.Add(center + direction * halfLength + perpendicular * halfWidth);
-        verts.Add(center - direction * halfLength + perpendicular * halfWidth);
-        tris.Add(baseIndex); tris.Add(baseIndex + 2); tris.Add(baseIndex + 1);
-        tris.Add(baseIndex); tris.Add(baseIndex + 3); tris.Add(baseIndex + 2);
+        const int size = 64;
+        var texture = CreateTexture("CellHoverHatchTexture", size);
+        var pixels = new Color32[size * size];
+        Vector2 center = new((size - 1) * 0.5f, (size - 1) * 0.5f);
+        float half = size * 0.33f;
+
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                Vector2 p = new Vector2(x, y) - center;
+                bool inside = Mathf.Abs(p.x) <= half && Mathf.Abs(p.y) <= half;
+                float stripe = Mathf.Abs(Mathf.Repeat((p.x + p.y) * 0.22f, 1f) - 0.5f);
+                float alpha = inside ? Mathf.Clamp01(1f - stripe / 0.11f) : 0f;
+                pixels[y * size + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(255f * alpha));
+            }
+        }
+
+        return FinishSprite(texture, pixels, "CellHoverHatchSprite", size);
     }
 
-    private static void SetStrip(Vector3[] verts, int[] tris,
-                                 int vBase, int tBase,
-                                 Vector3 a, Vector3 b, Vector3 c, Vector3 d)
+    private static Texture2D CreateTexture(string textureName, int size)
     {
-        verts[vBase] = a; verts[vBase + 1] = b;
-        verts[vBase + 2] = c; verts[vBase + 3] = d;
-        tris[tBase] = vBase; tris[tBase + 1] = vBase + 2; tris[tBase + 2] = vBase + 1;
-        tris[tBase + 3] = vBase; tris[tBase + 4] = vBase + 3; tris[tBase + 5] = vBase + 2;
+        return new Texture2D(size, size, TextureFormat.RGBA32, false)
+        {
+            name = textureName,
+            filterMode = FilterMode.Bilinear,
+            wrapMode = TextureWrapMode.Clamp,
+        };
     }
 
-    #endregion
-
-    #region Material Helpers
-
-    // Creates a transparent unlit material compatible with URP and legacy pipelines.
-    private static Material BuildMaterial(Color initialColor)
+    private static Sprite FinishSprite(Texture2D texture, Color32[] pixels, string spriteName, int size)
     {
-        var shader = Shader.Find("Universal Render Pipeline/Unlit")
-                  ?? Shader.Find("Unlit/Color")
-                  ?? Shader.Find("Sprites/Default");
-
-        var mat = new Material(shader) { name = "CellHoverMat" };
-        mat.SetOverrideTag("RenderType", "Transparent");
-        SetFloatIfSupported(mat, "_Surface", 1f);
-        SetFloatIfSupported(mat, "_Blend", 0f);
-        SetFloatIfSupported(mat, "_SrcBlend", (float)BlendMode.SrcAlpha);
-        SetFloatIfSupported(mat, "_DstBlend", (float)BlendMode.OneMinusSrcAlpha);
-        SetFloatIfSupported(mat, "_ZWrite", 0f);
-        SetFloatIfSupported(mat, "_Cull", (float)CullMode.Off);
-        SetFloatIfSupported(mat, "_AlphaClip", 0f);
-        mat.DisableKeyword("_ALPHATEST_ON");
-        mat.EnableKeyword("_ALPHABLEND_ON");
-        mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
-        mat.renderQueue = (int)RenderQueue.Transparent;
-        SetMaterialColor(mat, initialColor);
-        return mat;
+        texture.SetPixels32(pixels);
+        texture.Apply(false, true);
+        Sprite sprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
+        sprite.name = spriteName;
+        return sprite;
     }
 
-    private static void SetFloatIfSupported(Material material, string property, float value)
+    private static void DestroySprite(Sprite sprite)
     {
-        if (material != null && material.HasProperty(property))
-            material.SetFloat(property, value);
+        if (sprite == null) return;
+        if (sprite.texture != null)
+            Destroy(sprite.texture);
+        Destroy(sprite);
     }
 
-    private static void SetMaterialColor(Material material, Color color)
+    private static Vector2 Abs(Vector2 value)
     {
-        if (material == null) return;
-        if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
-        if (material.HasProperty("_Color")) material.SetColor("_Color", color);
+        return new Vector2(Mathf.Abs(value.x), Mathf.Abs(value.y));
+    }
+
+    private static Vector2 Max(Vector2 value, Vector2 min)
+    {
+        return new Vector2(Mathf.Max(value.x, min.x), Mathf.Max(value.y, min.y));
+    }
+
+    private static float Length(Vector2 value)
+    {
+        return Mathf.Sqrt(value.x * value.x + value.y * value.y);
     }
 
     #endregion
@@ -648,9 +602,7 @@ public class CellHoverIndicator : MonoBehaviour
         float left = panel.x + offsetX;
         float top = panel.y + offsetY;
 
-        // Flip left if tooltip would overflow right edge.
         if (left + tipW > panelRect.width) left = panel.x - tipW - offsetX * 0.5f;
-        // Flip up if tooltip would overflow bottom edge.
         if (top + tipH > panelRect.height) top = panel.y - tipH - offsetY * 0.5f;
 
         _tooltip.style.left = Mathf.Clamp(left, 0f, Mathf.Max(0f, panelRect.width - tipW));

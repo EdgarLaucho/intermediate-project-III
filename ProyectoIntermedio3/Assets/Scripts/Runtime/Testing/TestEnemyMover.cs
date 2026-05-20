@@ -14,7 +14,7 @@ public sealed class TestEnemyMover : MonoBehaviour
 
     private EnemyStub _enemy;
     private Transform _nexusTarget;
-    private Tower _towerTarget;
+    private BuildingBase _buildingTarget;
     private float _nextTowerSearchTime;
     private float _nextAttackTime;
 
@@ -29,9 +29,9 @@ public sealed class TestEnemyMover : MonoBehaviour
         if (_enemy == null || !_enemy.IsAlive) return;
 
         RefreshTowerTarget();
-        if (HasLiveTowerTarget())
+        if (HasLiveBuildingTarget())
         {
-            MoveOrAttackTower();
+            MoveOrAttackBuilding();
             return;
         }
 
@@ -39,9 +39,9 @@ public sealed class TestEnemyMover : MonoBehaviour
         MoveOrHitNexus();
     }
 
-    private void MoveOrAttackTower()
+    private void MoveOrAttackBuilding()
     {
-        Vector3 targetPosition = _towerTarget.transform.position;
+        Vector3 targetPosition = _buildingTarget.transform.position;
         targetPosition.y = transform.position.y;
 
         Vector3 offset = targetPosition - transform.position;
@@ -53,7 +53,7 @@ public sealed class TestEnemyMover : MonoBehaviour
         }
 
         Face(offset);
-        AttackTower();
+        AttackBuilding();
     }
 
     private void MoveOrHitNexus()
@@ -95,56 +95,60 @@ public sealed class TestEnemyMover : MonoBehaviour
 
     private void RefreshTowerTarget()
     {
-        if (!attackTowers || HasLiveTowerTarget()) return;
+        if (!attackTowers || HasLiveBuildingTarget()) return;
         if (Time.time < _nextTowerSearchTime) return;
 
         _nextTowerSearchTime = Time.time + Mathf.Max(0.05f, towerSearchInterval);
-        _towerTarget = FindClosestTower();
+        _buildingTarget = FindClosestBuilding();
     }
 
-    private bool HasLiveTowerTarget()
+    private bool HasLiveBuildingTarget()
     {
-        if (_towerTarget == null) return false;
-        if (_towerTarget.IsAlive) return true;
+        if (_buildingTarget == null) return false;
+        if (_buildingTarget.IsAlive) return true;
 
-        _towerTarget = null;
+        _buildingTarget = null;
         return false;
     }
 
-    private Tower FindClosestTower()
+    private BuildingBase FindClosestBuilding()
     {
-        Tower closest = null;
+        BuildingBase closest = null;
         float bestSqrDistance = towerSearchRadius > 0f
             ? towerSearchRadius * towerSearchRadius
             : float.PositiveInfinity;
 
-        Tower[] towers = FindObjectsByType<Tower>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-        foreach (Tower tower in towers)
+        BuildingBase[] buildings = FindObjectsByType<BuildingBase>(FindObjectsInactive.Exclude);
+        foreach (BuildingBase building in buildings)
         {
-            if (tower == null || !tower.IsAlive) continue;
+            if (building == null || !building.IsAlive) continue;
 
-            float sqrDistance = HorizontalSqrDistance(transform.position, tower.transform.position);
+            float sqrDistance = HorizontalSqrDistance(transform.position, building.transform.position);
             if (sqrDistance <= bestSqrDistance)
             {
                 bestSqrDistance = sqrDistance;
-                closest = tower;
+                closest = building;
             }
         }
 
         return closest;
     }
 
-    private void AttackTower()
+    private void AttackBuilding()
     {
-        if (Time.time < _nextAttackTime || !HasLiveTowerTarget()) return;
+        if (Time.time < _nextAttackTime || !HasLiveBuildingTarget()) return;
 
         _nextAttackTime = Time.time + Mathf.Max(0.05f, attackInterval);
         int damage = _enemy.ContactDamage;
         if (damage <= 0) return;
 
-        _towerTarget.TakeDamage(damage);
-        if (!_towerTarget.IsAlive)
-            _towerTarget = null;
+        if (_buildingTarget is Wall wall)
+            wall.TakeContactHit(_enemy, damage);
+        else
+            _buildingTarget.TakeDamage(damage);
+
+        if (!_buildingTarget.IsAlive)
+            _buildingTarget = null;
     }
 
     private bool FindNexus()

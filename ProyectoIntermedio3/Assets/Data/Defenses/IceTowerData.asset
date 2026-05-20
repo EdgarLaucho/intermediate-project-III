@@ -14,15 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TD.Data.TowerData
   buildingName: Torre de Hielo
   prefab: {fileID: 1000000000000000021, guid: a1f0c9e76b9a4b4fb2e8e8d47a100003, type: 3}
-  buyCost: 85
+  buyCost: 80
   refundPercentage: 0.5
   repairCostPerHP: 0.5
-  baseMaxHealth: 130
+  baseMaxHealth: 125
+  autoOrientRadially: 0
+  placementYawOffset: 0
+  allowPaintPlacement: 0
   maxLevel: 2
   upgradeLevels:
-  - upgradeCost: 65
+  - upgradeCost: 60
     bonusMaxHealth: 35
-    statMultiplier: 1.15
+    statMultiplier: 1.12
     fireRateMultiplier: 1.08
     bonusTrapUses: 0
     bonusRange: 0
@@ -34,7 +37,7 @@ MonoBehaviour:
   - upgradeCost: 120
     bonusMaxHealth: 55
     statMultiplier: 1.15
-    fireRateMultiplier: 1.12
+    fireRateMultiplier: 1.1
     bonusTrapUses: 0
     bonusRange: 1
     bonusArmor: 0
@@ -45,11 +48,11 @@ MonoBehaviour:
   role: 2
   damageKind: 2
   towerStats:
-    attackRange: 2
-    attackDamage: 5
-    fireRate: 0.9
-    projectileSpeed: 10
+    attackRange: 3
+    attackDamage: 7
+    fireRate: 0.85
+    projectileSpeed: 11
     projectilesPerAttack: 1
-    splashRadius: 1
-    slowPercent: 0.35
-    slowDuration: 1.6
+    splashRadius: 0
+    slowPercent: 0.4
+    slowDuration: 2

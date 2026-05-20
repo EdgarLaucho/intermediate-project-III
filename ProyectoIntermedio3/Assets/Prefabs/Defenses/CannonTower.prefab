@@ -11,7 +11,9 @@ GameObject:
   - component: {fileID: 1000000000000000012}
   - component: {fileID: 1000000000000000013}
   - component: {fileID: 1000000000000000015}
-  m_Layer: 0
+  - component: {fileID: 6863323619397279080}
+  - component: {fileID: 9017617657620280447}
+  m_Layer: 8
   m_Name: CannonTower
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -63,11 +65,50 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   aimPivot: {fileID: 6282577074040075684}
+  shootPoint: {fileID: 8814379106300249522}
+  projectilePrefab: {fileID: 0}
   idleSweepAngle: 35
   idleSweepFrequency: 0.35
   idleTurnSpeed: 90
   targetTurnSpeed: 420
   fireAlignmentAngle: 10
+--- !u!208 &6863323619397279080
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000000000000000011}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 1, y: 0.5, z: 1}
+  m_MoveThreshold: 0.1
+  m_Carve: 1
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 0.5, z: 0}
+  m_TimeToStationary: 0.5
+--- !u!65 &9017617657620280447
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000000000000000011}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2, y: 1, z: 2}
+  m_Center: {x: 0, y: 0.5, z: 0}
 --- !u!1 &1000000000000000100
 GameObject:
   m_ObjectHideFlags: 0
@@ -5358,3 +5399,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3800428466ddfb548ae907253596d92a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TD.UI.BuildingHealthBar
+  hideWhenFullHealth: 1
+  fullHealthLingerTime: 0.65
+  targetCamera: {fileID: 0}
+  faceCamera: 1
+  keepUpright: 0
+  scaleWithDistance: 1
+  referenceDistance: 10
+  minScale: 0.85
+  maxScale: 1.05

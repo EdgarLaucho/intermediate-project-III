@@ -4,7 +4,7 @@ using UnityEngine.AI;
 
 
 
-public class BaseEnemyAI : MonoBehaviour, IDamageable
+public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
 {
     [Header("References")] 
     [SerializeField] protected EnemySO enemySO;
