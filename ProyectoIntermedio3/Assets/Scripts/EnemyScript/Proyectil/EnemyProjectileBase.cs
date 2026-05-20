@@ -1,0 +1,50 @@
+using UnityEngine;
+
+public class EnemyProjectileBase : MonoBehaviour
+{
+    [Header("Settings")] [SerializeField] 
+    protected float speed = 10f;
+    [SerializeField] 
+    protected int damage = 10;
+    [SerializeField] 
+    protected float lifeTime = 10f;
+    
+    protected Vector3 moveDirection;
+    protected IDamageable owner;
+
+    protected virtual void Start()
+    {
+        Destroy(gameObject, lifeTime);
+    }
+
+    protected virtual void Update()
+    {
+        transform.position += moveDirection * speed * Time.deltaTime;
+    }
+
+    public virtual void Initialize(Vector3 direction, int projectileDamage, float projectileSpeed, IDamageable projectileOwner)
+    {
+        moveDirection = direction.normalized;
+        damage = projectileDamage;
+        speed = projectileSpeed;
+        owner = projectileOwner;
+    }
+
+    protected virtual void OnTriggerEnter(Collider other)
+    {
+        Debug.Log("Knife hit: " + other.name);
+        IDamageable damageable = other.GetComponentInParent<IDamageable>();
+        Debug.Log("Damageable found: " + (damageable != null));
+
+        if (damageable == owner)
+            return;
+        
+
+        if (damageable == null)
+            return;
+        
+        damageable.TakeDamage(damage);
+        
+        Destroy(gameObject);
+    }
+}

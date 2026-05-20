@@ -7,7 +7,7 @@ public enum  EnemyState
     Dodging,
     Retreating,
     ChasingPlayer,
-    AttackingTurret,
+    AttackingConstruction,
     Dead
     
 }

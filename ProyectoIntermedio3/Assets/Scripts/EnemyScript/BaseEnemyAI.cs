@@ -8,13 +8,15 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
 {
     [Header("References")] 
     [SerializeField] protected EnemySO enemySO;
-
+    
+    
     protected EnemyState currentState;
     protected NavMeshAgent agent;
     protected Transform currentTarget;
     protected IDamageable currentDamageable;
     protected bool hasCompletedObjective;
     protected int currentTargetLayer;
+    
 
     protected float attackTimer;
     
@@ -79,7 +81,7 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
                 HandleIdle();
                 break;
             case EnemyState.MovingToTarget:
-            case EnemyState.AttackingTurret:
+            case EnemyState.AttackingConstruction:
             case EnemyState.ChasingPlayer:
                 HandleMove();
                 break;
@@ -138,9 +140,9 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
             {
                 currentState = EnemyState.ChasingPlayer;
             }
-            else if (currentTargetLayer == LayerMask.NameToLayer("Turret"))
+            else if (currentTargetLayer == LayerMask.NameToLayer("Construction"))
             {
-                currentState = EnemyState.AttackingTurret;
+                currentState = EnemyState.AttackingConstruction;
             }
             else
             {
@@ -247,13 +249,13 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
     protected virtual void EvaluateTargets()
     {
         // Si ya está atacando una torreta viva, NO cambia de objetivo
-        if (enemySO.canAttackTurrets &&
+        if (enemySO.canAttackConstruction &&
             currentTarget != null &&
-            currentTargetLayer == LayerMask.NameToLayer("Turret") &&
+            currentTargetLayer == LayerMask.NameToLayer("Construction") &&
             currentDamageable != null &&
             currentDamageable.IsAlive)
         {
-            currentState = EnemyState.AttackingTurret;
+            currentState = EnemyState.AttackingConstruction;
             return;
         }
 
@@ -270,27 +272,33 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
 
         // Primero busca torretas si puede atacarlas
         // Esto permite que deje la mesa si aparece una torreta cerca
-        if (enemySO.canAttackTurrets)
+        if (enemySO.canAttackConstruction)
         {
-            Collider[] turrets = Physics.OverlapSphere(
+            Collider[] Constructions = Physics.OverlapSphere(
                 transform.position,
-                enemySO.turretDetectionRange,
-                enemySO.turretLayer
+                enemySO.ConstructionDetectionRange,
+                enemySO.constructionLayer
             );
 
-            foreach (Collider turret in turrets)
+            foreach (Collider construction in Constructions)
             {
-                IDamageable damageable = turret.GetComponentInParent<IDamageable>();
-
+                IDamageable damageable = construction.GetComponentInParent<IDamageable>();
+                
+                Debug.Log(
+                    $"[CONSTRUCTION CHECK] Collider: {construction.name} | " +
+                    $"Parent: {construction.transform.root.name} | " +
+                    $"Damageable: {damageable != null} | " +
+                    $"IsAlive: {(damageable != null ? damageable.IsAlive : false)}"
+                );
                 if (damageable == null || !damageable.IsAlive)
                     continue;
 
-                currentTarget = turret.transform;
+                currentTarget = construction.transform;
                 currentDamageable = damageable;
-                currentTargetLayer = LayerMask.NameToLayer("Turret");
-                currentState = EnemyState.AttackingTurret;
+                currentTargetLayer = LayerMask.NameToLayer("Construction");
+                currentState = EnemyState.AttackingConstruction;
 
-                Debug.Log("Changing target to TURRET");
+                Debug.Log("Changing target to Construction");
                 return;
             }
         }
@@ -364,18 +372,22 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
             }
         }
 
-        if (enemySO.canAttackTurrets)
+        if (enemySO.canAttackConstruction)
         {
-            Collider[] turrets = Physics.OverlapSphere(
+            Collider[] constructions = Physics.OverlapSphere(
                 transform.position,
-                enemySO.turretDetectionRange,
-                enemySO.turretLayer
+                enemySO.ConstructionDetectionRange,
+                enemySO.constructionLayer
             );
 
-            foreach (Collider turret in turrets)
+            foreach (Collider construction in constructions)
             {
-                IDamageable damageable = turret.GetComponentInParent<IDamageable>();
-
+                IDamageable damageable = construction.GetComponentInParent<IDamageable>();
+                Debug.Log(
+                    $"[HAS VALID CONSTRUCTION] Collider: {construction.name} | " +
+                    $"Damageable: {damageable != null} | " +
+                    $"IsAlive: {(damageable != null ? damageable.IsAlive : false)}"
+                );
                 if (damageable != null && damageable.IsAlive)
                     return true;
             }
@@ -393,6 +405,7 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
             {
                 IDamageable damageable = player.GetComponentInParent<IDamageable>();
 
+                
                 if (damageable != null && damageable.IsAlive)
                     return true;
             }
