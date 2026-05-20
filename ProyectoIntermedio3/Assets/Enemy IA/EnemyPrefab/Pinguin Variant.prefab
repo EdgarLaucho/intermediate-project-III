@@ -52,18 +52,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Pinguin Variant
       objectReference: {fileID: 0}
-    - target: {fileID: 8058892030328101944, guid: cfe1cea44be218740a3a824c42c06bbe, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0.178
-      objectReference: {fileID: 0}
-    - target: {fileID: 8058892030328101944, guid: cfe1cea44be218740a3a824c42c06bbe, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.405
-      objectReference: {fileID: 0}
-    - target: {fileID: 8058892030328101944, guid: cfe1cea44be218740a3a824c42c06bbe, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -0.136
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
