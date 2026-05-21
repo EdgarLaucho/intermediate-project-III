@@ -1,9 +1,12 @@
 using UnityEngine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
 public class WaveSystem : MonoBehaviour
 {
+    public static event Action OnGameWon;
+
     [Header("References")]
     [SerializeField] private EnemySpawner enemySpawner;
 
@@ -51,6 +54,7 @@ public class WaveSystem : MonoBehaviour
         }
 
         Debug.Log("YOU WON THE GAME!");
+        OnGameWon?.Invoke();
     }
 
     private void SpawnEnemyFromPool(EnemyType type)
