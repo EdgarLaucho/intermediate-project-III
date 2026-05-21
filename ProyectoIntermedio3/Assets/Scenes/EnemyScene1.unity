@@ -281,9 +281,13 @@ MonoBehaviour:
   enemiesPoolData:
   - {fileID: 11400000, guid: 5e90f7ad9822e354b8085c154f1c2929, type: 2}
   - {fileID: 11400000, guid: fd06edc3e742cbe479a974d355c3978f, type: 2}
+  - {fileID: 11400000, guid: c4eceb1d3b50195468965fb2ab0df263, type: 2}
+  - {fileID: 11400000, guid: 0d5359262d2092242b0b5348939965a9, type: 2}
   spawnPoints:
   - {fileID: 1913035658}
   - {fileID: 1178489467}
+  - {fileID: 1456606622}
+  - {fileID: 1484165017}
 --- !u!1 &296163206
 GameObject:
   m_ObjectHideFlags: 0
@@ -1107,7 +1111,7 @@ PrefabInstance:
       objectReference: {fileID: 1424701020}
     - target: {fileID: 6127395625895404759, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -4
+      value: 1.77
       objectReference: {fileID: 0}
     - target: {fileID: 6127395625895404759, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1115,7 +1119,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6127395625895404759, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -3
+      value: -7.31
       objectReference: {fileID: 0}
     - target: {fileID: 6127395625895404759, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1265,6 +1269,96 @@ MonoBehaviour:
   allowUpgradeDuringCombat: 0
   allowDemolishDuringCombat: 0
   allowRepairDuringCombat: 1
+--- !u!1 &1456606620
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1456606621}
+  - component: {fileID: 1456606622}
+  m_Layer: 0
+  m_Name: SPKitty
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1456606621
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1456606620}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -7.53, y: 0, z: 7.3}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1610695180}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1456606622
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1456606620}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0d71d35e820818429c312a4d06f7451, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemySpawnPoint
+  enemyType: 2
+--- !u!1 &1484165016
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1484165018}
+  - component: {fileID: 1484165017}
+  m_Layer: 0
+  m_Name: SPChickenPenguin
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1484165017
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1484165016}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0d71d35e820818429c312a4d06f7451, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemySpawnPoint
+  enemyType: 3
+--- !u!4 &1484165018
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1484165016}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -11.81, y: 0, z: 7.3}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1610695180}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1512643716
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1388,6 +1482,8 @@ Transform:
   - {fileID: 211044546}
   - {fileID: 1178489468}
   - {fileID: 1913035659}
+  - {fileID: 1456606621}
+  - {fileID: 1484165018}
   - {fileID: 396718391}
   - {fileID: 1689609166}
   m_Father: {fileID: 0}
@@ -1553,8 +1649,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WaveSystem
   enemySpawner: {fileID: 211044547}
   waves:
-  - waveName: PenguinWave
-    enemyType: 1
+  - waveName: ChickenPenguinWave
+    enemyType: 3
     enemyCount: 10
     rate: 1
   - waveName: PenguinWave
@@ -1920,7 +2016,7 @@ Transform:
   m_GameObject: {fileID: 1913035657}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -11.55538, y: 0, z: 3.4990802}
+  m_LocalPosition: {x: -11.55538, y: 0, z: 2.58}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

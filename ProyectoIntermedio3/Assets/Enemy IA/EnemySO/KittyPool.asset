@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: daf8cb93a2e8fd6469cc6da0908d9978, type: 3}
+  m_Name: KittyPool
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyPoolDataSO
+  EnemyType: 2
+  prefab: {fileID: 1208677054491889208, guid: ab6fee7440a09d846bb2e2c92e463667, type: 3}
+  defaultCapacity: 10
+  maxSize: 30

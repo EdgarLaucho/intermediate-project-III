@@ -10,29 +10,30 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 16ca2decb3a9efc4bb24eb79e1492e07, type: 3}
-  m_Name: PinguinSO 1
+  m_Name: KittySO
   m_EditorClassIdentifier: Assembly-CSharp::EnemySO
+  type: 2
   goldReward: 5
-  health: 100
-  speed: 10
+  health: 500
+  speed: 3
   foodTableLayer:
     serializedVersion: 2
-    m_Bits: 8
+    m_Bits: 264
   constructionLayer:
     serializedVersion: 2
     m_Bits: 256
   playerLayer:
     serializedVersion: 2
     m_Bits: 512
-  isRanged: 1
-  projectilePrefab: {fileID: -4335099252552524486, guid: 2e73b68e785e3f44e9850b09d274e26c, type: 3}
+  isRanged: 0
+  projectilePrefab: {fileID: 0}
   projectileSpeed: 10
-  canAttackFoodTable: 0
+  canAttackFoodTable: 1
   canAttackConstruction: 1
-  canAttackPlayer: 0
-  ConstructionDetectionRange: 20
-  playerDetectionRange: 20
-  damage: 30
-  attackRange: 8
-  attackCooldown: 3
+  canAttackPlayer: 1
+  ConstructionDetectionRange: 5
+  playerDetectionRange: 4
+  damage: 50
+  attackRange: 2
+  attackCooldown: 5
   attackSound: {fileID: 0}

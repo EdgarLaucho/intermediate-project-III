@@ -3,6 +3,9 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "EnemySO", menuName = "Scriptable Objects/EnemySO")]
 public class EnemySO : ScriptableObject
 {
+    [Header("Type")]
+    public EnemyType type;
+    
     [Header("Economy")]
     public int goldReward = 5;
     

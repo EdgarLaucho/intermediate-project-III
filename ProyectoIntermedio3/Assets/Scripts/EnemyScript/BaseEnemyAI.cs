@@ -13,6 +13,7 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
     protected EnemyState currentState;
     protected NavMeshAgent agent;
     protected Transform currentTarget;
+    public EnemyType EnemyType => enemySO.type;
     protected IDamageable currentDamageable;
     protected bool hasCompletedObjective;
     protected int currentTargetLayer;
@@ -22,8 +23,8 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
     
     
     
-    public int CurrentHealth { get; private set; }
-    public int MaxHealth { get; private set; }
+    public int CurrentHealth { get; protected set; }
+    public int MaxHealth { get; protected set; }
     public bool IsAlive => CurrentHealth > 0;
     public event Action<IDamageable> OnDeath;
     public event Action OnHealthChanged;
@@ -91,7 +92,7 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
         }
     }
     
-    public void Initialize()
+    public virtual void Initialize()
     {
         MaxHealth = enemySO.health;
         CurrentHealth = MaxHealth;
@@ -198,6 +199,11 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
     
     protected virtual void Attack()
     {
+        BaseMeleeAttack();
+    }
+
+    protected void BaseMeleeAttack()
+    {
         agent.isStopped = true;
 
         attackTimer += Time.deltaTime;
@@ -205,8 +211,7 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
         if (attackTimer >= enemySO.attackCooldown)
         {
             attackTimer = 0f;
-            
-            
+
             if (currentDamageable == null || !currentDamageable.IsAlive)
             {
                 currentState = EnemyState.Idle;
@@ -215,9 +220,11 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
                 agent.isStopped = true;
                 return;
             }
+
             currentDamageable.TakeDamage(enemySO.damage);
 
             Debug.Log($"{gameObject.name} attacked {currentTarget.name}");
+
             if (!currentDamageable.IsAlive)
             {
                 int deadTargetLayer = currentTargetLayer;
@@ -227,8 +234,8 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
                 currentDamageable = null;
                 agent.isStopped = true;
 
-                if (deadTargetLayer == LayerMask.NameToLayer("FoodTable")||
-                deadTargetLayer == LayerMask.NameToLayer("Player"))
+                if (deadTargetLayer == LayerMask.NameToLayer("FoodTable") ||
+                    deadTargetLayer == LayerMask.NameToLayer("Player"))
                 {
                     hasCompletedObjective = true;
                 }
@@ -439,13 +446,11 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
         OnHealthChanged?.Invoke();
     }
 
-    protected void Die()
+    protected virtual void Die()
     {
         Debug.Log($"{gameObject.name} died");
         
         EnemyEvents.EnemyDied(enemySO.goldReward);
         OnDeath?.Invoke(this);
-        
-        
     }
 }
