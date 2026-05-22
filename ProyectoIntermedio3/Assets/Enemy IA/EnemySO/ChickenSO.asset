@@ -29,7 +29,7 @@ MonoBehaviour:
   projectilePrefab: {fileID: 0}
   projectileSpeed: 10
   canAttackFoodTable: 1
-  canAttackConstruction: 1
+  canAttackConstruction: 0
   canAttackPlayer: 0
   ConstructionDetectionRange: 5
   playerDetectionRange: 10

@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 
 public class WaveSystem : MonoBehaviour
 {
@@ -9,20 +10,42 @@ public class WaveSystem : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private EnemySpawner enemySpawner;
+    [SerializeField] private GameObject startWaveButton;
+    [SerializeField] private TextMeshProUGUI finalWaveMessage;
+    [SerializeField] private TextMeshProUGUI killsCounter;
 
     [Header("Wave Settings")]
     public List<Wave> waves;
     public float timeBetweenWaves = 5f;
 
+    [Header("Game Mode Settings")]
+    public bool isNormalMode = false;
+
     private int currentWaveIndex = 0;
     private int currentEnemiesAlive = 0;
+    private int totalKills = 0;
+    private bool startNextWavePressed = false;
 
     void Start()
     {
+        isNormalMode = (PlayerPrefs.GetInt("NormalModeActive", 0) == 1);
+
+        if (startWaveButton != null)
+        {
+            startWaveButton.SetActive(isNormalMode);
+        }
+
         if (enemySpawner == null)
         {
             enemySpawner = FindFirstObjectByType<EnemySpawner>();
         }
+
+        if (finalWaveMessage != null)
+        {
+            finalWaveMessage.text = "";
+        }
+
+        UpdateKillsCounter();
 
         StartCoroutine(SpawnWave());
     }
@@ -31,15 +54,33 @@ public class WaveSystem : MonoBehaviour
     {
         while (currentWaveIndex < waves.Count)
         {
+            if (isNormalMode)
+            {
+                startNextWavePressed = false;
+
+                while (!startNextWavePressed)
+                {
+                    yield return null;
+                }
+            }
+
             Wave currentWave = waves[currentWaveIndex];
-            Debug.Log("WAVE OF: " + currentWave.waveName);
+            Debug.Log("LOADING WAVE: " + currentWave.waveName);
 
             currentEnemiesAlive = 0;
 
-            for (int i = 0; i < currentWave.enemyCount; i++)
+            int groupsFinished = 0;
+            foreach (EnemyMix mix in currentWave.mixedEnemies)
             {
-                SpawnEnemyFromPool(currentWave.enemyType);
-                yield return new WaitForSeconds(1f / currentWave.rate);
+                StartCoroutine(SpawnEnemyGroup(mix, () =>
+                {
+                    groupsFinished++;
+                }));
+            }
+
+            while (groupsFinished < currentWave.mixedEnemies.Count)
+            {
+                yield return new WaitForSeconds(0.2f);
             }
 
             while (currentEnemiesAlive > 0)
@@ -49,12 +90,60 @@ public class WaveSystem : MonoBehaviour
 
             Debug.Log($"YOU SURVIVED TO {currentWave.waveName} !");
 
+            if (currentWaveIndex == waves.Count - 1)
+            {
+                StartCoroutine(ShowFinalWaveMessage("YOU SURVIVE! "));
+            }
+            else
+            {
+                StartCoroutine(ShowFinalWaveMessage("WAVE FINISHED! "));
+            }
+
             currentWaveIndex++;
-            yield return new WaitForSeconds(timeBetweenWaves);
+            if (!isNormalMode)
+            {
+                yield return new WaitForSeconds(timeBetweenWaves);
+            }
         }
 
         Debug.Log("YOU WON THE GAME!");
         OnGameWon?.Invoke();
+    }
+
+    IEnumerator ShowFinalWaveMessage(string message)
+    {
+        if (finalWaveMessage != null)
+        {
+            finalWaveMessage.text = message;
+
+            yield return new WaitForSeconds(3f);
+
+            finalWaveMessage.text = "";
+        }
+    }
+
+    public void StartNextWave()
+    {
+        if (isNormalMode && currentEnemiesAlive == 0)
+        {
+            startNextWavePressed = true;
+        }
+    }
+
+    IEnumerator SpawnEnemyGroup(EnemyMix mix, Action onGroupComplete)
+    {
+        if (mix.delayBeforeStart > 0)
+        {
+            yield return new WaitForSeconds(mix.delayBeforeStart);
+        }
+
+        for (int i = 0; i < mix.enemyCount; i++)
+        {
+            SpawnEnemyFromPool(mix.enemyType);
+            yield return new WaitForSeconds(1f / mix.rate);
+        }
+
+        onGroupComplete?.Invoke();
     }
 
     private void SpawnEnemyFromPool(EnemyType type)
@@ -78,5 +167,15 @@ public class WaveSystem : MonoBehaviour
         }
 
         currentEnemiesAlive--;
+        totalKills++;
+        UpdateKillsCounter();
+    }
+
+    private void UpdateKillsCounter()
+    {
+        if (killsCounter != null)
+        {
+            killsCounter.text = "KILLS: " + totalKills;
+        }
     }
 }

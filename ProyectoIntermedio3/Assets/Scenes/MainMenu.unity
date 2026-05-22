@@ -132,7 +132,7 @@ GameObject:
   - component: {fileID: 198319271}
   - component: {fileID: 198319270}
   m_Layer: 5
-  m_Name: Button3
+  m_Name: ExitButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -418,7 +418,7 @@ RectTransform:
   m_GameObject: {fileID: 668189319}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 26.213, y: 3.4711, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1664327369}
@@ -426,7 +426,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 528, y: 330}
+  m_SizeDelta: {x: 70, y: 330}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &668189321
 MonoBehaviour:
@@ -787,7 +787,7 @@ GameObject:
   - component: {fileID: 1228275265}
   - component: {fileID: 1228275264}
   m_Layer: 5
-  m_Name: Button2
+  m_Name: HardcoreModeButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -856,7 +856,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1228275265}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1487176133}
+        m_TargetAssemblyTypeName: MainMenuScreen, Assembly-CSharp
+        m_MethodName: PlayHardcoreGame
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1228275265
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -922,14 +934,14 @@ RectTransform:
   m_GameObject: {fileID: 1299179219}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 5.294079, y: 1.6836, z: 1}
+  m_LocalScale: {x: 18.337101, y: 5.880983, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1487176132}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -1, y: 81}
+  m_AnchoredPosition: {x: -1, y: 277.61053}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1299179221
@@ -1120,7 +1132,7 @@ GameObject:
   - component: {fileID: 1434596556}
   - component: {fileID: 1434596555}
   m_Layer: 5
-  m_Name: Button1
+  m_Name: NormalModeButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1192,7 +1204,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1487176133}
         m_TargetAssemblyTypeName: MainMenuScreen, Assembly-CSharp
-        m_MethodName: PlayGame
+        m_MethodName: PlayNormalGame
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1289,12 +1301,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 0.5
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -1390,10 +1402,10 @@ RectTransform:
   - {fileID: 668189320}
   m_Father: {fileID: 1487176132}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &2053311386
 GameObject:
@@ -1548,7 +1560,7 @@ RectTransform:
   m_GameObject: {fileID: 2119473377}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 3.7217438, y: 4.177496, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1434596554}
@@ -1558,7 +1570,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -32, y: -71}
+  m_AnchoredPosition: {x: -98.89873, y: -291.49103}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2119473379
