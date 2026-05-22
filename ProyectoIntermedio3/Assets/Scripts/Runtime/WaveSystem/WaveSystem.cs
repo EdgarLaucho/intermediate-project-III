@@ -9,16 +9,28 @@ public class WaveSystem : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private EnemySpawner enemySpawner;
+    [SerializeField] private GameObject startWaveButton;
 
     [Header("Wave Settings")]
     public List<Wave> waves;
     public float timeBetweenWaves = 5f;
 
+    [Header("Game Mode Settings")]
+    public bool isNormalMode = false;
+
     private int currentWaveIndex = 0;
     private int currentEnemiesAlive = 0;
+    private bool startNextWavePressed = false;
 
     void Start()
     {
+        isNormalMode = (PlayerPrefs.GetInt("NormalModeActive", 0) == 1);
+
+        if (startWaveButton != null)
+        {
+            startWaveButton.SetActive(isNormalMode);
+        }
+
         if (enemySpawner == null)
         {
             enemySpawner = FindFirstObjectByType<EnemySpawner>();
@@ -31,6 +43,16 @@ public class WaveSystem : MonoBehaviour
     {
         while (currentWaveIndex < waves.Count)
         {
+            if (isNormalMode)
+            {
+                startNextWavePressed = false;
+
+                while (!startNextWavePressed)
+                {
+                    yield return null;
+                }
+            }
+
             Wave currentWave = waves[currentWaveIndex];
             Debug.Log("LOADING WAVE: " + currentWave.waveName);
 
@@ -57,11 +79,22 @@ public class WaveSystem : MonoBehaviour
             Debug.Log($"YOU SURVIVED TO {currentWave.waveName} !");
 
             currentWaveIndex++;
-            yield return new WaitForSeconds(timeBetweenWaves);
+            if (!isNormalMode)
+            {
+                yield return new WaitForSeconds(timeBetweenWaves);
+            }
         }
 
         Debug.Log("YOU WON THE GAME!");
         OnGameWon?.Invoke();
+    }
+
+    public void StartNextWave()
+    {
+        if (isNormalMode && currentEnemiesAlive == 0)
+        {
+            startNextWavePressed = true;
+        }
     }
 
     IEnumerator SpawnEnemyGroup(EnemyMix mix, Action onGroupComplete)
