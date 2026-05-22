@@ -32,14 +32,21 @@ public class WaveSystem : MonoBehaviour
         while (currentWaveIndex < waves.Count)
         {
             Wave currentWave = waves[currentWaveIndex];
-            Debug.Log("WAVE OF: " + currentWave.waveName);
+            Debug.Log("LOADING WAVE: " + currentWave.waveName);
 
             currentEnemiesAlive = 0;
 
-            for (int i = 0; i < currentWave.enemyCount; i++)
+            int groupsFinished = 0;
+            foreach (EnemyMix mix in currentWave.mixedEnemies)
             {
-                SpawnEnemyFromPool(currentWave.enemyType);
-                yield return new WaitForSeconds(1f / currentWave.rate);
+                StartCoroutine(SpawnEnemyGroup(mix, () => {
+                    groupsFinished++;
+                }));
+            }
+
+            while (groupsFinished < currentWave.mixedEnemies.Count)
+            {
+                yield return new WaitForSeconds(0.2f);
             }
 
             while (currentEnemiesAlive > 0)
@@ -55,6 +62,22 @@ public class WaveSystem : MonoBehaviour
 
         Debug.Log("YOU WON THE GAME!");
         OnGameWon?.Invoke();
+    }
+
+    IEnumerator SpawnEnemyGroup(EnemyMix mix, Action onGroupComplete)
+    {
+        if (mix.delayBeforeStart > 0)
+        {
+            yield return new WaitForSeconds(mix.delayBeforeStart);
+        }
+
+        for (int i = 0; i < mix.enemyCount; i++)
+        {
+            SpawnEnemyFromPool(mix.enemyType);
+            yield return new WaitForSeconds(1f / mix.rate);
+        }
+
+        onGroupComplete?.Invoke();
     }
 
     private void SpawnEnemyFromPool(EnemyType type)
