@@ -15,5 +15,5 @@ MonoBehaviour:
   weaponName: Explosive
   damage: 4
   attackRate: 0.7
-  attackRange: 8
+  attackRange: 7
   projectilePrefab: {fileID: -3292536453791288912, guid: 3e5b0980d9cc7a94bbb93263b9c6228d, type: 3}

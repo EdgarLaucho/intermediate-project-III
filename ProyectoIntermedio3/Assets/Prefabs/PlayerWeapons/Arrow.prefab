@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: -7250486791371573123}
   - component: {fileID: 659712409588892524}
   m_Layer: 0
-  m_Name: PP_Theme_01_Arrow_001
+  m_Name: Arrow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -126,5 +126,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: becb97de0cefeb5428c90acc0b51c82f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Projectile
-  speed: 7
+  speed: 10
   arcHeight: 0.3

@@ -11,9 +11,11 @@ GameObject:
   - component: {fileID: 3595557804323297469}
   - component: {fileID: 453217939841996568}
   - component: {fileID: 2427106056267965394}
-  - component: {fileID: 453217939841996575}
+  - component: {fileID: -5575028177344612156}
+  - component: {fileID: 1535345040582244385}
+  - component: {fileID: 7010397887454137519}
   m_Layer: 0
-  m_Name: PP_Theme_02_Bow_001
+  m_Name: Bow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -89,9 +91,10 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &453217939841996575
-MeshCollider:
+--- !u!136 &-5575028177344612156
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -105,10 +108,42 @@ MeshCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 1
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 6132041091034060240, guid: f2313de6d6114514da7b09c4b6ac3fcf, type: 3}
+  serializedVersion: 2
+  m_Radius: 0.20122558
+  m_Height: 1.5650086
+  m_Direction: 1
+  m_Center: {x: -0.106174506, y: 0, z: -0.00013396889}
+--- !u!114 &1535345040582244385
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4228365931688133127}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d60747f8df7a3248b276c3297296690, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponPickup
+  weaponData: {fileID: 11400000, guid: fdaaccd4bb4633948a3a4ef03e7cba92, type: 2}
+  weaponDuration: 20
+--- !u!114 &7010397887454137519
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4228365931688133127}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 854d6de23fc8e8f4eb52cf8fecd10ecc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PickupVisual
+  itemLifeTime: 5
+  pulseBeforeDestroy: 1
+  floatHeight: 0.25
+  floatSpeed: 2
+  rotationSpeed: 45

@@ -4,6 +4,8 @@ public class WeaponPickup : MonoBehaviour, IPickable
 {
     [SerializeField] private WeaponData weaponData;
 
+    [SerializeField] private float weaponDuration = 15f;
+
     public void PickUp(GameObject picker)
     {
         PlayerWeaponController weaponController =
@@ -12,7 +14,7 @@ public class WeaponPickup : MonoBehaviour, IPickable
         if (weaponController == null)
             return;
 
-        weaponController.EquipWeapon(weaponData);
+        weaponController.EquipWeapon(weaponData, weaponDuration);
 
         Destroy(gameObject);
     }

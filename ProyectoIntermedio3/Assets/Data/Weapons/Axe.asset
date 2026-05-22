@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f187b578ff90d9d44b12aa9041c82c24, type: 3}
-  m_Name: FastCrossbow
+  m_Name: Axe
   m_EditorClassIdentifier: Assembly-CSharp::WeaponData
-  weaponName: Fast Crossbow
-  damage: 2
-  attackRate: 3
+  weaponName: Axe
+  damage: 1
+  attackRate: 1
   attackRange: 5
-  projectilePrefab: {fileID: 6634830010108146841, guid: e8634adbc34d1394ea7d16fe06351b55, type: 3}
+  projectilePrefab: {fileID: 2370084295778246443, guid: 6b42bd07dae72e1459a17f1d5a9d8f30, type: 3}
