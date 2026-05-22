@@ -12,21 +12,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16ca2decb3a9efc4bb24eb79e1492e07, type: 3}
   m_Name: ChickenSO
   m_EditorClassIdentifier: Assembly-CSharp::EnemySO
+  type: 0
+  goldReward: 5
   health: 50
   speed: 3.5
   foodTableLayer:
     serializedVersion: 2
     m_Bits: 8
-  turretLayer:
+  constructionLayer:
     serializedVersion: 2
-    m_Bits: 256
+    m_Bits: 0
   playerLayer:
     serializedVersion: 2
     m_Bits: 512
+  isRanged: 0
+  projectilePrefab: {fileID: 0}
+  projectileSpeed: 10
   canAttackFoodTable: 1
-  canAttackTurrets: 0
+  canAttackConstruction: 0
   canAttackPlayer: 0
-  turretDetectionRange: 20
+  ConstructionDetectionRange: 5
   playerDetectionRange: 10
   damage: 10
   attackRange: 1.6
