@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4590348899741804}
+  - component: {fileID: -3292536453791288912}
   m_Layer: 0
   m_Name: Bullet03
   m_TagString: Untagged
@@ -33,6 +34,26 @@ Transform:
   - {fileID: 4189322529613816}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &-3292536453791288912
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1162392375372998}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 485d9ad34185bf645963c439648d77c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExplosiveProjectile
+  speed: 12
+  explosionRadius: 3
+  damageLayers:
+    serializedVersion: 2
+    m_Bits: 128
+  travelDuration: 0.7
+  arcHeight: 1.5
+  explosionEffect: {fileID: -5716473066537565790, guid: ebae6107c5a71c84ab661ed7b7c8b374, type: 3}
 --- !u!1 &1513605970140576
 GameObject:
   m_ObjectHideFlags: 0

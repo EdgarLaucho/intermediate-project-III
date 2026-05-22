@@ -2,17 +2,35 @@ using UnityEngine;
 
 public class Projectile : MonoBehaviour
 {
-    [SerializeField] protected float speed = 12f;
+    [SerializeField]
+    protected float speed = 12f;
+
+    [SerializeField]
+    protected float arcHeight = 0.3f;
 
     protected Transform target;
     protected int damage;
 
-    public virtual void Initialize(
-        Transform newTarget,
-        int newDamage)
+    private Vector3 startPosition;
+
+    private float journeyLength;
+
+    private float currentTravelDistance;
+
+    public virtual void Initialize(Transform newTarget, int newDamage)
     {
         target = newTarget;
         damage = newDamage;
+
+        startPosition = transform.position;
+
+        if (target != null)
+        {
+            journeyLength =
+                Vector3.Distance(
+                    startPosition,
+                    target.position);
+        }
     }
 
     protected virtual void Update()
@@ -28,17 +46,32 @@ public class Projectile : MonoBehaviour
 
     protected virtual void Move()
     {
-        Vector3 direction = (target.position - transform.position).normalized;
+        currentTravelDistance += speed * Time.deltaTime;
 
-        transform.position += direction * speed * Time.deltaTime;
+        float progress = currentTravelDistance / journeyLength;
 
-        transform.LookAt(target);
+        progress = Mathf.Clamp01(progress);
 
-        float distance = Vector3.Distance(
-            transform.position,
-            target.position);
+        Vector3 targetPosition = target.position;
 
-        if (distance <= 0.2f)
+        Vector3 nextPosition =
+            Vector3.Lerp(
+                startPosition,
+                targetPosition,
+                progress);
+
+        nextPosition.y += Mathf.Sin(progress * Mathf.PI) * arcHeight;
+
+        Vector3 movementDirection = nextPosition - transform.position;
+
+        transform.position = nextPosition;
+
+        if (movementDirection != Vector3.zero)
+        {
+            transform.rotation = Quaternion.LookRotation(movementDirection);
+        }
+
+        if (progress >= 1f)
         {
             HitTarget();
         }

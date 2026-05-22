@@ -13,6 +13,13 @@ public class HealthPickup : MonoBehaviour, IPickable
 
         health.Heal(healAmount);
 
+        HealEffect effect = picker.GetComponent<HealEffect>();
+
+        if (effect != null)
+        {
+            effect.PlayHealEffect();
+        }
+
         Destroy(gameObject);
     }
 }

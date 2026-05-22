@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f187b578ff90d9d44b12aa9041c82c24, type: 3}
-  m_Name: WoodenBow
+  m_Name: Bow
   m_EditorClassIdentifier: Assembly-CSharp::WeaponData
-  weaponName: Arrow Bow
+  weaponName: Bow
   damage: 1
   attackRate: 1
   attackRange: 5
-  projectilePrefab: {fileID: 6634830010108146841, guid: 6fa877f14d1dbcf4c888b807cb64607d, type: 3}
+  projectilePrefab: {fileID: 659712409588892524, guid: 96711372ac71aa94d8ef04b40e9445f9, type: 3}

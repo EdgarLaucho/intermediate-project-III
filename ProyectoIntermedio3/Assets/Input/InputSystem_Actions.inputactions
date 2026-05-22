@@ -25,6 +25,15 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "ToggleHelp",
+                    "type": "Button",
+                    "id": "848be1a2-cc67-4e80-83de-15d71b3162d7",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "PrimaryClick",
                     "type": "Button",
                     "id": "8383bf55-8466-47ba-95be-c5f45b9208fa",
@@ -160,6 +169,17 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "ToggleCameraFollow",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f1da4b0f-b4da-4e11-8405-dbd7cf84db74",
+                    "path": "<Keyboard>/h",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "ToggleHelp",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

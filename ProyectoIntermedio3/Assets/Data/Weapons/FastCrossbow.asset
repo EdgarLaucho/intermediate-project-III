@@ -15,5 +15,5 @@ MonoBehaviour:
   weaponName: Fast Crossbow
   damage: 2
   attackRate: 3
-  attackRange: 6
+  attackRange: 5
   projectilePrefab: {fileID: 6634830010108146841, guid: e8634adbc34d1394ea7d16fe06351b55, type: 3}

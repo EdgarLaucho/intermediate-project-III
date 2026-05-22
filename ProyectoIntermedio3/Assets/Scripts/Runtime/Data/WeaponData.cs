@@ -13,7 +13,4 @@ public class WeaponData : ScriptableObject
 
     [Header("Projectile")]
     public Projectile projectilePrefab;
-
-    //[Header("Visual")]
-    //public Color projectileColor = Color.white;
 }

@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f187b578ff90d9d44b12aa9041c82c24, type: 3}
-  m_Name: ExplosiveLauncher
+  m_Name: Explosive
   m_EditorClassIdentifier: Assembly-CSharp::WeaponData
-  weaponName: Explosive Launcher
+  weaponName: Explosive
   damage: 4
   attackRate: 0.7
-  attackRange: 7
-  projectilePrefab: {fileID: 651101998740978959, guid: c8bdfc0955eb8fc43b320d18da8e3820, type: 3}
+  attackRange: 8
+  projectilePrefab: {fileID: -3292536453791288912, guid: 3e5b0980d9cc7a94bbb93263b9c6228d, type: 3}

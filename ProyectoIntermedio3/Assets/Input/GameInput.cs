@@ -113,6 +113,15 @@ namespace Game
                     ""initialStateCheck"": false
                 },
                 {
+                    ""name"": ""ToggleHelp"",
+                    ""type"": ""Button"",
+                    ""id"": ""848be1a2-cc67-4e80-83de-15d71b3162d7"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
                     ""name"": ""PrimaryClick"",
                     ""type"": ""Button"",
                     ""id"": ""8383bf55-8466-47ba-95be-c5f45b9208fa"",
@@ -248,6 +257,17 @@ namespace Game
                     ""processors"": """",
                     ""groups"": ""Keyboard&Mouse"",
                     ""action"": ""ToggleCameraFollow"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f1da4b0f-b4da-4e11-8405-dbd7cf84db74"",
+                    ""path"": ""<Keyboard>/h"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""ToggleHelp"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -870,6 +890,7 @@ namespace Game
             m_Gameplay = asset.FindActionMap("Gameplay", throwIfNotFound: true);
             m_Gameplay_MoveCamera = m_Gameplay.FindAction("MoveCamera", throwIfNotFound: true);
             m_Gameplay_ToggleCameraFollow = m_Gameplay.FindAction("ToggleCameraFollow", throwIfNotFound: true);
+            m_Gameplay_ToggleHelp = m_Gameplay.FindAction("ToggleHelp", throwIfNotFound: true);
             m_Gameplay_PrimaryClick = m_Gameplay.FindAction("PrimaryClick", throwIfNotFound: true);
             m_Gameplay_SecondaryClick = m_Gameplay.FindAction("SecondaryClick", throwIfNotFound: true);
             m_Gameplay_Cancel = m_Gameplay.FindAction("Cancel", throwIfNotFound: true);
@@ -968,6 +989,7 @@ namespace Game
         private List<IGameplayActions> m_GameplayActionsCallbackInterfaces = new List<IGameplayActions>();
         private readonly InputAction m_Gameplay_MoveCamera;
         private readonly InputAction m_Gameplay_ToggleCameraFollow;
+        private readonly InputAction m_Gameplay_ToggleHelp;
         private readonly InputAction m_Gameplay_PrimaryClick;
         private readonly InputAction m_Gameplay_SecondaryClick;
         private readonly InputAction m_Gameplay_Cancel;
@@ -990,6 +1012,10 @@ namespace Game
             /// Provides access to the underlying input action "Gameplay/ToggleCameraFollow".
             /// </summary>
             public InputAction @ToggleCameraFollow => m_Wrapper.m_Gameplay_ToggleCameraFollow;
+            /// <summary>
+            /// Provides access to the underlying input action "Gameplay/ToggleHelp".
+            /// </summary>
+            public InputAction @ToggleHelp => m_Wrapper.m_Gameplay_ToggleHelp;
             /// <summary>
             /// Provides access to the underlying input action "Gameplay/PrimaryClick".
             /// </summary>
@@ -1034,6 +1060,9 @@ namespace Game
                 @ToggleCameraFollow.started += instance.OnToggleCameraFollow;
                 @ToggleCameraFollow.performed += instance.OnToggleCameraFollow;
                 @ToggleCameraFollow.canceled += instance.OnToggleCameraFollow;
+                @ToggleHelp.started += instance.OnToggleHelp;
+                @ToggleHelp.performed += instance.OnToggleHelp;
+                @ToggleHelp.canceled += instance.OnToggleHelp;
                 @PrimaryClick.started += instance.OnPrimaryClick;
                 @PrimaryClick.performed += instance.OnPrimaryClick;
                 @PrimaryClick.canceled += instance.OnPrimaryClick;
@@ -1060,6 +1089,9 @@ namespace Game
                 @ToggleCameraFollow.started -= instance.OnToggleCameraFollow;
                 @ToggleCameraFollow.performed -= instance.OnToggleCameraFollow;
                 @ToggleCameraFollow.canceled -= instance.OnToggleCameraFollow;
+                @ToggleHelp.started -= instance.OnToggleHelp;
+                @ToggleHelp.performed -= instance.OnToggleHelp;
+                @ToggleHelp.canceled -= instance.OnToggleHelp;
                 @PrimaryClick.started -= instance.OnPrimaryClick;
                 @PrimaryClick.performed -= instance.OnPrimaryClick;
                 @PrimaryClick.canceled -= instance.OnPrimaryClick;
@@ -1383,6 +1415,13 @@ namespace Game
             /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
             /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
             void OnToggleCameraFollow(InputAction.CallbackContext context);
+            /// <summary>
+            /// Method invoked when associated input action "ToggleHelp" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+            /// </summary>
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+            void OnToggleHelp(InputAction.CallbackContext context);
             /// <summary>
             /// Method invoked when associated input action "PrimaryClick" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
             /// </summary>

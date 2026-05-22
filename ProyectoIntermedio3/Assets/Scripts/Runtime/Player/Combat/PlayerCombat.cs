@@ -18,6 +18,8 @@ public class PlayerCombat : MonoBehaviour
 
     private bool hasManualTarget;
 
+    private bool allowAutoCombat = true;
+
     private float attackTimer;
 
     private void Awake()
@@ -32,7 +34,7 @@ public class PlayerCombat : MonoBehaviour
     {
         ValidateTarget();
 
-        if (!hasManualTarget)
+        if (allowAutoCombat && !hasManualTarget)
         {
             FindAutomaticTarget();
         }
@@ -45,6 +47,24 @@ public class PlayerCombat : MonoBehaviour
         currentTarget = newTarget;
 
         hasManualTarget = true;
+
+        allowAutoCombat = true;
+    }
+
+    public void StopCombat()
+    {
+        currentTarget = null;
+
+        hasManualTarget = false;
+
+        allowAutoCombat = false;
+
+        agent.ResetPath();
+    }
+
+    public void EnableAutoCombat()
+    {
+        allowAutoCombat = true;
     }
 
     private void ValidateTarget()
@@ -61,6 +81,7 @@ public class PlayerCombat : MonoBehaviour
         if (damageable == null || !damageable.IsAlive)
         {
             currentTarget = null;
+
             hasManualTarget = false;
         }
     }
@@ -91,6 +112,7 @@ public class PlayerCombat : MonoBehaviour
             if (distance < closestDistance)
             {
                 closestDistance = distance;
+
                 closestTarget = hit.transform;
             }
         }
@@ -137,13 +159,11 @@ public class PlayerCombat : MonoBehaviour
 
     private void RotateTowardsTarget()
     {
-        Vector3 direction =
-            (currentTarget.position - transform.position).normalized;
+        Vector3 direction = (currentTarget.position - transform.position).normalized;
 
         direction.y = 0f;
 
-        Quaternion targetRotation =
-            Quaternion.LookRotation(direction);
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
 
         transform.rotation = Quaternion.Slerp(
             transform.rotation,
