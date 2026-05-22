@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 
 public class WaveSystem : MonoBehaviour
 {
@@ -10,6 +11,8 @@ public class WaveSystem : MonoBehaviour
     [Header("References")]
     [SerializeField] private EnemySpawner enemySpawner;
     [SerializeField] private GameObject startWaveButton;
+    [SerializeField] private TextMeshProUGUI finalWaveMessage;
+    [SerializeField] private TextMeshProUGUI killsCounter;
 
     [Header("Wave Settings")]
     public List<Wave> waves;
@@ -20,6 +23,7 @@ public class WaveSystem : MonoBehaviour
 
     private int currentWaveIndex = 0;
     private int currentEnemiesAlive = 0;
+    private int totalKills = 0;
     private bool startNextWavePressed = false;
 
     void Start()
@@ -35,6 +39,13 @@ public class WaveSystem : MonoBehaviour
         {
             enemySpawner = FindFirstObjectByType<EnemySpawner>();
         }
+
+        if (finalWaveMessage != null)
+        {
+            finalWaveMessage.text = "";
+        }
+
+        UpdateKillsCounter();
 
         StartCoroutine(SpawnWave());
     }
@@ -61,7 +72,8 @@ public class WaveSystem : MonoBehaviour
             int groupsFinished = 0;
             foreach (EnemyMix mix in currentWave.mixedEnemies)
             {
-                StartCoroutine(SpawnEnemyGroup(mix, () => {
+                StartCoroutine(SpawnEnemyGroup(mix, () =>
+                {
                     groupsFinished++;
                 }));
             }
@@ -78,6 +90,15 @@ public class WaveSystem : MonoBehaviour
 
             Debug.Log($"YOU SURVIVED TO {currentWave.waveName} !");
 
+            if (currentWaveIndex == waves.Count - 1)
+            {
+                StartCoroutine(ShowFinalWaveMessage("YOU SURVIVE! "));
+            }
+            else
+            {
+                StartCoroutine(ShowFinalWaveMessage("WAVE FINISHED! "));
+            }
+
             currentWaveIndex++;
             if (!isNormalMode)
             {
@@ -87,6 +108,18 @@ public class WaveSystem : MonoBehaviour
 
         Debug.Log("YOU WON THE GAME!");
         OnGameWon?.Invoke();
+    }
+
+    IEnumerator ShowFinalWaveMessage(string message)
+    {
+        if (finalWaveMessage != null)
+        {
+            finalWaveMessage.text = message;
+
+            yield return new WaitForSeconds(3f);
+
+            finalWaveMessage.text = "";
+        }
     }
 
     public void StartNextWave()
@@ -134,5 +167,15 @@ public class WaveSystem : MonoBehaviour
         }
 
         currentEnemiesAlive--;
+        totalKills++;
+        UpdateKillsCounter();
+    }
+
+    private void UpdateKillsCounter()
+    {
+        if (killsCounter != null)
+        {
+            killsCounter.text = "KILLS: " + totalKills;
+        }
     }
 }

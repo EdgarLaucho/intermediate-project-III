@@ -8,6 +8,7 @@ public class GameOverScreen : MonoBehaviour
 
     [Header("Player Reference")]
     [SerializeField] private Health playerHealth;
+    [SerializeField] private Health tableHealth;
 
     void Start()
     {
@@ -20,9 +21,23 @@ public class GameOverScreen : MonoBehaviour
             }
         }
 
+        if (tableHealth == null)
+        {
+            GameObject table = GameObject.FindWithTag("Base");
+            if (table != null)
+            {
+                tableHealth = table.GetComponent<Health>();
+            }
+        }
+
         if (playerHealth != null)
         {
-            playerHealth.OnDeath += OnPlayerDeath;
+            playerHealth.OnDeath += OnTargetDeath;
+        }
+
+        if (tableHealth != null)
+        {
+            tableHealth.OnDeath += OnTargetDeath;
         }
     }
 
@@ -30,11 +45,16 @@ public class GameOverScreen : MonoBehaviour
     {
         if (playerHealth != null)
         {
-            playerHealth.OnDeath -= OnPlayerDeath;
+            playerHealth.OnDeath -= OnTargetDeath;
+        }
+
+        if (tableHealth != null)
+        { 
+            tableHealth.OnDeath -= OnTargetDeath;
         }
     }
 
-    private void OnPlayerDeath(IDamageable damageable)
+    private void OnTargetDeath(IDamageable damageable)
     {
         if (gameOverPanel != null)
         {
