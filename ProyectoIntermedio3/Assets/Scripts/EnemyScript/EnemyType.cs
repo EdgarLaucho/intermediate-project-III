@@ -2,7 +2,7 @@ public enum EnemyType
 {
     Chicken,
     Penguin,
-    Tank,
-    Ranged,
+    Kitty,
+    ChickenPenguin,
     Boss
 }

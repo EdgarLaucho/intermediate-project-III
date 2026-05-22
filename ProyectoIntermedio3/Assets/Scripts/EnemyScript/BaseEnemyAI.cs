@@ -4,24 +4,27 @@ using UnityEngine.AI;
 
 
 
-public class BaseEnemyAI : MonoBehaviour, IDamageable
+public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
 {
     [Header("References")] 
     [SerializeField] protected EnemySO enemySO;
-
+    
+    
     protected EnemyState currentState;
     protected NavMeshAgent agent;
     protected Transform currentTarget;
+    public EnemyType EnemyType => enemySO.type;
     protected IDamageable currentDamageable;
     protected bool hasCompletedObjective;
     protected int currentTargetLayer;
+    
 
     protected float attackTimer;
     
     
     
-    public int CurrentHealth { get; private set; }
-    public int MaxHealth { get; private set; }
+    public int CurrentHealth { get; protected set; }
+    public int MaxHealth { get; protected set; }
     public bool IsAlive => CurrentHealth > 0;
     public event Action<IDamageable> OnDeath;
     public event Action OnHealthChanged;
@@ -79,7 +82,7 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable
                 HandleIdle();
                 break;
             case EnemyState.MovingToTarget:
-            case EnemyState.AttackingTurret:
+            case EnemyState.AttackingConstruction:
             case EnemyState.ChasingPlayer:
                 HandleMove();
                 break;
@@ -89,7 +92,7 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable
         }
     }
     
-    public void Initialize()
+    public virtual void Initialize()
     {
         MaxHealth = enemySO.health;
         CurrentHealth = MaxHealth;
@@ -138,9 +141,9 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable
             {
                 currentState = EnemyState.ChasingPlayer;
             }
-            else if (currentTargetLayer == LayerMask.NameToLayer("Turret"))
+            else if (currentTargetLayer == LayerMask.NameToLayer("Construction"))
             {
-                currentState = EnemyState.AttackingTurret;
+                currentState = EnemyState.AttackingConstruction;
             }
             else
             {
@@ -196,6 +199,11 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable
     
     protected virtual void Attack()
     {
+        BaseMeleeAttack();
+    }
+
+    protected void BaseMeleeAttack()
+    {
         agent.isStopped = true;
 
         attackTimer += Time.deltaTime;
@@ -203,8 +211,7 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable
         if (attackTimer >= enemySO.attackCooldown)
         {
             attackTimer = 0f;
-            
-            
+
             if (currentDamageable == null || !currentDamageable.IsAlive)
             {
                 currentState = EnemyState.Idle;
@@ -213,9 +220,11 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable
                 agent.isStopped = true;
                 return;
             }
+
             currentDamageable.TakeDamage(enemySO.damage);
 
             Debug.Log($"{gameObject.name} attacked {currentTarget.name}");
+
             if (!currentDamageable.IsAlive)
             {
                 int deadTargetLayer = currentTargetLayer;
@@ -225,8 +234,8 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable
                 currentDamageable = null;
                 agent.isStopped = true;
 
-                if (deadTargetLayer == LayerMask.NameToLayer("FoodTable")||
-                deadTargetLayer == LayerMask.NameToLayer("Player"))
+                if (deadTargetLayer == LayerMask.NameToLayer("FoodTable") ||
+                    deadTargetLayer == LayerMask.NameToLayer("Player"))
                 {
                     hasCompletedObjective = true;
                 }
@@ -247,13 +256,13 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable
     protected virtual void EvaluateTargets()
     {
         // Si ya está atacando una torreta viva, NO cambia de objetivo
-        if (enemySO.canAttackTurrets &&
+        if (enemySO.canAttackConstruction &&
             currentTarget != null &&
-            currentTargetLayer == LayerMask.NameToLayer("Turret") &&
+            currentTargetLayer == LayerMask.NameToLayer("Construction") &&
             currentDamageable != null &&
             currentDamageable.IsAlive)
         {
-            currentState = EnemyState.AttackingTurret;
+            currentState = EnemyState.AttackingConstruction;
             return;
         }
 
@@ -270,27 +279,33 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable
 
         // Primero busca torretas si puede atacarlas
         // Esto permite que deje la mesa si aparece una torreta cerca
-        if (enemySO.canAttackTurrets)
+        if (enemySO.canAttackConstruction)
         {
-            Collider[] turrets = Physics.OverlapSphere(
+            Collider[] Constructions = Physics.OverlapSphere(
                 transform.position,
-                enemySO.turretDetectionRange,
-                enemySO.turretLayer
+                enemySO.ConstructionDetectionRange,
+                enemySO.constructionLayer
             );
 
-            foreach (Collider turret in turrets)
+            foreach (Collider construction in Constructions)
             {
-                IDamageable damageable = turret.GetComponentInParent<IDamageable>();
-
+                IDamageable damageable = construction.GetComponentInParent<IDamageable>();
+                
+                Debug.Log(
+                    $"[CONSTRUCTION CHECK] Collider: {construction.name} | " +
+                    $"Parent: {construction.transform.root.name} | " +
+                    $"Damageable: {damageable != null} | " +
+                    $"IsAlive: {(damageable != null ? damageable.IsAlive : false)}"
+                );
                 if (damageable == null || !damageable.IsAlive)
                     continue;
 
-                currentTarget = turret.transform;
+                currentTarget = construction.transform;
                 currentDamageable = damageable;
-                currentTargetLayer = LayerMask.NameToLayer("Turret");
-                currentState = EnemyState.AttackingTurret;
+                currentTargetLayer = LayerMask.NameToLayer("Construction");
+                currentState = EnemyState.AttackingConstruction;
 
-                Debug.Log("Changing target to TURRET");
+                Debug.Log("Changing target to Construction");
                 return;
             }
         }
@@ -364,18 +379,22 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable
             }
         }
 
-        if (enemySO.canAttackTurrets)
+        if (enemySO.canAttackConstruction)
         {
-            Collider[] turrets = Physics.OverlapSphere(
+            Collider[] constructions = Physics.OverlapSphere(
                 transform.position,
-                enemySO.turretDetectionRange,
-                enemySO.turretLayer
+                enemySO.ConstructionDetectionRange,
+                enemySO.constructionLayer
             );
 
-            foreach (Collider turret in turrets)
+            foreach (Collider construction in constructions)
             {
-                IDamageable damageable = turret.GetComponentInParent<IDamageable>();
-
+                IDamageable damageable = construction.GetComponentInParent<IDamageable>();
+                Debug.Log(
+                    $"[HAS VALID CONSTRUCTION] Collider: {construction.name} | " +
+                    $"Damageable: {damageable != null} | " +
+                    $"IsAlive: {(damageable != null ? damageable.IsAlive : false)}"
+                );
                 if (damageable != null && damageable.IsAlive)
                     return true;
             }
@@ -393,6 +412,7 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable
             {
                 IDamageable damageable = player.GetComponentInParent<IDamageable>();
 
+                
                 if (damageable != null && damageable.IsAlive)
                     return true;
             }
@@ -426,13 +446,11 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable
         OnHealthChanged?.Invoke();
     }
 
-    protected void Die()
+    protected virtual void Die()
     {
         Debug.Log($"{gameObject.name} died");
         
         EnemyEvents.EnemyDied(enemySO.goldReward);
         OnDeath?.Invoke(this);
-        
-        
     }
 }

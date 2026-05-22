@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: daf8cb93a2e8fd6469cc6da0908d9978, type: 3}
-  m_Name: PinguinPoolSO
+  m_Name: ChickenPenPool
   m_EditorClassIdentifier: Assembly-CSharp::EnemyPoolDataSO
-  EnemyType: 1
-  prefab: {fileID: 2347924195473327487, guid: 185a0543ff680344c85117f948047424, type: 3}
+  EnemyType: 3
+  prefab: {fileID: 1392352978762795624, guid: 5c438a2a58b2f3a418cf410eaeaba5b7, type: 3}
   defaultCapacity: 10
   maxSize: 30

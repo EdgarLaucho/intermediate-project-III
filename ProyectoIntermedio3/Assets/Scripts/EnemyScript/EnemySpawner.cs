@@ -7,8 +7,7 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField] private EnemyPoolDataSO[] enemiesPoolData;
     [SerializeField] private EnemySpawnPoint[] spawnPoints;
 
-    private Dictionary<BaseEnemyAI, EnemyType> enemyTypes =
-        new Dictionary<BaseEnemyAI, EnemyType>();
+    
     private Dictionary<EnemyType, ObjectPool<BaseEnemyAI>> pools = 
         new Dictionary<EnemyType, ObjectPool<BaseEnemyAI>>();
 
@@ -32,7 +31,6 @@ public class EnemySpawner : MonoBehaviour
     private BaseEnemyAI CreateEnemy(EnemyPoolDataSO data)
     {
         BaseEnemyAI enemy = Instantiate(data.prefab);
-        enemyTypes[enemy] = data.EnemyType;
         enemy.gameObject.SetActive(false);
         return enemy;
     }
@@ -52,7 +50,6 @@ public class EnemySpawner : MonoBehaviour
 
     private void OnDestroyEnemy(BaseEnemyAI enemy)
     {
-        enemyTypes.Remove(enemy);
         Destroy(enemy.gameObject);
     }
 
@@ -71,8 +68,9 @@ public class EnemySpawner : MonoBehaviour
         return enemy;
     }
 
-    public void ReturnEnemy(EnemyType enemyType, BaseEnemyAI enemy)
+    public void ReturnEnemy( BaseEnemyAI enemy)
     {
+        EnemyType enemyType = enemy.EnemyType;
         if (!pools.ContainsKey(enemyType))
         {
             Destroy(enemy.gameObject);
@@ -112,12 +110,6 @@ public class EnemySpawner : MonoBehaviour
         if (enemy == null)
             return;
 
-        if (!enemyTypes.ContainsKey(enemy))
-        {
-            enemy.gameObject.SetActive(false);
-            return;
-        }
-
-        ReturnEnemy(enemyTypes[enemy], enemy);
+        ReturnEnemy(enemy);
     }
 }
