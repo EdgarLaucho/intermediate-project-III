@@ -30,6 +30,12 @@ public class ExplosionWave : MonoBehaviour
 
         while (timer < duration)
         {
+            if (GamePauseEvents.IsPaused)
+            {
+                yield return null;
+                continue;
+            }
+
             timer += Time.deltaTime;
 
             float progress = timer / duration;

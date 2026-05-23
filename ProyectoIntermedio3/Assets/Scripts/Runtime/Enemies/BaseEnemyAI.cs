@@ -17,6 +17,7 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
     protected IDamageable currentDamageable;
     protected bool hasCompletedObjective;
     protected int currentTargetLayer;
+    protected bool isGamePaused;
     
 
     protected float attackTimer;
@@ -46,8 +47,30 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
         FindFoodTable();
     }
 
+    protected virtual void OnEnable()
+    {
+        GamePauseEvents.OnGamePaused += HandleGamePaused;
+        GamePauseEvents.OnGameResumed += HandleGameResumed;
+
+        isGamePaused = GamePauseEvents.IsPaused;
+        if (isGamePaused)
+            StopAgent();
+    }
+
+    protected virtual void OnDisable()
+    {
+        GamePauseEvents.OnGamePaused -= HandleGamePaused;
+        GamePauseEvents.OnGameResumed -= HandleGameResumed;
+    }
+
     protected virtual void Update()
     {
+        if (isGamePaused)
+        {
+            StopAgent();
+            return;
+        }
+
         if (hasCompletedObjective)
         {
             agent.isStopped = true;
@@ -105,11 +128,30 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
 
         if (agent != null)
         {
-            agent.isStopped = false;
             agent.speed = enemySO.speed;
+            agent.isStopped = GamePauseEvents.IsPaused;
         }
 
+        isGamePaused = GamePauseEvents.IsPaused;
+
         FindFoodTable();
+    }
+
+    private void HandleGamePaused()
+    {
+        isGamePaused = true;
+        StopAgent();
+    }
+
+    private void HandleGameResumed()
+    {
+        isGamePaused = false;
+    }
+
+    private void StopAgent()
+    {
+        if (agent != null && agent.enabled)
+            agent.isStopped = true;
     }
     
     //State Enemy

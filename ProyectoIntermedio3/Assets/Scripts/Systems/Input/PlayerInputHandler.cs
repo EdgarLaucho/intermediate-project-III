@@ -1,11 +1,14 @@
 using Game;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.UIElements;
 
 public class PlayerInputHandler : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private GridManager grid;
+    private GridManager grid;
     [SerializeField] private Camera gameplayCamera;
 
     [Header("Configuration")]
@@ -13,6 +16,11 @@ public class PlayerInputHandler : MonoBehaviour
 
     private GameInput _input;
     private Camera _cam;
+    private bool _primaryStartedOnWorld;
+    private bool _primaryStartedOverUi;
+    private bool _hasLastWorldPos;
+    private Vector3 _lastWorldPos;
+    private static readonly List<RaycastResult> UiRaycastResults = new();
 
     #region Unity Lifecycle
 
@@ -23,6 +31,8 @@ public class PlayerInputHandler : MonoBehaviour
         _cam = gameplayCamera != null
             ? gameplayCamera
             : Camera.main;
+
+        grid = FindAnyObjectByType<GridManager>(FindObjectsInactive.Exclude);
     }
 
     private void OnEnable()
@@ -42,6 +52,7 @@ public class PlayerInputHandler : MonoBehaviour
     private void Update()
     {
         HandlePointerMovement();
+        HandlePrimaryHeld();
     }
 
     #endregion
@@ -100,22 +111,38 @@ public class PlayerInputHandler : MonoBehaviour
 
     private void OnPrimaryClick(InputAction.CallbackContext ctx)
     {
+        _primaryStartedOnWorld = false;
+        _primaryStartedOverUi = IsPointerOverUi();
+
+        if (_primaryStartedOverUi)
+            return;
+
         if (TryGetGroundHit(out Vector3 worldPos))
         {
+            _primaryStartedOnWorld = true;
             InputEvents.PrimaryPressed(worldPos);
         }
     }
 
     private void OnPrimaryRelease(InputAction.CallbackContext ctx)
     {
-        if (TryGetGroundHit(out Vector3 worldPos))
+        if (_primaryStartedOverUi)
         {
-            InputEvents.PrimaryReleased(worldPos);
+            ResetPrimaryPressState();
+            return;
         }
+
+        if (_primaryStartedOnWorld)
+            InputEvents.PrimaryReleased(GetCurrentOrLastWorldPos());
+
+        ResetPrimaryPressState();
     }
 
     private void OnSecondaryClick(InputAction.CallbackContext ctx)
     {
+        if (IsPointerOverUi())
+            return;
+
         if (TryGetGroundHit(out Vector3 worldPos))
         {
             InputEvents.SecondaryPressed(worldPos);
@@ -139,6 +166,9 @@ public class PlayerInputHandler : MonoBehaviour
     {
         if (TryGetGroundHit(out Vector3 worldPos))
         {
+            _hasLastWorldPos = true;
+            _lastWorldPos = worldPos;
+
             Vector2Int gridCoords = grid != null
                 ? grid.WorldToGrid(worldPos)
                 : Vector2Int.zero;
@@ -147,8 +177,32 @@ public class PlayerInputHandler : MonoBehaviour
         }
         else
         {
+            _hasLastWorldPos = false;
             InputEvents.WorldPointerLost();
         }
+    }
+
+    private void HandlePrimaryHeld()
+    {
+        if (!_primaryStartedOnWorld || Mouse.current == null || !Mouse.current.leftButton.isPressed)
+            return;
+
+        if (TryGetGroundHit(out Vector3 worldPos))
+            InputEvents.PrimaryHeld(worldPos);
+    }
+
+    private Vector3 GetCurrentOrLastWorldPos()
+    {
+        if (TryGetGroundHit(out Vector3 worldPos))
+            return worldPos;
+
+        return _hasLastWorldPos ? _lastWorldPos : Vector3.zero;
+    }
+
+    private void ResetPrimaryPressState()
+    {
+        _primaryStartedOnWorld = false;
+        _primaryStartedOverUi = false;
     }
 
     private bool TryGetGroundHit(out Vector3 worldPos)
@@ -183,6 +237,91 @@ public class PlayerInputHandler : MonoBehaviour
         }
 
         worldPos = Vector3.zero;
+        return false;
+    }
+
+    private static bool IsPointerOverUi()
+    {
+        return IsPointerOverToolkitUi() || IsPointerOverLegacyUi();
+    }
+
+    private static bool IsPointerOverToolkitUi()
+    {
+        if (Mouse.current == null)
+            return false;
+
+        Vector2 screenPosition = Mouse.current.position.ReadValue();
+        Vector2 panelPosition = new(screenPosition.x, Screen.height - screenPosition.y);
+
+        foreach (UIDocument document in FindObjectsByType<UIDocument>(FindObjectsInactive.Exclude))
+        {
+            if (document == null || !document.isActiveAndEnabled)
+                continue;
+
+            VisualElement root = document.rootVisualElement;
+            if (root?.panel == null || root.resolvedStyle.display == DisplayStyle.None)
+                continue;
+
+            Vector2 localPanelPosition = RuntimePanelUtils.ScreenToPanel(root.panel, panelPosition);
+            VisualElement picked = root.panel.Pick(localPanelPosition);
+
+            if (IsBlockingToolkitElement(picked))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsBlockingToolkitElement(VisualElement element)
+    {
+        for (VisualElement current = element; current != null; current = current.parent)
+        {
+            if (current.resolvedStyle.display == DisplayStyle.None ||
+                current.resolvedStyle.visibility == Visibility.Hidden)
+                return false;
+
+            if (current is Button || current is Toggle || current is Slider || current is TextField)
+                return true;
+
+            if (current.name == "radial-root" && current.resolvedStyle.display == DisplayStyle.Flex)
+                return true;
+
+            if (current.ClassListContains("screen-panel") &&
+                current.resolvedStyle.display == DisplayStyle.Flex)
+                return true;
+
+            if (current.ClassListContains("radial-entry-node") ||
+                current.ClassListContains("radial-center-button") ||
+                current.ClassListContains("radial-backdrop"))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsPointerOverLegacyUi()
+    {
+        EventSystem eventSystem = EventSystem.current;
+        if (eventSystem == null || Mouse.current == null)
+            return false;
+
+        PointerEventData pointerData = new(eventSystem)
+        {
+            position = Mouse.current.position.ReadValue()
+        };
+
+        UiRaycastResults.Clear();
+        eventSystem.RaycastAll(pointerData, UiRaycastResults);
+
+        foreach (RaycastResult result in UiRaycastResults)
+        {
+            if (result.module != null && result.module.GetType().Name == "PanelRaycaster")
+                continue;
+
+            if (result.gameObject != null && result.gameObject.activeInHierarchy)
+                return true;
+        }
+
         return false;
     }
 

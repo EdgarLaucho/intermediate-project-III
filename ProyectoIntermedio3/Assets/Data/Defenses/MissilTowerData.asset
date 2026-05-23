@@ -14,17 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TD.Data.TowerData
   buildingName: Torre de Misiles
   prefab: {fileID: 1000000000000000001, guid: a1f0c9e76b9a4b4fb2e8e8d47a100001, type: 3}
-  buyCost: 65
+  buyCost: 70
   refundPercentage: 0.5
   repairCostPerHP: 0.45
-  baseMaxHealth: 120
+  baseMaxHealth: 115
   autoOrientRadially: 0
   placementYawOffset: 0
   allowPaintPlacement: 0
   maxLevel: 2
   upgradeLevels:
-  - upgradeCost: 50
-    bonusMaxHealth: 30
+  - upgradeCost: 55
+    bonusMaxHealth: 25
     statMultiplier: 1.2
     fireRateMultiplier: 1.1
     bonusTrapUses: 0
@@ -34,10 +34,10 @@ MonoBehaviour:
     bonusProjectilesPerAttack: 0
     visualPrefabOverride: {fileID: 0}
     specialLabel: Reinforced bowstring
-  - upgradeCost: 95
-    bonusMaxHealth: 50
-    statMultiplier: 1.2
-    fireRateMultiplier: 1.12
+  - upgradeCost: 105
+    bonusMaxHealth: 45
+    statMultiplier: 1.18
+    fireRateMultiplier: 1.1
     bonusTrapUses: 0
     bonusRange: 1
     bonusArmor: 0
@@ -49,8 +49,8 @@ MonoBehaviour:
   damageKind: 0
   towerStats:
     attackRange: 4
-    attackDamage: 14
-    fireRate: 1.25
+    attackDamage: 12
+    fireRate: 1.35
     projectileSpeed: 14
     projectilesPerAttack: 1
     splashRadius: 0

@@ -32,6 +32,9 @@ public class PlayerCombat : MonoBehaviour
 
     private void Update()
     {
+        if (GamePauseEvents.IsPaused)
+            return;
+
         ValidateTarget();
 
         if (allowAutoCombat && !hasManualTarget)

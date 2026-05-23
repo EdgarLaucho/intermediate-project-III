@@ -33,6 +33,9 @@ public class PickupVisual : MonoBehaviour
 
     private void Update()
     {
+        if (GamePauseEvents.IsPaused)
+            return;
+
         HandleFloating();
         HandleRotation();
         HandleLifetime();

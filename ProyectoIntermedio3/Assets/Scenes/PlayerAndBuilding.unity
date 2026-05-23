@@ -449,7 +449,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74c861e5e45916e40893955824286e6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TD.Economy.EconomyManager
-  startingGold: 10000
+  startingGold: 300
   <Gold>k__BackingField: 0
 --- !u!1001 &168566783
 PrefabInstance:
@@ -1933,8 +1933,8 @@ MonoBehaviour:
   grid: {fileID: 1696980423}
   economy: {fileID: 139066528}
   allowBuildDuringCombat: 0
-  allowUpgradeDuringCombat: 0
-  allowDemolishDuringCombat: 0
+  allowUpgradeDuringCombat: 1
+  allowDemolishDuringCombat: 1
   allowRepairDuringCombat: 1
 --- !u!1 &1304149862
 GameObject:

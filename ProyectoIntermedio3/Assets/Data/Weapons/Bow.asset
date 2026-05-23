@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Bow
   m_EditorClassIdentifier: Assembly-CSharp::WeaponData
   weaponName: Bow
-  damage: 2
-  attackRate: 3
-  attackRange: 5
+  damage: 5
+  attackRate: 2
+  attackRange: 6
   projectilePrefab: {fileID: 659712409588892524, guid: 96711372ac71aa94d8ef04b40e9445f9, type: 3}

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Explosive
   m_EditorClassIdentifier: Assembly-CSharp::WeaponData
   weaponName: Explosive
-  damage: 4
-  attackRate: 0.7
-  attackRange: 7
+  damage: 14
+  attackRate: 0.55
+  attackRange: 6.5
   projectilePrefab: {fileID: -3292536453791288912, guid: 3e5b0980d9cc7a94bbb93263b9c6228d, type: 3}

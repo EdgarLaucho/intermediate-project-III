@@ -42,6 +42,38 @@ public sealed class TowerProjectile : MonoBehaviour
     private float _progress;
     private bool _launched;
     private bool _impacted;
+    private bool _isGamePaused;
+
+    #endregion
+
+    #region Lifecycle
+
+    private void OnEnable()
+    {
+        GamePauseEvents.OnGamePaused += HandleGamePaused;
+        GamePauseEvents.OnGameResumed += HandleGameResumed;
+        _isGamePaused = GamePauseEvents.IsPaused;
+    }
+
+    private void OnDisable()
+    {
+        GamePauseEvents.OnGamePaused -= HandleGamePaused;
+        GamePauseEvents.OnGameResumed -= HandleGameResumed;
+    }
+
+    #endregion
+
+    #region Event Handlers
+
+    private void HandleGamePaused()
+    {
+        _isGamePaused = true;
+    }
+
+    private void HandleGameResumed()
+    {
+        _isGamePaused = false;
+    }
 
     #endregion
 
@@ -63,6 +95,7 @@ public sealed class TowerProjectile : MonoBehaviour
         ConfigureArc();
         _launched = true;
         _impacted = false;
+        _isGamePaused = GamePauseEvents.IsPaused;
     }
 
     #endregion
@@ -71,6 +104,7 @@ public sealed class TowerProjectile : MonoBehaviour
 
     private void Update()
     {
+        if (_isGamePaused) return;
         if (!_launched || _impacted) return;
 
         _age += Time.deltaTime;

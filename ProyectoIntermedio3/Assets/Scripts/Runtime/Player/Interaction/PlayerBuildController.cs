@@ -66,6 +66,9 @@ public class PlayerBuildController : MonoBehaviour
 
     private void Update()
     {
+        if (GamePauseEvents.IsPaused)
+            return;
+
         switch (_state)
         {
             case BuildState.Idle:
@@ -87,6 +90,9 @@ public class PlayerBuildController : MonoBehaviour
 
     private void HandleBuildRequest(Vector2Int coords, BuildingData data)
     {
+        if (GamePauseEvents.IsPaused)
+            return;
+
         if (!_agent.isOnNavMesh)
             return;
 

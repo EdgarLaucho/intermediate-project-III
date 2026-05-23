@@ -52,8 +52,8 @@ public class BuildManager : MonoBehaviour
     // Repair is on by default so players can maintain damaged buildings mid-wave.
     [Header("Actions Allowed During Combat")]
     [SerializeField] private bool allowBuildDuringCombat = false;
-    [SerializeField] private bool allowUpgradeDuringCombat = false;
-    [SerializeField] private bool allowDemolishDuringCombat = false;
+    [SerializeField] private bool allowUpgradeDuringCombat = true;
+    [SerializeField] private bool allowDemolishDuringCombat = true;
     [SerializeField] private bool allowRepairDuringCombat = true;
 
     #endregion
@@ -68,7 +68,7 @@ public class BuildManager : MonoBehaviour
 
     private void OnEnable()
     {
-        _currentPhase = GamePhase.Preparation;
+        _currentPhase = PhaseEvents.CurrentPhase;
         PhaseEvents.OnPhaseChanged += OnPhaseChanged;
     }
 

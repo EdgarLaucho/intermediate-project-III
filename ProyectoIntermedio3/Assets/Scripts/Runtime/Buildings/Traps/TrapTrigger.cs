@@ -45,6 +45,7 @@ public sealed class TrapTrigger : MonoBehaviour
 
     private void Update()
     {
+        if (GamePauseEvents.IsPaused) return;
         if (_trap == null || !_trap.IsAlive) return;
 
         _cooldown -= Time.deltaTime;

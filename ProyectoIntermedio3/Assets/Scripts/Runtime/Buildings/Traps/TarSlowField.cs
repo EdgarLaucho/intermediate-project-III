@@ -42,6 +42,8 @@ public sealed class TarSlowField : MonoBehaviour
 
     private void Update()
     {
+        if (GamePauseEvents.IsPaused) return;
+
         if (Time.time >= _expireAt)
         {
             Destroy(gameObject);

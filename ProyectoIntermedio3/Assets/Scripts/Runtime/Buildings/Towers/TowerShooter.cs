@@ -43,6 +43,7 @@ public sealed class TowerShooter : MonoBehaviour
     private Tower _tower;
     private BuildingVisualController _visualController;
     private TowerLaunchSockets _launchSockets;
+    private CannonCatapultAnimator _cannonAnimator;
     private Transform _resolvedAimPivot;
     private Transform[] _resolvedShootPoints;
     private float _cooldown;
@@ -51,6 +52,9 @@ public sealed class TowerShooter : MonoBehaviour
     private Quaternion _aimPivotRestRotation;
     // Per-instance seed so towers placed at the same time sweep out of sync.
     private float _idleSeed;
+    private bool _isGamePaused;
+    private bool _fireSequenceInProgress;
+    private ITargetable _sequenceTarget;
 
     #endregion
 
@@ -71,12 +75,19 @@ public sealed class TowerShooter : MonoBehaviour
 
         if (_visualController != null)
             _visualController.OnVisualChanged += HandleVisualChanged;
+
+        GamePauseEvents.OnGamePaused += HandleGamePaused;
+        GamePauseEvents.OnGameResumed += HandleGameResumed;
+        _isGamePaused = GamePauseEvents.IsPaused;
     }
 
     private void OnDisable()
     {
         if (_visualController != null)
             _visualController.OnVisualChanged -= HandleVisualChanged;
+
+        GamePauseEvents.OnGamePaused -= HandleGamePaused;
+        GamePauseEvents.OnGameResumed -= HandleGameResumed;
     }
 
     #endregion
@@ -90,26 +101,40 @@ public sealed class TowerShooter : MonoBehaviour
         ResolveVisualReferences();
     }
 
+    private void HandleGamePaused()
+    {
+        _isGamePaused = true;
+    }
+
+    private void HandleGameResumed()
+    {
+        _isGamePaused = false;
+    }
+
     #endregion
 
     #region Main Update Loop
 
     private void Update()
     {
+        if (_isGamePaused) return;
         if (_tower == null || !_tower.IsAlive) return;
 
-        ITargetable target = FindTarget();
+        ITargetable target = _fireSequenceInProgress && _sequenceTarget != null && _sequenceTarget.IsAlive
+            ? _sequenceTarget
+            : FindTarget();
         UpdateAim(target);
 
         if (_tower.FireRate <= 0f) return;
 
         _cooldown -= Time.deltaTime;
+        if (_fireSequenceInProgress) return;
         if (_cooldown > 0f) return;
         if (target == null) return;
         if (!IsAlignedWith(target)) return;
 
-        FireAt(target);
-        _cooldown = 1f / _tower.FireRate;
+        if (FireAt(target))
+            _cooldown = 1f / _tower.FireRate;
     }
 
     #endregion
@@ -232,20 +257,119 @@ public sealed class TowerShooter : MonoBehaviour
 
     #region Firing
 
-    private void FireAt(ITargetable target)
+    private bool FireAt(ITargetable target)
     {
+        if (TryStartCannonSequence(target))
+            return true;
+
+        FireNow(target);
+        return true;
+    }
+
+    private void FireNow(ITargetable target)
+    {
+        if (target == null || !target.IsAlive) return;
+
         int projectileCount = Mathf.Max(1, _tower.ProjectilesPerAttack);
 
         for (int projectileIndex = 0; projectileIndex < projectileCount; projectileIndex++)
         {
             Transform launchPoint = GetLaunchPoint(projectileIndex);
             PlayShootEffects(launchPoint);
+            PlayIceBeamIfNeeded(target, launchPoint);
 
             if (projectilePrefab != null && target is Component)
                 SpawnProjectile(target, launchPoint);
             else
                 ApplyImpact(target); // Instant-hit fallback when no projectile prefab is set.
         }
+    }
+
+    private void PlayIceBeamIfNeeded(ITargetable target, Transform launchPoint)
+    {
+        if (_tower == null || _tower.Role != TowerRole.Ice) return;
+        if (!TryGetTargetPosition(target, out Vector3 targetPosition)) return;
+
+        Vector3 startPosition = ResolveIceBeamOrigin(launchPoint, targetPosition);
+        Vector3 endPosition = targetPosition + Vector3.up * 0.55f;
+        IceBeamEffect.Play(startPosition, endPosition);
+    }
+
+    private Vector3 ResolveIceBeamOrigin(Transform launchPoint, Vector3 targetPosition)
+    {
+        if (launchPoint != null && launchPoint != transform)
+            return launchPoint.position;
+
+        Bounds bounds = CalculateVisibleBounds();
+        Vector3 origin = bounds.center;
+        origin.y = bounds.max.y - bounds.size.y * 0.18f;
+
+        Vector3 direction = targetPosition - origin;
+        direction.y = 0f;
+        if (direction.sqrMagnitude > 0.0001f)
+            origin += direction.normalized * Mathf.Min(0.35f, Mathf.Max(bounds.extents.x, bounds.extents.z) * 0.55f);
+
+        return origin;
+    }
+
+    private Bounds CalculateVisibleBounds()
+    {
+        Bounds bounds = new Bounds(transform.position, Vector3.one);
+        bool hasBounds = false;
+        Transform searchRoot = GetVisualSearchRoot();
+
+        foreach (Renderer renderer in searchRoot.GetComponentsInChildren<Renderer>(true))
+        {
+            if (renderer == null || !renderer.enabled || !renderer.gameObject.activeInHierarchy)
+                continue;
+
+            if (renderer is ParticleSystemRenderer || renderer is TrailRenderer || renderer is LineRenderer)
+                continue;
+
+            if (renderer.GetComponentInParent<BuildingHealthBar>() != null)
+                continue;
+
+            if (!hasBounds)
+            {
+                bounds = renderer.bounds;
+                hasBounds = true;
+            }
+            else
+            {
+                bounds.Encapsulate(renderer.bounds);
+            }
+        }
+
+        return bounds;
+    }
+
+    private bool TryStartCannonSequence(ITargetable target)
+    {
+        if (_cannonAnimator == null || _cannonAnimator.IsPlaying)
+            return false;
+
+        Transform launchPoint = GetLaunchPoint(0);
+        _cannonAnimator.Configure(projectilePrefab, launchPoint, GetVisualSearchRoot());
+        if (!_cannonAnimator.CanAnimate)
+            return false;
+
+        _fireSequenceInProgress = true;
+        _sequenceTarget = target;
+        bool started = _cannonAnimator.Play(
+            () => FireNow(target),
+            () =>
+            {
+                _fireSequenceInProgress = false;
+                _sequenceTarget = null;
+            });
+
+        if (!started)
+        {
+            _fireSequenceInProgress = false;
+            _sequenceTarget = null;
+        }
+
+        return started;
     }
 
     private void SpawnProjectile(ITargetable target, Transform launchPoint)
@@ -367,15 +491,33 @@ public sealed class TowerShooter : MonoBehaviour
     // Priority order: TowerLaunchSockets on the visual > named child in visual > Inspector field > named child on root.
     private void ResolveVisualReferences()
     {
-        Transform visualRoot = _visualController != null ? _visualController.ActiveVisualRoot : null;
-        Transform searchRoot = visualRoot != null ? visualRoot : transform;
+        Transform searchRoot = GetVisualSearchRoot();
 
         _launchSockets = searchRoot.GetComponentInChildren<TowerLaunchSockets>(true);
         _resolvedAimPivot = ResolveAimPivot(searchRoot);
         _resolvedShootPoints = ResolveShootPoints(searchRoot);
+        ResolveCannonAnimator(searchRoot);
 
         if (_resolvedAimPivot != null)
             _aimPivotRestRotation = _resolvedAimPivot.localRotation;
+    }
+
+    private Transform GetVisualSearchRoot()
+    {
+        Transform visualRoot = _visualController != null ? _visualController.ActiveVisualRoot : null;
+        return visualRoot != null ? visualRoot : transform;
+    }
+
+    private void ResolveCannonAnimator(Transform searchRoot)
+    {
+        if (searchRoot == null || FindChildRecursive(searchRoot, "CatapultG_Arm02") == null)
+            return;
+
+        if (_cannonAnimator == null && !TryGetComponent(out _cannonAnimator))
+            _cannonAnimator = gameObject.AddComponent<CannonCatapultAnimator>();
+
+        Transform launchPoint = GetLaunchPoint(0);
+        _cannonAnimator.Configure(projectilePrefab, launchPoint, searchRoot);
     }
 
     private Transform ResolveAimPivot(Transform searchRoot)

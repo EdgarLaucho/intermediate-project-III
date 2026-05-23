@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: ChickenPenguin
   m_EditorClassIdentifier: Assembly-CSharp::EnemySO
   type: 3
-  goldReward: 10
-  health: 1
-  speed: 3
+  goldReward: 12
+  health: 80
+  speed: 3.1
   foodTableLayer:
     serializedVersion: 2
     m_Bits: 8
@@ -33,7 +33,7 @@ MonoBehaviour:
   canAttackPlayer: 1
   ConstructionDetectionRange: 5
   playerDetectionRange: 4
-  damage: 1
+  damage: 8
   attackRange: 3
-  attackCooldown: 1
+  attackCooldown: 2
   attackSound: {fileID: 0}

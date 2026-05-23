@@ -11,6 +11,30 @@ public class EnemyProjectileBase : MonoBehaviour
     
     protected Vector3 moveDirection;
     protected IDamageable owner;
+    protected bool isGamePaused;
+
+    protected virtual void OnEnable()
+    {
+        GamePauseEvents.OnGamePaused += HandleGamePaused;
+        GamePauseEvents.OnGameResumed += HandleGameResumed;
+        isGamePaused = GamePauseEvents.IsPaused;
+    }
+
+    protected virtual void OnDisable()
+    {
+        GamePauseEvents.OnGamePaused -= HandleGamePaused;
+        GamePauseEvents.OnGameResumed -= HandleGameResumed;
+    }
+
+    private void HandleGamePaused()
+    {
+        isGamePaused = true;
+    }
+
+    private void HandleGameResumed()
+    {
+        isGamePaused = false;
+    }
 
     protected virtual void Start()
     {
@@ -19,6 +43,9 @@ public class EnemyProjectileBase : MonoBehaviour
 
     protected virtual void Update()
     {
+        if (isGamePaused)
+            return;
+
         transform.position += moveDirection * speed * Time.deltaTime;
     }
 

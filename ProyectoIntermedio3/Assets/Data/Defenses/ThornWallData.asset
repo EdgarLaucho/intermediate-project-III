@@ -13,40 +13,18 @@ MonoBehaviour:
   m_Name: ThornWallData
   m_EditorClassIdentifier: Assembly-CSharp::TD.Data.WallData
   buildingName: Muro Espinoso
-  prefab: {fileID: 1000000000000000081, guid: a1f0c9e76b9a4b4fb2e8e8d47a100009, type: 3}
-  buyCost: 50
+  prefab: {fileID: 5620625464038206038, guid: a1f0c9e76b9a4b4fb2e8e8d47a100009, type: 3}
+  buyCost: 55
   refundPercentage: 0.5
   repairCostPerHP: 0.45
-  baseMaxHealth: 170
+  baseMaxHealth: 165
   autoOrientRadially: 1
   placementYawOffset: 0
   allowPaintPlacement: 1
-  maxLevel: 2
-  upgradeLevels:
-  - upgradeCost: 45
-    bonusMaxHealth: 70
-    statMultiplier: 1
-    fireRateMultiplier: 1
-    bonusTrapUses: 0
-    bonusRange: 0
-    bonusArmor: 1
-    bonusThornsDamage: 5
-    bonusProjectilesPerAttack: 0
-    visualPrefabOverride: {fileID: 0}
-    specialLabel: Sharper thorns
-  - upgradeCost: 95
-    bonusMaxHealth: 100
-    statMultiplier: 1
-    fireRateMultiplier: 1
-    bonusTrapUses: 0
-    bonusRange: 0
-    bonusArmor: 2
-    bonusThornsDamage: 7
-    bonusProjectilesPerAttack: 0
-    visualPrefabOverride: {fileID: 0}
-    specialLabel: Bleeding thorns
+  maxLevel: 0
+  upgradeLevels: []
   role: 1
   armor: 1
-  thornsDamage: 7
-  cornerPrefab: {fileID: 1936804532874447123, guid: ac7a04ed08ea5044d8787502f114d6c7, type: 3}
+  thornsDamage: 6
+  cornerPrefab: {fileID: 5620625464038206038, guid: 38b110c6b46d04f4e85f5fd6a16d515e, type: 3}
   cornerPlacementYawOffset: 135

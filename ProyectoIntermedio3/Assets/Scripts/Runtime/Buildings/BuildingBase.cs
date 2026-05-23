@@ -78,6 +78,7 @@ public class BuildingBase : MonoBehaviour, IDamageable
         CurrentHealth = MaxHealth;
         CurrentLevel = 0;
         TotalGoldInvested = data.buyCost;
+        EnsureLevelIndicator();
     }
 
     // Called by the grid system right after placement so the building knows which
@@ -135,6 +136,14 @@ public class BuildingBase : MonoBehaviour, IDamageable
     #endregion
 
     #region Private Helpers
+
+    private void EnsureLevelIndicator()
+    {
+        if (!TryGetComponent(out BuildingLevelIndicator indicator))
+            indicator = gameObject.AddComponent<BuildingLevelIndicator>();
+
+        indicator.Initialize(this);
+    }
 
     private void DieFromDamage()
     {

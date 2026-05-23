@@ -16,6 +16,30 @@ public class Projectile : MonoBehaviour
     private float journeyLength;
 
     private float currentTravelDistance;
+    protected bool isGamePaused;
+
+    protected virtual void OnEnable()
+    {
+        GamePauseEvents.OnGamePaused += HandleGamePaused;
+        GamePauseEvents.OnGameResumed += HandleGameResumed;
+        isGamePaused = GamePauseEvents.IsPaused;
+    }
+
+    protected virtual void OnDisable()
+    {
+        GamePauseEvents.OnGamePaused -= HandleGamePaused;
+        GamePauseEvents.OnGameResumed -= HandleGameResumed;
+    }
+
+    private void HandleGamePaused()
+    {
+        isGamePaused = true;
+    }
+
+    private void HandleGameResumed()
+    {
+        isGamePaused = false;
+    }
 
     public virtual void Initialize(Transform newTarget, int newDamage)
     {
@@ -35,6 +59,9 @@ public class Projectile : MonoBehaviour
 
     protected virtual void Update()
     {
+        if (isGamePaused)
+            return;
+
         if (target == null)
         {
             Destroy(gameObject);
