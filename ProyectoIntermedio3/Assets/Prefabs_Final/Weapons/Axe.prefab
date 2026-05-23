@@ -146,3 +146,5 @@ MonoBehaviour:
   floatHeight: 0.25
   floatSpeed: 2
   rotationSpeed: 45
+  itemRenderer: {fileID: 8408109709729633621}
+  flashMaterial: {fileID: 2100000, guid: 592fda3de8c32234e932d37ccea8de64, type: 2}

@@ -18,6 +18,10 @@ public class WaveSystem : MonoBehaviour
 
     [Header("Game Mode Settings")]
     public bool isNormalMode = false;
+    
+    [Header("Wave UI")]
+    [SerializeField] private WaveInfoUI waveInfoUI;
+    [SerializeField] private WaveEnemiesUI waveEnemiesUI;
 
     private int currentWaveIndex = 0;
     private int currentEnemiesAlive = 0;
@@ -59,6 +63,13 @@ public class WaveSystem : MonoBehaviour
     {
         while (currentWaveIndex < waves.Count)
         {
+            Wave currentWave = waves[currentWaveIndex];
+
+            if (waveEnemiesUI != null)
+            {
+                waveEnemiesUI.ShowEnemies(currentWave.mixedEnemies);
+            }
+            
             if (isNormalMode)
             {
                 if (battleButton == null)
@@ -71,6 +82,11 @@ public class WaveSystem : MonoBehaviour
                 SetBattleButtonVisible(true);
                 SetBattleButtonEnabled(currentEnemiesAlive == 0);
 
+                if (waveInfoUI != null)
+                {
+                    waveInfoUI.ShowBuildPhaseWithButton(currentWaveIndex, waves.Count);
+                }
+                
                 while (!startNextWavePressed)
                 {
                     yield return null;
@@ -79,10 +95,33 @@ public class WaveSystem : MonoBehaviour
                 SetBattleButtonEnabled(false);
                 SetBattleButtonVisible(false);
             }
+            if (!isNormalMode)
+            {
+                float timer = timeBetweenWaves;
+
+                while (timer > 0)
+                {
+                    if (waveInfoUI != null)
+                    {
+                        waveInfoUI.ShowBuildPhaseWithTimer(
+                            currentWaveIndex,
+                            waves.Count,
+                            timer);
+                    }
+
+                    timer -= Time.deltaTime;
+
+                    yield return null;
+                }
+            }
 
             PhaseEvents.PhaseChanged(GamePhase.Combat);
 
-            Wave currentWave = waves[currentWaveIndex];
+            if (waveInfoUI != null)
+            {
+                waveInfoUI.ShowCombatPhase(currentWaveIndex, waves.Count);
+            }
+            
             Debug.Log("LOADING WAVE: " + currentWave.waveName);
 
             currentEnemiesAlive = 0;
@@ -121,9 +160,7 @@ public class WaveSystem : MonoBehaviour
             if (currentWaveIndex < waves.Count)
             {
                 PhaseEvents.PhaseChanged(GamePhase.Preparation);
-
-                if (!isNormalMode)
-                    yield return new WaitForSeconds(timeBetweenWaves);
+                
             }
         }
 

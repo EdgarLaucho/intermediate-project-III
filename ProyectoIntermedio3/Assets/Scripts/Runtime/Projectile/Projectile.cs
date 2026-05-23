@@ -10,6 +10,7 @@ public class Projectile : MonoBehaviour
 
     protected Transform target;
     protected int damage;
+    protected Transform owner;
 
     protected Vector3 startPosition;
     protected float journeyLength;
@@ -40,11 +41,11 @@ public class Projectile : MonoBehaviour
         isGamePaused = false;
     }
 
-    public virtual void Initialize(Transform newTarget, int newDamage)
+    public virtual void Initialize(Transform newTarget, int newDamage,Transform newOwner)
     {
         target = newTarget;
         damage = newDamage;
-
+        owner = newOwner;
         startPosition = transform.position;
 
         if (target != null)
@@ -111,6 +112,13 @@ public class Projectile : MonoBehaviour
         if (damageable != null)
         {
             damageable.TakeDamage(damage);
+            BaseEnemyAI enemy =
+                target.GetComponent<BaseEnemyAI>();
+
+            if (enemy != null)
+            {
+                enemy.SetPlayerAsTarget(owner);
+            }
         }
 
         Destroy(gameObject);

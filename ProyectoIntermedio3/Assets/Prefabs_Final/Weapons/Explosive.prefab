@@ -88,6 +88,8 @@ MonoBehaviour:
   floatHeight: 0.25
   floatSpeed: 2
   rotationSpeed: 45
+  itemRenderer: {fileID: 23590828493064888}
+  flashMaterial: {fileID: 2100000, guid: 592fda3de8c32234e932d37ccea8de64, type: 2}
 --- !u!1 &1513605970140576
 GameObject:
   m_ObjectHideFlags: 0
@@ -4973,7 +4975,6 @@ ParticleSystemRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: b36bca72328711e469f2614e3d52b7ed, type: 2}
-  - {fileID: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

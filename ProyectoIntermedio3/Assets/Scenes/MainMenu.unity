@@ -1294,7 +1294,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d9a858ee8e51954c912e3169990d82e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MainMenuScreen
-  gameplaySceneName: WaveSystemScene
+  gameplaySceneName: TowerDefence
 --- !u!1 &2053311386
 GameObject:
   m_ObjectHideFlags: 0

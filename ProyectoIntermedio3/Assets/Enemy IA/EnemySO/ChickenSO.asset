@@ -30,7 +30,7 @@ MonoBehaviour:
   projectileSpeed: 10
   canAttackFoodTable: 1
   canAttackConstruction: 0
-  canAttackPlayer: 0
+  canAttackPlayer: 1
   ConstructionDetectionRange: 5
   playerDetectionRange: 10
   damage: 6

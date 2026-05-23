@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 
 public class MainMenuScreen : MonoBehaviour
 {
-    [SerializeField] private string gameplaySceneName = "WaveSystemScene";
+    [SerializeField] private string gameplaySceneName = "TowerDefence";
 
     public void PlayHardcoreGame()
     {
