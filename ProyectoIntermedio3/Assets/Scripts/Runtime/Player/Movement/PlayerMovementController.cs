@@ -26,6 +26,16 @@ public class PlayerMovementController : MonoBehaviour
         InputEvents.OnPrimaryPressed -= HandleMoveCommand;
     }
 
+    private void Update()
+    {
+        if (!_agent.pathPending &&
+            _agent.remainingDistance <= _agent.stoppingDistance &&
+            !_agent.hasPath)
+        {
+            combat.EnableAutoCombat();
+        }
+    }
+
     private void HandleMoveCommand(Vector3 worldPos)
     {
         Ray ray = Camera.main.ScreenPointToRay(
@@ -53,6 +63,8 @@ public class PlayerMovementController : MonoBehaviour
         Vector3 targetPosition = grid.GridToWorld(gridCoords);
 
         targetPosition.y = transform.position.y;
+
+        combat.StopCombat();
 
         _agent.SetDestination(targetPosition);
 

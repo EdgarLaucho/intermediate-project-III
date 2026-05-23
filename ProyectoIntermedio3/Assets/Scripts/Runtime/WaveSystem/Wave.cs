@@ -1,10 +1,9 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 [System.Serializable]
 public class Wave
 {
     public string waveName;
-    public EnemyType enemyType;
-    public int enemyCount;              
-    public float rate;             
+    public List<EnemyMix> mixedEnemies;
 }

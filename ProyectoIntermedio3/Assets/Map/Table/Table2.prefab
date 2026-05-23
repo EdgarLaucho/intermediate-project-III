@@ -10,19 +10,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 3484804037060006919, guid: a55a0c9e057bc994ea182b2668dbdccb, type: 3}
       propertyPath: m_Name
-      value: rpgpp_lt_awning_standing_01b Variant
-      objectReference: {fileID: 0}
-    - target: {fileID: 4257962555416202941, guid: a55a0c9e057bc994ea182b2668dbdccb, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1.034617
-      objectReference: {fileID: 0}
-    - target: {fileID: 4257962555416202941, guid: a55a0c9e057bc994ea182b2668dbdccb, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 0.18983869
-      objectReference: {fileID: 0}
-    - target: {fileID: 4257962555416202941, guid: a55a0c9e057bc994ea182b2668dbdccb, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 0.59774
+      value: Table2
       objectReference: {fileID: 0}
     - target: {fileID: 4257962555416202941, guid: a55a0c9e057bc994ea182b2668dbdccb, type: 3}
       propertyPath: m_LocalPosition.x

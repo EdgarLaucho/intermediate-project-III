@@ -2,9 +2,14 @@ using UnityEngine;
 
 public class PlayerWeaponController : MonoBehaviour
 {
-    [SerializeField] private WeaponData startingWeapon;
+    [SerializeField]
+    private WeaponData startingWeapon;
 
     private WeaponData currentWeapon;
+
+    private float weaponTimer;
+
+    private bool usingTemporaryWeapon;
 
     public WeaponData CurrentWeapon => currentWeapon;
 
@@ -13,10 +18,38 @@ public class PlayerWeaponController : MonoBehaviour
         currentWeapon = startingWeapon;
     }
 
-    public void EquipWeapon(WeaponData newWeapon)
+    private void Update()
+    {
+        HandleWeaponTimer();
+    }
+
+    public void EquipWeapon(WeaponData newWeapon, float duration)
     {
         currentWeapon = newWeapon;
+        weaponTimer = duration;
+        usingTemporaryWeapon = true;
 
         Debug.Log($"Equipped weapon: {newWeapon.weaponName}");
+    }
+
+    private void HandleWeaponTimer()
+    {
+        if (!usingTemporaryWeapon)
+            return;
+
+        weaponTimer -= Time.deltaTime;
+
+        if (weaponTimer > 0f)
+            return;
+
+        ReturnToDefaultWeapon();
+    }
+
+    private void ReturnToDefaultWeapon()
+    {
+        currentWeapon = startingWeapon;
+        usingTemporaryWeapon = false;
+
+        Debug.Log("Weapon expired.");
     }
 }

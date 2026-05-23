@@ -1,0 +1,91 @@
+using UnityEngine;
+
+public class Projectile : MonoBehaviour
+{
+    [SerializeField]
+    protected float speed = 12f;
+
+    [SerializeField]
+    protected float arcHeight = 0.3f;
+
+    protected Transform target;
+    protected int damage;
+
+    private Vector3 startPosition;
+
+    private float journeyLength;
+
+    private float currentTravelDistance;
+
+    public virtual void Initialize(Transform newTarget, int newDamage)
+    {
+        target = newTarget;
+        damage = newDamage;
+
+        startPosition = transform.position;
+
+        if (target != null)
+        {
+            journeyLength =
+                Vector3.Distance(
+                    startPosition,
+                    target.position);
+        }
+    }
+
+    protected virtual void Update()
+    {
+        if (target == null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Move();
+    }
+
+    protected virtual void Move()
+    {
+        currentTravelDistance += speed * Time.deltaTime;
+
+        float progress = currentTravelDistance / journeyLength;
+
+        progress = Mathf.Clamp01(progress);
+
+        Vector3 targetPosition = target.position;
+
+        Vector3 nextPosition =
+            Vector3.Lerp(
+                startPosition,
+                targetPosition,
+                progress);
+
+        nextPosition.y += Mathf.Sin(progress * Mathf.PI) * arcHeight;
+
+        Vector3 movementDirection = nextPosition - transform.position;
+
+        transform.position = nextPosition;
+
+        if (movementDirection != Vector3.zero)
+        {
+            transform.rotation = Quaternion.LookRotation(movementDirection);
+        }
+
+        if (progress >= 1f)
+        {
+            HitTarget();
+        }
+    }
+
+    protected virtual void HitTarget()
+    {
+        IDamageable damageable = target.GetComponent<IDamageable>();
+
+        if (damageable != null)
+        {
+            damageable.TakeDamage(damage);
+        }
+
+        Destroy(gameObject);
+    }
+}
