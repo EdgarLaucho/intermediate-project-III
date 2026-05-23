@@ -12,8 +12,11 @@ EditorBuildSettings:
     path: Assets/Scenes/MainMenu.unity
     guid: 96f686bdde3378347944275d5b9dab9d
   - enabled: 1
+    path: Assets/Map/TowerDefence.unity
+    guid: 97328de62754bc04eadf331bac02fe8c
+  - enabled: 0
     path: Assets/Scenes/WaveSystemScene.unity
-    guid: aa6129da493e93b43995a0b3abc23bfb
+    guid: 82ddab2494f5e964aae2c084a5fd372e
   m_configObjects:
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

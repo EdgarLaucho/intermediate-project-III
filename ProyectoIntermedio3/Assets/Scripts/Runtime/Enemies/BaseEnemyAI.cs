@@ -18,6 +18,8 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
     protected bool hasCompletedObjective;
     protected int currentTargetLayer;
     protected bool isGamePaused;
+    protected bool wasAttackedByPlayer;
+    protected Transform playerAggroTarget;
     
 
     protected float attackTimer;
@@ -354,29 +356,33 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
 
         // Luego busca player si puede atacarlo
         // Ya NO hay probabilidad, si lo detecta lo ataca
-        if (enemySO.canAttackPlayer)
+        if (enemySO.canAttackPlayer &&
+            wasAttackedByPlayer &&
+            playerAggroTarget != null)
         {
-            Collider[] players = Physics.OverlapSphere(
+            float distance = Vector3.Distance(
                 transform.position,
-                enemySO.playerDetectionRange,
-                enemySO.playerLayer
-            );
+                playerAggroTarget.position);
 
-            foreach (Collider playerCollider in players)
+            if (distance <= enemySO.playerDetectionRange)
             {
-                IDamageable damageable = playerCollider.GetComponentInParent<IDamageable>();
+                IDamageable damageable =
+                    playerAggroTarget.GetComponentInParent<IDamageable>();
 
-                if (damageable == null || !damageable.IsAlive)
-                    continue;
+                if (damageable != null && damageable.IsAlive)
+                {
+                    currentTarget = playerAggroTarget;
+                    currentDamageable = damageable;
+                    currentTargetLayer = LayerMask.NameToLayer("Player");
+                    currentState = EnemyState.ChasingPlayer;
 
-                currentTarget = playerCollider.transform;
-                currentDamageable = damageable;
-                currentTargetLayer = LayerMask.NameToLayer("Player");
-                currentState = EnemyState.ChasingPlayer;
-
-                Debug.Log("Changing target to PLAYER");
-                return;
+                    Debug.Log("Player attacked me, chasing PLAYER");
+                    return;
+                }
             }
+
+            wasAttackedByPlayer = false;
+            playerAggroTarget = null;
         }
 
         // Finalmente va a la mesa si puede atacarla
@@ -494,5 +500,14 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
         
         EnemyEvents.EnemyDied(enemySO.goldReward);
         OnDeath?.Invoke(this);
+    }
+    
+    public void SetPlayerAsTarget(Transform player)
+    {
+        if (!enemySO.canAttackPlayer)
+            return;
+
+        wasAttackedByPlayer = true;
+        playerAggroTarget = player;
     }
 }
