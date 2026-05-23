@@ -172,6 +172,7 @@ public class PlayerCombat : MonoBehaviour
 
         projectile.Initialize(
             currentTarget,
-            weapon.damage);
+            weapon.damage, 
+            transform);
     }
 }
