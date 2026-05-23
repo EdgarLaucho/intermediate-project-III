@@ -20,15 +20,32 @@ public class PickupVisual : MonoBehaviour
     [SerializeField]
     private float rotationSpeed = 60f;
 
+    [Header("Flashing Material")]
+    [SerializeField]
+    private Renderer itemRenderer;
+    [SerializeField]
+    private Material flashMaterial;
+
     private float timer;
     private Vector3 startPosition;
     private Vector3 initialScale;
+    private Material originalMaterial;
 
     private void Start()
     {
         timer = itemLifeTime;
         startPosition = transform.position;
         initialScale = transform.localScale;
+
+        if (itemRenderer == null)
+        {
+            itemRenderer = GetComponentInChildren<Renderer>();
+        }
+
+        if (itemRenderer != null)
+        {
+            originalMaterial = itemRenderer.material;
+        }
     }
 
     private void Update()
@@ -64,11 +81,25 @@ public class PickupVisual : MonoBehaviour
         {
             float scale = Mathf.PingPong(Time.time * 5f, 0.5f) + 0.5f;
             transform.localScale = initialScale * scale;
+
+            if (itemRenderer != null && flashMaterial != null)
+            {
+                bool shouldFlash = Mathf.PingPong(Time.time * 5f, 1f) > 0.5f;
+                itemRenderer.material = shouldFlash ? flashMaterial : originalMaterial;
+            }
         }
 
         if (timer <= 0f)
         {
             Destroy(gameObject);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (originalMaterial != null)
+        {
+            Destroy(originalMaterial);
         }
     }
 }
