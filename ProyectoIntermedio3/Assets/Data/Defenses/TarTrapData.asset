@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TD.Data.TrapData
   buildingName: Alquitran
   prefab: {fileID: 1000000000000000051, guid: a1f0c9e76b9a4b4fb2e8e8d47a100006, type: 3}
-  buyCost: 45
+  buyCost: 50
   refundPercentage: 0.35
   repairCostPerHP: 0.6
   baseMaxHealth: 50
@@ -49,7 +49,7 @@ MonoBehaviour:
   trapStats:
     triggerDamage: 0
     cooldown: 0.75
-    maxUses: 2
+    maxUses: 3
     effectRadius: 1
     effectDuration: 4.5
-    slowPercent: 0.5
+    slowPercent: 0.45

@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 // Trap is a placed structure that damages (and optionally slows) enemies that walk
@@ -29,6 +30,10 @@ public class Trap : BuildingBase
 
     private static Material _fallbackParticleMaterial;
     private static AudioClip _fallbackActivationSound;
+    private SpikeTrapAnimator _spikeAnimator;
+    private bool _spentWaitingForAnimation;
+    private Coroutine _spikeDamageRoutine;
+    private readonly List<ITargetable> _pendingSpikeTargets = new();
 
     #endregion
 
@@ -48,6 +53,8 @@ public class Trap : BuildingBase
             EffectDuration = td.trapStats.effectDuration;
             SlowPercent = td.trapStats.slowPercent;
         }
+
+        EnsureSpikeAnimator();
     }
 
     internal void SetRuntimeTargetMask(LayerMask targetMask)
@@ -67,7 +74,17 @@ public class Trap : BuildingBase
 
         RemainingUses--;
         if (RemainingUses <= 0)
-            TakeDamage(MaxHealth); // Force death; lets BuildingBase handle cleanup.
+        {
+            if (Role == TrapRole.Spikes && _spikeAnimator != null)
+            {
+                _spentWaitingForAnimation = true;
+                Invoke(nameof(KillSpentTrap), Mathf.Max(0.05f, _spikeAnimator.RemainingDurationAfterHit));
+            }
+            else
+            {
+                TakeDamage(MaxHealth); // Force death; lets BuildingBase handle cleanup.
+            }
+        }
 
         return true;
     }
@@ -100,6 +117,14 @@ public class Trap : BuildingBase
     // Override in subclasses to add custom effects (e.g. explosion log, VFX).
     public virtual void OnTriggered(IEnumerable<ITargetable> targets)
     {
+        if (_spentWaitingForAnimation || RemainingUses <= 0) return;
+
+        if (Role == TrapRole.Spikes && _spikeAnimator != null)
+        {
+            TriggerSpikeAttack(targets);
+            return;
+        }
+
         PlayActivationFeedback();
         ApplyToTargets(targets);
     }
@@ -125,6 +150,67 @@ public class Trap : BuildingBase
         if (SlowPercent <= 0f || EffectDuration <= 0f) return;
         if (target is ISlowable slowable)
             slowable.ApplySlow(SlowPercent, EffectDuration);
+    }
+
+    private void EnsureSpikeAnimator()
+    {
+        if (Role != TrapRole.Spikes)
+            return;
+
+        if (!TryGetComponent(out _spikeAnimator))
+            _spikeAnimator = gameObject.AddComponent<SpikeTrapAnimator>();
+
+        _spikeAnimator.SyncToAttackRate(Cooldown);
+        _spikeAnimator.Initialize();
+    }
+
+    private void TriggerSpikeAttack(IEnumerable<ITargetable> targets)
+    {
+        if (_spikeDamageRoutine != null) return;
+
+        _pendingSpikeTargets.Clear();
+        if (targets != null)
+        {
+            foreach (ITargetable target in targets)
+            {
+                if (target != null && target.IsAlive)
+                    _pendingSpikeTargets.Add(target);
+            }
+        }
+
+        if (_pendingSpikeTargets.Count == 0) return;
+
+        _spikeAnimator.Play();
+        _spikeDamageRoutine = StartCoroutine(ApplySpikeDamageAtHitFrame());
+    }
+
+    private IEnumerator ApplySpikeDamageAtHitFrame()
+    {
+        float elapsed = 0f;
+        float hitDelay = _spikeAnimator != null ? _spikeAnimator.HitDelay : 0f;
+
+        while (elapsed < hitDelay)
+        {
+            if (!GamePauseEvents.IsPaused)
+                elapsed += Time.deltaTime;
+
+            yield return null;
+        }
+
+        if (IsAlive && !_spentWaitingForAnimation)
+        {
+            PlayActivationFeedback();
+            ApplyToTargets(_pendingSpikeTargets);
+        }
+
+        _pendingSpikeTargets.Clear();
+        _spikeDamageRoutine = null;
+    }
+
+    private void KillSpentTrap()
+    {
+        if (IsAlive)
+            TakeDamage(MaxHealth);
     }
 
     protected void PlayActivationFeedback(bool useFallbackVisual = false, bool useFallbackSound = false)

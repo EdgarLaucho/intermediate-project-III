@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.AI;
+using UnityEngine.UIElements;
 using System.Collections.Generic;
 
 // Renders the translucent "ghost" building and the cell highlight ring while the
@@ -149,12 +150,14 @@ public class BuildPreview : MonoBehaviour
         _ghostPrefabRotation = _ghost.transform.rotation;
         _ghostBaseRotation = _ghostPrefabRotation;
         DisableColliders(_ghost);
+        DisableGhostGameplay(_ghost);
         CacheGhostRenderers(_ghost);
         _previewTower = null;
         _ghost.TryGetComponent<Tower>(out _previewTower);
 
         // Initialize the preview tower so TowerRangeIndicator can read its AttackRange.
         _previewTower?.Initialize(data);
+        DisableGhostLevelIndicators(_ghost);
 
         // Cell highlight plane removed.
 
@@ -269,6 +272,32 @@ public class BuildPreview : MonoBehaviour
 
         foreach (var obstacle in go.GetComponentsInChildren<NavMeshObstacle>())
             obstacle.enabled = false;
+    }
+
+    // The preview uses the real prefab for visuals and range data, but it must not
+    // run combat/trigger/UI logic before the building is actually placed.
+    private static void DisableGhostGameplay(GameObject go)
+    {
+        foreach (var shooter in go.GetComponentsInChildren<TowerShooter>(true))
+            shooter.enabled = false;
+
+        foreach (var catapultAnimator in go.GetComponentsInChildren<CannonCatapultAnimator>(true))
+            catapultAnimator.enabled = false;
+
+        foreach (var trigger in go.GetComponentsInChildren<TrapTrigger>(true))
+            trigger.enabled = false;
+
+        foreach (var healthBar in go.GetComponentsInChildren<BuildingHealthBar>(true))
+            healthBar.enabled = false;
+
+        foreach (var uiDocument in go.GetComponentsInChildren<UIDocument>(true))
+            uiDocument.enabled = false;
+    }
+
+    private static void DisableGhostLevelIndicators(GameObject go)
+    {
+        foreach (var indicator in go.GetComponentsInChildren<BuildingLevelIndicator>(true))
+            indicator.enabled = false;
     }
 
     // Walks every renderer in the ghost hierarchy, forces transparent rendering,
@@ -422,10 +451,12 @@ public class BuildPreview : MonoBehaviour
         _ghostPrefabRotation = _ghost.transform.rotation;
         _ghostBaseRotation = _ghostPrefabRotation;
         DisableColliders(_ghost);
+        DisableGhostGameplay(_ghost);
         CacheGhostRenderers(_ghost);
         _previewTower = null;
         _ghost.TryGetComponent<Tower>(out _previewTower);
         _previewTower?.Initialize(_data);
+        DisableGhostLevelIndicators(_ghost);
         ApplyGhostVisual(new BuildManager.PlacementValidation(
             _lastPlacementState, null, string.Empty));
     }

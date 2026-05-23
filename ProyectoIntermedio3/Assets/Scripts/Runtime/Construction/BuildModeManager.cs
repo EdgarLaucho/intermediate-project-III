@@ -5,7 +5,7 @@ using UnityEngine;
 // Sits between raw input events and BuildManager. It owns the placement state
 // machine (Idle / Placing / MenuOpen), feeds the radial menu with contextual
 // entries, and translates user decisions into BuildManager calls.
-public sealed class ConstructionPresenter : MonoBehaviour
+public sealed class BuildModeManager : MonoBehaviour
 {
     #region Inspector Fields
 
@@ -39,6 +39,7 @@ public sealed class ConstructionPresenter : MonoBehaviour
     private bool _hasPaintCursorCell;
     private readonly List<Vector2Int> _paintStroke = new();
     private readonly HashSet<Vector2Int> _paintStrokeSet = new();
+    private bool _isGamePaused;
 
     // Filtered copy of availableBuildings with null entries removed.
     private BuildingData[] _catalogue;
@@ -49,6 +50,15 @@ public sealed class ConstructionPresenter : MonoBehaviour
 
     private void Awake()
     {
+        if (construction == null)
+            construction = FindAnyObjectByType<BuildManager>(FindObjectsInactive.Exclude);
+
+        if (grid == null)
+            grid = FindAnyObjectByType<GridManager>(FindObjectsInactive.Exclude);
+
+        if (radialMenu == null)
+            radialMenu = FindAnyObjectByType<RadialMenu>(FindObjectsInactive.Exclude);
+
         _catalogue = CleanCatalogue(availableBuildings).ToArray();
     }
 
@@ -62,7 +72,14 @@ public sealed class ConstructionPresenter : MonoBehaviour
         InputEvents.OnSecondaryPressed += OnSecondaryPressed;
         InputEvents.OnTertiaryPressed += OnTertiaryPressed;
         InputEvents.OnCancelPressed += CancelToIdle;
+        GamePauseEvents.OnGamePaused += HandleGamePaused;
+        GamePauseEvents.OnGameResumed += HandleGameResumed;
+        PhaseEvents.OnPhaseChanged += HandlePhaseChanged;
         SubscribeRadial();
+
+        _isGamePaused = GamePauseEvents.IsPaused;
+        if (_isGamePaused)
+            HandleGamePaused();
     }
 
     private void OnDisable()
@@ -75,6 +92,9 @@ public sealed class ConstructionPresenter : MonoBehaviour
         InputEvents.OnSecondaryPressed -= OnSecondaryPressed;
         InputEvents.OnTertiaryPressed -= OnTertiaryPressed;
         InputEvents.OnCancelPressed -= CancelToIdle;
+        GamePauseEvents.OnGamePaused -= HandleGamePaused;
+        GamePauseEvents.OnGameResumed -= HandleGameResumed;
+        PhaseEvents.OnPhaseChanged -= HandlePhaseChanged;
         UnsubscribeRadial();
     }
 
@@ -82,6 +102,9 @@ public sealed class ConstructionPresenter : MonoBehaviour
     // so the state machine doesn't get stuck in MenuOpen with no visible menu.
     private void Update()
     {
+        if (_isGamePaused)
+            return;
+
         if (_state == State.MenuOpen && (radialMenu == null || !radialMenu.IsOpen))
             _state = State.Idle;
     }
@@ -92,6 +115,9 @@ public sealed class ConstructionPresenter : MonoBehaviour
 
     private void OnPointerMoved(Vector3 worldPos, Vector2Int gridCoords)
     {
+        if (_isGamePaused)
+            return;
+
         _hasPointer = true;
         _hoveredCell = gridCoords;
         _hoveredWorldPos = worldPos;
@@ -108,6 +134,9 @@ public sealed class ConstructionPresenter : MonoBehaviour
 
     private void OnPointerLost()
     {
+        if (_isGamePaused)
+            return;
+
         _hasPointer = false;
         if (_state == State.Idle)
         {
@@ -118,6 +147,9 @@ public sealed class ConstructionPresenter : MonoBehaviour
 
     private void OnPrimaryPressed(Vector3 worldPos)
     {
+        if (_isGamePaused)
+            return;
+
         if (_state != State.Placing) return;
 
         if (CanPaintSelectedBuilding())
@@ -128,24 +160,36 @@ public sealed class ConstructionPresenter : MonoBehaviour
 
     private void OnPrimaryHeld(Vector3 worldPos)
     {
+        if (_isGamePaused)
+            return;
+
         if (_state == State.Placing && _isPainting)
             AppendPaintCellsThrough(_hoveredCell);
     }
 
     private void OnPrimaryReleased(Vector3 worldPos)
     {
+        if (_isGamePaused)
+            return;
+
         if (_isPainting)
             CommitPaintStroke();
     }
 
     private void OnSecondaryPressed(Vector3 worldPos)
     {
+        if (_isGamePaused)
+            return;
+
         if (_state == State.Placing) { CancelToIdle(); return; }
         if (_state == State.Idle && _hasPointer) OpenContextMenu(_hoveredCell);
     }
 
     private void OnTertiaryPressed(Vector3 worldPos)
     {
+        if (_isGamePaused)
+            return;
+
         if (_state != State.Idle || !_hasPointer) return;
         TryDuplicateHoveredBuilding();
     }
@@ -160,6 +204,13 @@ public sealed class ConstructionPresenter : MonoBehaviour
     {
         GridCell cell = grid.GetCell(coords);
         if (cell == null)
+        {
+            ConstructionEvents.CellLost();
+            ConstructionEvents.TowerFocused(null);
+            return;
+        }
+
+        if (construction != null && !construction.CanBuild && !cell.IsOccupied)
         {
             ConstructionEvents.CellLost();
             ConstructionEvents.TowerFocused(null);
@@ -207,7 +258,7 @@ public sealed class ConstructionPresenter : MonoBehaviour
             ConstructionEvents.TowerFocused(cell.CurrentBuilding as Tower);
             radialMenu?.ShowEntries(BuildActionEntries(coords, cell.CurrentBuilding));
         }
-        else if (cell.IsBuildable)
+        else if (cell.IsBuildable && construction != null && construction.CanBuild)
         {
             // Show the category browser so the player can pick what to build.
             ConstructionEvents.TowerFocused(null);
@@ -222,6 +273,9 @@ public sealed class ConstructionPresenter : MonoBehaviour
 
     private void TryDuplicateHoveredBuilding()
     {
+        if (construction != null && !construction.CanBuild)
+            return;
+
         GridCell cell = grid.GetCell(_hoveredCell);
         BuildingBase sourceBuilding = cell?.CurrentBuilding;
         BuildingData data = sourceBuilding != null ? sourceBuilding.Data : null;
@@ -252,8 +306,18 @@ public sealed class ConstructionPresenter : MonoBehaviour
             return;
         }
 
-        GameplayEvents.BuildRequested(_hoveredCell, _selectedBuilding);
-        CancelToIdle();
+        try
+        {
+            construction.TryBuild(_hoveredCell, _selectedBuilding);
+        }
+        catch (System.Exception exception)
+        {
+            Debug.LogException(exception);
+        }
+        finally
+        {
+            CancelToIdle();
+        }
     }
 
     private void CancelToIdle()
@@ -265,6 +329,25 @@ public sealed class ConstructionPresenter : MonoBehaviour
         radialMenu?.HideImmediate();
         ConstructionEvents.PlacementEnded();
         ConstructionEvents.TowerFocused(null);
+    }
+
+    private void HandleGamePaused()
+    {
+        _isGamePaused = true;
+        _hasPointer = false;
+        CancelToIdle();
+        ConstructionEvents.CellLost();
+    }
+
+    private void HandleGameResumed()
+    {
+        _isGamePaused = false;
+    }
+
+    private void HandlePhaseChanged(GamePhase phase)
+    {
+        if (phase == GamePhase.Combat)
+            CancelToIdle();
     }
 
     private void BeginPlacement(BuildingData data)
@@ -512,6 +595,9 @@ public sealed class ConstructionPresenter : MonoBehaviour
 
     private void HandleRadialEntrySelected(RadialMenu.Entry entry)
     {
+        if (_isGamePaused)
+            return;
+
         if (!entry.Interactable) return;
 
         // Payload is typed, so each case handles one kind of data without casting unsafely.
@@ -527,17 +613,30 @@ public sealed class ConstructionPresenter : MonoBehaviour
                 radialMenu?.ShowEntries(BuildCategoryEntries());
                 break;
             case ActionId.Repair:
-                construction.TryRepair(_menuCell);
-                CancelToIdle();
+                RunBuildActionAndCancel(() => construction.TryRepair(_menuCell));
                 break;
             case ActionId.Upgrade:
-                construction.TryUpgrade(_menuCell);
-                CancelToIdle();
+                RunBuildActionAndCancel(() => construction.TryUpgrade(_menuCell));
                 break;
             case ActionId.Demolish:
-                construction.TryDemolish(_menuCell);
-                CancelToIdle();
+                RunBuildActionAndCancel(() => construction.TryDemolish(_menuCell));
                 break;
+        }
+    }
+
+    private void RunBuildActionAndCancel(System.Action action)
+    {
+        try
+        {
+            action?.Invoke();
+        }
+        catch (System.Exception exception)
+        {
+            Debug.LogException(exception);
+        }
+        finally
+        {
+            CancelToIdle();
         }
     }
 
@@ -545,6 +644,9 @@ public sealed class ConstructionPresenter : MonoBehaviour
     // tower indicator; revert to the current stats when the cursor moves away.
     private void HandleRadialEntryHovered(RadialMenu.Entry? entry)
     {
+        if (_isGamePaused)
+            return;
+
         if (_menuBuilding is not Tower tower) return;
 
         if (entry.HasValue && entry.Value.Payload is ActionId.Upgrade && entry.Value.Interactable)
@@ -574,8 +676,9 @@ public sealed class ConstructionPresenter : MonoBehaviour
         var entries = new List<RadialMenu.Entry>();
         foreach (BuildingData data in CleanCatalogue(_catalogue).Where(d => d.Category == category))
         {
-            BuildManager.PlacementValidation v = construction.GetPlacementValidation(_menuCell, data);
-            entries.Add(new RadialMenu.Entry(data.buildingName, BuildSubLabel(data, v), v.IsValid, data));
+            bool canBegin = construction.CanBeginPlacement(data, out string reason);
+            string subLabel = canBegin ? $"{data.buyCost}g" : reason;
+            entries.Add(new RadialMenu.Entry(data.buildingName, subLabel, canBegin, data));
         }
         entries.Add(new RadialMenu.Entry("Back", string.Empty, true, ActionId.Back));
         return entries;

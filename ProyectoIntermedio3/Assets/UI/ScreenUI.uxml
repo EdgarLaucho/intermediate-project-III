@@ -1,20 +1,43 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements">
-    <ui:Style src="ScreenUI.uss" />
-
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/ScreenUI.uss?fileID=7433441132597879392&amp;guid=6c359afd3ce40e747b6b003bd5bc5aac&amp;type=3#ScreenUI"/>
     <ui:VisualElement name="gold-hud" class="gold-hud">
         <ui:VisualElement name="gold-panel" class="gold-panel">
             <ui:VisualElement name="gold-icon" class="gold-icon">
-                <ui:Label name="gold-icon-symbol" text="G" class="gold-icon-symbol" />
+                <ui:Label name="gold-icon-symbol" text="G" class="gold-icon-symbol"/>
             </ui:VisualElement>
-
             <ui:VisualElement name="gold-copy" class="gold-copy">
-                <ui:Label name="gold-title" text="Gold" class="gold-title" />
-                <ui:Label name="gold-label" text="0" class="gold-label" />
+                <ui:Label name="gold-title" text="Gold" class="gold-title"/>
+                <ui:Label name="gold-label" text="0" class="gold-label"/>
             </ui:VisualElement>
         </ui:VisualElement>
-
-        <ui:VisualElement name="gold-delta-layer" class="gold-delta-layer" />
+        <ui:VisualElement name="gold-delta-layer" class="gold-delta-layer"/>
     </ui:VisualElement>
-
-    <ui:VisualElement name="radial-root" class="radial-root" />
+    <ui:VisualElement name="wave-hud" class="wave-hud">
+        <ui:VisualElement name="life-panel" picking-mode="Ignore" class="life-panel">
+            <ui:VisualElement name="life-bar-bg" picking-mode="Ignore" class="life-bar-bg">
+                <ui:VisualElement name="life-bar-fill" picking-mode="Ignore" class="life-bar-fill"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:Label name="kills-label" text="KILLS: 0" enabled="true" display-tooltip-when-elided="false" triple-click-selects-line="false" double-click-selects-word="false" picking-mode="Ignore" class="kills-label" style="height: 66px; width: 285px; left: auto; top: 0; font-size: 35px;"/>
+        <ui:Label name="wave-message-label" text="" picking-mode="Ignore" class="wave-message-label" style="display: none;"/>
+        <ui:Button name="battle-button" text="BATTLE !" class="battle-button" style="display: none; height: 67px; width: 192px; font-size: 29px;"/>
+    </ui:VisualElement>
+    <ui:VisualElement name="screen-overlays" picking-mode="Ignore" class="screen-overlays">
+        <ui:VisualElement name="victory-panel" class="screen-panel victory-panel" style="display: none;">
+            <ui:Label text="VICTORY!!!" class="screen-title victory-title"/>
+            <ui:Button name="victory-restart-button" text="RESTART" class="screen-menu-button"/>
+            <ui:Button name="victory-main-menu-button" text="MAIN MENU" class="screen-menu-button"/>
+        </ui:VisualElement>
+        <ui:VisualElement name="pause-panel" class="screen-panel pause-panel" style="display: none;">
+            <ui:Label text="PAUSE" class="screen-title pause-title"/>
+            <ui:Button name="pause-restart-button" text="RESTART" class="screen-menu-button"/>
+            <ui:Button name="pause-main-menu-button" text="MAIN MENU" class="screen-menu-button"/>
+        </ui:VisualElement>
+        <ui:VisualElement name="game-over-panel" class="screen-panel game-over-panel" style="display: none;">
+            <ui:Label text="GAME OVER..." class="screen-title game-over-title"/>
+            <ui:Button name="game-over-restart-button" text="RESTART" class="screen-menu-button"/>
+            <ui:Button name="game-over-main-menu-button" text="MAIN MENU" class="screen-menu-button"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="radial-root" class="radial-root"/>
 </ui:UXML>

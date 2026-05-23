@@ -1266,8 +1266,8 @@ MonoBehaviour:
   grid: {fileID: 622606618}
   economy: {fileID: 1830597209}
   allowBuildDuringCombat: 0
-  allowUpgradeDuringCombat: 0
-  allowDemolishDuringCombat: 0
+  allowUpgradeDuringCombat: 1
+  allowDemolishDuringCombat: 1
   allowRepairDuringCombat: 1
 --- !u!1 &1456606620
 GameObject:
@@ -1583,13 +1583,17 @@ MonoBehaviour:
   enemySpawner: {fileID: 211044547}
   waves:
   - waveName: ChickenPenguinWave
-    enemyType: 3
-    enemyCount: 10
-    rate: 1
+    mixedEnemies:
+    - enemyType: 3
+      enemyCount: 4
+      rate: 2.5
+      delayBeforeStart: 0
   - waveName: PenguinWave
-    enemyType: 1
-    enemyCount: 10
-    rate: 1
+    mixedEnemies:
+    - enemyType: 1
+      enemyCount: 5
+      rate: 2.5
+      delayBeforeStart: 0
   timeBetweenWaves: 5
 --- !u!1 &1749197806
 GameObject:
@@ -1766,7 +1770,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74c861e5e45916e40893955824286e6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TD.Economy.EconomyManager
-  startingGold: 10000
+  startingGold: 300
   <Gold>k__BackingField: 0
 --- !u!4 &1830597210
 Transform:

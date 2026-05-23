@@ -1322,13 +1322,17 @@ MonoBehaviour:
   enemySpawner: {fileID: 1442276251}
   waves:
   - waveName: ChickenPenguinWave
-    enemyType: 0
-    enemyCount: 10
-    rate: 1
+    mixedEnemies:
+    - enemyType: 0
+      enemyCount: 5
+      rate: 2.5
+      delayBeforeStart: 0
   - waveName: PenguinWave
-    enemyType: 1
-    enemyCount: 10
-    rate: 1
+    mixedEnemies:
+    - enemyType: 1
+      enemyCount: 5
+      rate: 2.5
+      delayBeforeStart: 0
   timeBetweenWaves: 5
 --- !u!4 &809692968 stripped
 Transform:

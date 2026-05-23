@@ -19,6 +19,9 @@ public class PlayerWeaponController : MonoBehaviour
 
     private void Update()
     {
+        if (GamePauseEvents.IsPaused)
+            return;
+
         HandleWeaponTimer();
     }
 

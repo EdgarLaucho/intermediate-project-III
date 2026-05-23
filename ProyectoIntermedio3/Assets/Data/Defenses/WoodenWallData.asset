@@ -14,37 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TD.Data.WallData
   buildingName: Muro de Madera
   prefab: {fileID: 1000000000000000071, guid: a1f0c9e76b9a4b4fb2e8e8d47a100008, type: 3}
-  buyCost: 35
+  buyCost: 40
   refundPercentage: 0.5
   repairCostPerHP: 0.35
-  baseMaxHealth: 220
+  baseMaxHealth: 200
   autoOrientRadially: 1
   placementYawOffset: 0
   allowPaintPlacement: 1
-  maxLevel: 2
-  upgradeLevels:
-  - upgradeCost: 35
-    bonusMaxHealth: 100
-    statMultiplier: 1
-    fireRateMultiplier: 1
-    bonusTrapUses: 0
-    bonusRange: 0
-    bonusArmor: 1
-    bonusThornsDamage: 0
-    bonusProjectilesPerAttack: 0
-    visualPrefabOverride: {fileID: 0}
-    specialLabel: Braced planks
-  - upgradeCost: 80
-    bonusMaxHealth: 140
-    statMultiplier: 1
-    fireRateMultiplier: 1
-    bonusTrapUses: 0
-    bonusRange: 0
-    bonusArmor: 2
-    bonusThornsDamage: 0
-    bonusProjectilesPerAttack: 0
-    visualPrefabOverride: {fileID: 0}
-    specialLabel: Reinforced frame
+  maxLevel: 0
+  upgradeLevels: []
   role: 0
   armor: 2
   thornsDamage: 0

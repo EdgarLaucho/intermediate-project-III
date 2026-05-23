@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: PinguinSO
   m_EditorClassIdentifier: Assembly-CSharp::EnemySO
   type: 1
-  goldReward: 5
-  health: 100
-  speed: 10
+  goldReward: 10
+  health: 90
+  speed: 3.2
   foodTableLayer:
     serializedVersion: 2
     m_Bits: 8
@@ -31,9 +31,9 @@ MonoBehaviour:
   canAttackFoodTable: 0
   canAttackConstruction: 1
   canAttackPlayer: 0
-  ConstructionDetectionRange: 20
-  playerDetectionRange: 20
-  damage: 30
-  attackRange: 8
-  attackCooldown: 1
+  ConstructionDetectionRange: 9
+  playerDetectionRange: 8
+  damage: 10
+  attackRange: 6
+  attackCooldown: 1.8
   attackSound: {fileID: 0}

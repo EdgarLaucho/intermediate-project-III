@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: KittySO
   m_EditorClassIdentifier: Assembly-CSharp::EnemySO
   type: 2
-  goldReward: 5
-  health: 500
-  speed: 3
+  goldReward: 18
+  health: 180
+  speed: 2.6
   foodTableLayer:
     serializedVersion: 2
     m_Bits: 264
@@ -33,7 +33,7 @@ MonoBehaviour:
   canAttackPlayer: 1
   ConstructionDetectionRange: 5
   playerDetectionRange: 4
-  damage: 50
+  damage: 18
   attackRange: 2
-  attackCooldown: 5
+  attackCooldown: 2.6
   attackSound: {fileID: 0}

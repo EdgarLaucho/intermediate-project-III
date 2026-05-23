@@ -2,7 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using TMPro;
+using UnityEngine.UIElements;
 
 public class WaveSystem : MonoBehaviour
 {
@@ -10,9 +10,7 @@ public class WaveSystem : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private EnemySpawner enemySpawner;
-    [SerializeField] private GameObject startWaveButton;
-    [SerializeField] private TextMeshProUGUI finalWaveMessage;
-    [SerializeField] private TextMeshProUGUI killsCounter;
+    [SerializeField] private UIDocument screenUIDocument;
 
     [Header("Wave Settings")]
     public List<Wave> waves;
@@ -25,29 +23,36 @@ public class WaveSystem : MonoBehaviour
     private int currentEnemiesAlive = 0;
     private int totalKills = 0;
     private bool startNextWavePressed = false;
+    private Button battleButton;
+    private Label killsLabel;
+    private Label waveMessageLabel;
+    private VisualElement waveHud;
+    private VisualElement lifePanel;
+    private bool reportedMissingToolkitUI;
 
     void Start()
     {
-        isNormalMode = (PlayerPrefs.GetInt("NormalModeActive", 0) == 1);
+        isNormalMode = PlayerPrefs.GetInt("NormalModeActive", 0) == 1;
+        PhaseEvents.PhaseChanged(GamePhase.Preparation);
+        ResolveScreenUI();
 
-        if (startWaveButton != null)
-        {
-            startWaveButton.SetActive(isNormalMode);
-        }
+        SetBattleButtonVisible(isNormalMode);
 
         if (enemySpawner == null)
         {
-            enemySpawner = FindFirstObjectByType<EnemySpawner>();
+            enemySpawner = FindAnyObjectByType<EnemySpawner>(FindObjectsInactive.Exclude);
         }
 
-        if (finalWaveMessage != null)
-        {
-            finalWaveMessage.text = "";
-        }
-
+        SetWaveMessage("");
         UpdateKillsCounter();
 
         StartCoroutine(SpawnWave());
+    }
+
+    private void OnDestroy()
+    {
+        if (battleButton != null)
+            battleButton.clicked -= StartNextWave;
     }
 
     IEnumerator SpawnWave()
@@ -56,13 +61,26 @@ public class WaveSystem : MonoBehaviour
         {
             if (isNormalMode)
             {
+                if (battleButton == null)
+                {
+                    ReportMissingToolkitUI();
+                    yield break;
+                }
+
                 startNextWavePressed = false;
+                SetBattleButtonVisible(true);
+                SetBattleButtonEnabled(currentEnemiesAlive == 0);
 
                 while (!startNextWavePressed)
                 {
                     yield return null;
                 }
+
+                SetBattleButtonEnabled(false);
+                SetBattleButtonVisible(false);
             }
+
+            PhaseEvents.PhaseChanged(GamePhase.Combat);
 
             Wave currentWave = waves[currentWaveIndex];
             Debug.Log("LOADING WAVE: " + currentWave.waveName);
@@ -100,26 +118,27 @@ public class WaveSystem : MonoBehaviour
             }
 
             currentWaveIndex++;
-            if (!isNormalMode)
+            if (currentWaveIndex < waves.Count)
             {
-                yield return new WaitForSeconds(timeBetweenWaves);
+                PhaseEvents.PhaseChanged(GamePhase.Preparation);
+
+                if (!isNormalMode)
+                    yield return new WaitForSeconds(timeBetweenWaves);
             }
         }
 
         Debug.Log("YOU WON THE GAME!");
+        SetBattleButtonVisible(false);
         OnGameWon?.Invoke();
     }
 
     IEnumerator ShowFinalWaveMessage(string message)
     {
-        if (finalWaveMessage != null)
-        {
-            finalWaveMessage.text = message;
+        SetWaveMessage(message);
 
-            yield return new WaitForSeconds(3f);
+        yield return new WaitForSeconds(3f);
 
-            finalWaveMessage.text = "";
-        }
+        SetWaveMessage("");
     }
 
     public void StartNextWave()
@@ -127,6 +146,7 @@ public class WaveSystem : MonoBehaviour
         if (isNormalMode && currentEnemiesAlive == 0)
         {
             startNextWavePressed = true;
+            SetBattleButtonEnabled(false);
         }
     }
 
@@ -173,9 +193,106 @@ public class WaveSystem : MonoBehaviour
 
     private void UpdateKillsCounter()
     {
-        if (killsCounter != null)
+        string text = "KILLS: " + totalKills;
+
+        if (killsLabel != null)
+            killsLabel.text = text;
+    }
+
+    private void ResolveScreenUI()
+    {
+        UIDocument doc = screenUIDocument != null ? screenUIDocument : FindScreenUIDocument();
+        if (doc == null || doc.rootVisualElement == null)
+            return;
+
+        screenUIDocument = doc;
+        VisualElement root = doc.rootVisualElement;
+
+        waveHud = root.Q<VisualElement>("wave-hud");
+        lifePanel = root.Q<VisualElement>("life-panel");
+        killsLabel = root.Q<Label>("kills-label");
+        waveMessageLabel = root.Q<Label>("wave-message-label");
+        battleButton = root.Q<Button>("battle-button");
+
+        if (waveHud != null)
+            waveHud.pickingMode = PickingMode.Position;
+
+        if (lifePanel != null)
+            lifePanel.pickingMode = PickingMode.Ignore;
+
+        if (killsLabel != null)
+            killsLabel.pickingMode = PickingMode.Ignore;
+
+        if (waveMessageLabel != null)
+            waveMessageLabel.pickingMode = PickingMode.Ignore;
+
+        if (battleButton != null)
         {
-            killsCounter.text = "KILLS: " + totalKills;
+            battleButton.clicked -= StartNextWave;
+            battleButton.clicked += StartNextWave;
+            battleButton.text = "BATTLE !";
+            battleButton.focusable = true;
+            battleButton.pickingMode = PickingMode.Position;
         }
+
+        if (battleButton == null || killsLabel == null || waveMessageLabel == null)
+            ReportMissingToolkitUI();
+    }
+
+    private static UIDocument FindScreenUIDocument()
+    {
+        foreach (UIDocument doc in FindObjectsByType<UIDocument>(FindObjectsInactive.Include))
+        {
+            if (doc?.rootVisualElement == null)
+                continue;
+
+            VisualElement root = doc.rootVisualElement;
+            if (root.Q<VisualElement>("wave-hud") != null
+                || root.Q<Button>("battle-button") != null
+                || root.Q<Label>("kills-label") != null)
+                return doc;
+        }
+
+        return null;
+    }
+
+    private void SetBattleButtonVisible(bool visible)
+    {
+        if (battleButton == null)
+            return;
+
+        battleButton.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+        battleButton.pickingMode = visible ? PickingMode.Position : PickingMode.Ignore;
+
+        if (visible)
+            battleButton.BringToFront();
+    }
+
+    private void SetBattleButtonEnabled(bool enabled)
+    {
+        if (battleButton == null)
+            return;
+
+        battleButton.SetEnabled(enabled);
+    }
+
+    private void SetWaveMessage(string message)
+    {
+        if (waveMessageLabel == null)
+            return;
+
+        waveMessageLabel.text = message;
+        waveMessageLabel.style.display = string.IsNullOrEmpty(message)
+            ? DisplayStyle.None
+            : DisplayStyle.Flex;
+    }
+
+    private void ReportMissingToolkitUI()
+    {
+        if (reportedMissingToolkitUI)
+            return;
+
+        Debug.LogError("[WaveSystem] ScreenUI UIDocument must provide 'battle-button', 'kills-label' and 'wave-message-label' UI Toolkit elements.", this);
+        reportedMissingToolkitUI = true;
     }
 }

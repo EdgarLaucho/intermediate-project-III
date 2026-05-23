@@ -154,19 +154,53 @@ public static class ConstructionEvents
 
     #region Raise Helpers
 
-    public static void CellHovered(CellHoveredArgs args) => OnCellHovered?.Invoke(args);
-    public static void CellLost() => OnCellLost?.Invoke();
-    public static void PlacementStarted(BuildingData data) => OnPlacementStarted?.Invoke(data);
-    public static void PlacementUpdated(PlacementUpdatedArgs args) => OnPlacementUpdated?.Invoke(args);
-    public static void PlacementEnded() => OnPlacementEnded?.Invoke();
-    public static void PaintPlacementPreviewUpdated(PaintPlacementPreviewArgs args) => OnPaintPlacementPreviewUpdated?.Invoke(args);
-    public static void PaintPlacementPreviewEnded() => OnPaintPlacementPreviewEnded?.Invoke();
-    public static void TowerFocused(Tower tower) => OnTowerFocused?.Invoke(tower);
-    public static void TowerUpgradeHovered(Tower tower) => OnTowerUpgradeHovered?.Invoke(tower);
-    public static void BuildingPlaced(BuildingActionArgs args) => OnBuildingPlaced?.Invoke(args);
-    public static void BuildingDemolished(Vector2Int coords) => OnBuildingDemolished?.Invoke(coords);
-    public static void BuildingRepaired(BuildingActionArgs args) => OnBuildingRepaired?.Invoke(args);
-    public static void BuildingUpgraded(BuildingActionArgs args) => OnBuildingUpgraded?.Invoke(args);
+    public static void CellHovered(CellHoveredArgs args) => SafeInvoke(OnCellHovered, args);
+    public static void CellLost() => SafeInvoke(OnCellLost);
+    public static void PlacementStarted(BuildingData data) => SafeInvoke(OnPlacementStarted, data);
+    public static void PlacementUpdated(PlacementUpdatedArgs args) => SafeInvoke(OnPlacementUpdated, args);
+    public static void PlacementEnded() => SafeInvoke(OnPlacementEnded);
+    public static void PaintPlacementPreviewUpdated(PaintPlacementPreviewArgs args) => SafeInvoke(OnPaintPlacementPreviewUpdated, args);
+    public static void PaintPlacementPreviewEnded() => SafeInvoke(OnPaintPlacementPreviewEnded);
+    public static void TowerFocused(Tower tower) => SafeInvoke(OnTowerFocused, tower);
+    public static void TowerUpgradeHovered(Tower tower) => SafeInvoke(OnTowerUpgradeHovered, tower);
+    public static void BuildingPlaced(BuildingActionArgs args) => SafeInvoke(OnBuildingPlaced, args);
+    public static void BuildingDemolished(Vector2Int coords) => SafeInvoke(OnBuildingDemolished, coords);
+    public static void BuildingRepaired(BuildingActionArgs args) => SafeInvoke(OnBuildingRepaired, args);
+    public static void BuildingUpgraded(BuildingActionArgs args) => SafeInvoke(OnBuildingUpgraded, args);
+
+    private static void SafeInvoke(Action action)
+    {
+        if (action == null) return;
+
+        foreach (Action listener in action.GetInvocationList())
+        {
+            try
+            {
+                listener.Invoke();
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+            }
+        }
+    }
+
+    private static void SafeInvoke<T>(Action<T> action, T arg)
+    {
+        if (action == null) return;
+
+        foreach (Action<T> listener in action.GetInvocationList())
+        {
+            try
+            {
+                listener.Invoke(arg);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+            }
+        }
+    }
 
     #endregion
 }

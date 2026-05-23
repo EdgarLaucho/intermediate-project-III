@@ -67,6 +67,7 @@ public sealed class TarMudPatchVisual : MonoBehaviour
 
     private void Update()
     {
+        if (GamePauseEvents.IsPaused) return;
         if (!_initialized) return;
 
         float age = Time.time - _createdAt;

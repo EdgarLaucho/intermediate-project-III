@@ -57,6 +57,7 @@ public class GridRenderer : MonoBehaviour
             Debug.LogError("[GridRenderer] One or more materials are not assigned in the Inspector.");
 
         RebuildGrid();
+        ApplyPhaseVisibility(PhaseEvents.CurrentPhase);
         Subscribe();
     }
 
@@ -84,6 +85,7 @@ public class GridRenderer : MonoBehaviour
         if (_subscribed) return;
         ConstructionEvents.OnBuildingPlaced += OnBuildingPlaced;
         ConstructionEvents.OnBuildingDemolished += OnBuildingDemolished;
+        PhaseEvents.OnPhaseChanged += ApplyPhaseVisibility;
         _subscribed = true;
     }
 
@@ -92,11 +94,22 @@ public class GridRenderer : MonoBehaviour
         if (!_subscribed) return;
         ConstructionEvents.OnBuildingPlaced -= OnBuildingPlaced;
         ConstructionEvents.OnBuildingDemolished -= OnBuildingDemolished;
+        PhaseEvents.OnPhaseChanged -= ApplyPhaseVisibility;
         _subscribed = false;
     }
 
     private void OnBuildingPlaced(BuildingActionArgs _) => RebuildGrid();
     private void OnBuildingDemolished(Vector2Int _) => RebuildGrid();
+
+    private void ApplyPhaseVisibility(GamePhase phase)
+    {
+        bool visible = phase == GamePhase.Preparation;
+        for (int i = 0; i < _markers.Count; i++)
+        {
+            if (_markers[i] != null)
+                _markers[i].SetActive(visible);
+        }
+    }
 
     #endregion
 
@@ -118,6 +131,8 @@ public class GridRenderer : MonoBehaviour
                 AddMarker(cell, c, buildableMaterial, "Buildable");
             // Out-of-range cells are intentionally skipped (not rendered).
         }
+
+        ApplyPhaseVisibility(PhaseEvents.CurrentPhase);
     }
 
     private void AddMarker(GridCell cell, Vector3 center, Material sourceMaterial, string category)

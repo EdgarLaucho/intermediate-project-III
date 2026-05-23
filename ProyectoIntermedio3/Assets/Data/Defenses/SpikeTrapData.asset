@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TD.Data.TrapData
   buildingName: Pinchos
   prefab: {fileID: 1000000000000000041, guid: a1f0c9e76b9a4b4fb2e8e8d47a100005, type: 3}
-  buyCost: 35
+  buyCost: 40
   refundPercentage: 0.35
   repairCostPerHP: 0.6
-  baseMaxHealth: 40
+  baseMaxHealth: 35
   autoOrientRadially: 0
   placementYawOffset: 0
   allowPaintPlacement: 0
@@ -47,9 +47,9 @@ MonoBehaviour:
     specialLabel: Bleeding cuts
   role: 0
   trapStats:
-    triggerDamage: 24
-    cooldown: 0.25
-    maxUses: 7
+    triggerDamage: 20
+    cooldown: 0.35
+    maxUses: 6
     effectRadius: 0
     effectDuration: 0
     slowPercent: 0
