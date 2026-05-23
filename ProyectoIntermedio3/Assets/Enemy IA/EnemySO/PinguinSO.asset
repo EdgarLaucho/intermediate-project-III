@@ -28,11 +28,11 @@ MonoBehaviour:
   isRanged: 1
   projectilePrefab: {fileID: -4335099252552524486, guid: 2e73b68e785e3f44e9850b09d274e26c, type: 3}
   projectileSpeed: 10
-  canAttackFoodTable: 0
+  canAttackFoodTable: 1
   canAttackConstruction: 1
   canAttackPlayer: 0
-  ConstructionDetectionRange: 9
-  playerDetectionRange: 8
+  ConstructionDetectionRange: 1000
+  playerDetectionRange: 1000
   damage: 10
   attackRange: 6
   attackCooldown: 1.8

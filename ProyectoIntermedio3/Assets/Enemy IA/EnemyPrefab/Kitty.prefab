@@ -278,6 +278,7 @@ MonoBehaviour:
   enemySO: {fileID: 11400000, guid: f8e6e6052d010364dbaf9bb3f7cad1de, type: 2}
   explosionRadius: 2
   explosionDamage: 40
+  explosionEffect: {fileID: -5716473066537565790, guid: ebae6107c5a71c84ab661ed7b7c8b374, type: 3}
 --- !u!54 &2830393890366564386
 Rigidbody:
   m_ObjectHideFlags: 0

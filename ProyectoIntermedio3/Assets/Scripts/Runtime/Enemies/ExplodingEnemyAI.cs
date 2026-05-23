@@ -10,6 +10,9 @@ public class ExplodingEnemyAI : BaseEnemyAI
     [SerializeField] 
     protected int explosionDamage = 40;
     
+    [SerializeField]
+    protected ExplosionWave explosionEffect;
+    
     protected bool hasExploded = false;
 
     protected override void Attack()
@@ -36,7 +39,13 @@ public class ExplodingEnemyAI : BaseEnemyAI
             
             if (damageable is BaseEnemyAI)
                 continue;
-            
+            if (explosionEffect != null)
+            {
+                Instantiate(
+                    explosionEffect,
+                    transform.position,
+                    Quaternion.identity);
+            }
             damageable.TakeDamage(explosionDamage);
         }
         
