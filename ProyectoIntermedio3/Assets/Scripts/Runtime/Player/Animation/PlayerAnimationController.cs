@@ -18,7 +18,6 @@ public class PlayerAnimationController : MonoBehaviour
     private void Update()
     {
         float speed = _agent.velocity.magnitude;
-
         _animator.SetFloat(SpeedHash, speed);
     }
 }

@@ -13,13 +13,10 @@ public class PlayerCombat : MonoBehaviour
 
     private NavMeshAgent agent;
     private PlayerWeaponController weaponController;
-
     private Transform currentTarget;
 
     private bool hasManualTarget;
-
     private bool allowAutoCombat = true;
-
     private float attackTimer;
 
     private void Awake()
@@ -45,18 +42,14 @@ public class PlayerCombat : MonoBehaviour
     public void SetTarget(Transform newTarget)
     {
         currentTarget = newTarget;
-
         hasManualTarget = true;
-
         allowAutoCombat = true;
     }
 
     public void StopCombat()
     {
         currentTarget = null;
-
         hasManualTarget = false;
-
         allowAutoCombat = false;
 
         agent.ResetPath();
@@ -81,7 +74,6 @@ public class PlayerCombat : MonoBehaviour
         if (damageable == null || !damageable.IsAlive)
         {
             currentTarget = null;
-
             hasManualTarget = false;
         }
     }
@@ -100,7 +92,6 @@ public class PlayerCombat : MonoBehaviour
         }
 
         float closestDistance = float.MaxValue;
-
         Transform closestTarget = null;
 
         foreach (Collider hit in hits)
@@ -112,7 +103,6 @@ public class PlayerCombat : MonoBehaviour
             if (distance < closestDistance)
             {
                 closestDistance = distance;
-
                 closestTarget = hit.transform;
             }
         }
@@ -137,8 +127,7 @@ public class PlayerCombat : MonoBehaviour
 
         if (distance > weapon.attackRange)
         {
-            agent.SetDestination(
-                currentTarget.position);
+            agent.SetDestination(currentTarget.position);
 
             return;
         }

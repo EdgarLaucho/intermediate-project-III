@@ -8,7 +8,6 @@ public class PlayerWeaponController : MonoBehaviour
     private WeaponData currentWeapon;
 
     private float weaponTimer;
-
     private bool usingTemporaryWeapon;
 
     public WeaponData CurrentWeapon => currentWeapon;

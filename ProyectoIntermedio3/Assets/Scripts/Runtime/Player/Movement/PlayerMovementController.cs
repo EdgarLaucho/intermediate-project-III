@@ -54,7 +54,7 @@ public class PlayerMovementController : MonoBehaviour
             return;
 
         Vector2Int gridCoords = grid.WorldToGrid(worldPos);
-
+        
         GridCell cell = grid.GetCell(gridCoords);
 
         if (cell == null || cell.IsOccupied)

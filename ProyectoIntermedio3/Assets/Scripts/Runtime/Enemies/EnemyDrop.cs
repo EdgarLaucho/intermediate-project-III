@@ -31,6 +31,8 @@ public class EnemyDrop : MonoBehaviour
                 drop.pickupPrefab,
                 transform.position,
                 Quaternion.identity);
+
+            break;
         }
     }
 }

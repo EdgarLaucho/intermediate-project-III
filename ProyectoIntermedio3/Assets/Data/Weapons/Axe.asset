@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Axe
   m_EditorClassIdentifier: Assembly-CSharp::WeaponData
   weaponName: Axe
-  damage: 1
+  damage: 2
   attackRate: 1
   attackRange: 5
-  projectilePrefab: {fileID: 2370084295778246443, guid: 6b42bd07dae72e1459a17f1d5a9d8f30, type: 3}
+  projectilePrefab: {fileID: 3994094482806639228, guid: a9562f2bf22cb4e4f937d6d4fa087ebd, type: 3}

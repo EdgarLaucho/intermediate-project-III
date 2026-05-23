@@ -101,11 +101,9 @@ public class PlayerBuildController : MonoBehaviour
     private void MoveToBuildPosition(Vector2Int buildCell)
     {
         Vector2Int adjacentCell = FindBestAdjacentCell(buildCell);
-
         Vector3 worldPosition = grid.GridToWorld(adjacentCell);
 
         worldPosition.y = transform.position.y;
-
         _agent.SetDestination(worldPosition);
     }
 
@@ -123,7 +121,6 @@ public class PlayerBuildController : MonoBehaviour
     private void StartConstruction()
     {
         _state = BuildState.Constructing;
-
         _buildTimer = buildDuration;
 
         // TODO-Reproducir sonido
@@ -168,7 +165,6 @@ public class PlayerBuildController : MonoBehaviour
     private void CancelBuild()
     {
         _state = BuildState.Idle;
-
         _pendingBuilding = null;
     }
 
@@ -179,13 +175,11 @@ public class PlayerBuildController : MonoBehaviour
     private Vector2Int FindBestAdjacentCell(Vector2Int buildCell)
     {
         Vector2Int bestCell = buildCell;
-
         float bestDistance = float.MaxValue;
 
         foreach (Vector2Int direction in AdjacentDirections)
         {
             Vector2Int candidate = buildCell + direction;
-
             GridCell cell = grid.GetCell(candidate);
 
             if (cell == null)
@@ -198,10 +192,7 @@ public class PlayerBuildController : MonoBehaviour
                 continue;
 
             Vector3 worldPos = grid.GridToWorld(candidate);
-
-            float distance = Vector3.Distance(
-                transform.position,
-                worldPos);
+            float distance = Vector3.Distance(transform.position, worldPos);
 
             if (distance < bestDistance)
             {
