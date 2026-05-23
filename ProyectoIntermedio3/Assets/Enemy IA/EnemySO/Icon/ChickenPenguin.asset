@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c2877bc23ce641419e2d079f4df00be, type: 3}
+  m_Name: ChickenPenguin
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyIconInfo
+  enemyType: 3
+  icon: {fileID: 21300000, guid: 71c225a484af16a4c9d976ce4ffe8901, type: 3}
+  enemyName: ChickenPenguin
+  description: "Fast chicken riders mounted on penguins by nature. \nWhen defeated,
+    the chicken on top dies and the penguin enters a second phase, standing up and
+    attacking with deadly knives."

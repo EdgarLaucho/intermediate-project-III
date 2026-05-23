@@ -10,6 +10,7 @@ public class Projectile : MonoBehaviour
 
     protected Transform target;
     protected int damage;
+    protected Transform owner;
 
     private Vector3 startPosition;
 
