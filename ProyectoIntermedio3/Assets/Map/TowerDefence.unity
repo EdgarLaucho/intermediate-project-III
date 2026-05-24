@@ -4822,10 +4822,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Construction-System
       objectReference: {fileID: 0}
-    - target: {fileID: 7684512513295172514, guid: 44768a341afa00b43aa34b22f2a670b9, type: 3}
-      propertyPath: startingGold
-      value: 10000
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
