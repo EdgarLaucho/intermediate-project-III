@@ -1,9 +1,6 @@
 using UnityEngine;
 using System;
 
-// Base class for every placeable structure in the game.
-// Implements IDamageable so towers, traps, and walls can all receive damage through
-// the same interface without knowing each other's concrete types.
 public class BuildingBase : MonoBehaviour, IDamageable
 {
     #region IDamageable Interface
@@ -26,11 +23,9 @@ public class BuildingBase : MonoBehaviour, IDamageable
 
     public int CurrentHealth { get; protected set; }
     public int MaxHealth { get; protected set; }
-    // 0 = base state; each call to Upgrade() increments this by 1.
     public int CurrentLevel { get; protected set; }
     public int TotalGoldInvested { get; internal set; }
 
-    // Cached grid placement – populated by BuildingManager right after the building is placed.
     private GridCell _boundCell;
     private Vector2Int _boundCoords;
     private bool _hasBoundCell;
@@ -41,15 +36,13 @@ public class BuildingBase : MonoBehaviour, IDamageable
 
     public bool IsMaxLevel => Data != null && CurrentLevel >= Data.maxLevel;
 
-    // Returns the gold cost to fully restore this building to MaxHealth.
     public int GetRepairCost()
     {
         if (Data == null) return 0;
-        int missing = MaxHealth - CurrentHealth;
+        var missing = MaxHealth - CurrentHealth;
         return Mathf.CeilToInt(missing * Data.repairCostPerHP);
     }
 
-    // Overload that prices only a partial heal amount.
     public int GetRepairCost(int healAmount)
     {
         return Mathf.CeilToInt(healAmount * Data.repairCostPerHP);
@@ -61,7 +54,6 @@ public class BuildingBase : MonoBehaviour, IDamageable
         return Data.upgradeLevels[CurrentLevel].upgradeCost;
     }
 
-    // Refund is floored so the player never receives a fractional gold windfall.
     public int GetRefundAmount()
     {
         return Mathf.FloorToInt(TotalGoldInvested * Data.refundPercentage);
@@ -81,8 +73,6 @@ public class BuildingBase : MonoBehaviour, IDamageable
         EnsureLevelIndicator();
     }
 
-    // Called by the grid system right after placement so the building knows which
-    // cell it occupies and can clear it on death.
     internal void BindToGridCell(Vector2Int coords, GridCell cell)
     {
         _boundCoords = coords;
@@ -118,10 +108,8 @@ public class BuildingBase : MonoBehaviour, IDamageable
             return;
         }
 
-        UpgradeLevelData upgradeData = Data.upgradeLevels[CurrentLevel];
+        var upgradeData = Data.upgradeLevels[CurrentLevel];
 
-        // Topping up current health by the same bonus gives the player a small
-        // immediate reward for upgrading mid-combat.
         MaxHealth += upgradeData.bonusMaxHealth;
         CurrentHealth = Mathf.Min(CurrentHealth + upgradeData.bonusMaxHealth, MaxHealth);
 
@@ -130,7 +118,6 @@ public class BuildingBase : MonoBehaviour, IDamageable
         OnUpgraded?.Invoke(this, upgradeData);
     }
 
-    // Override in subclasses to apply type-specific stat changes (damage, range, etc.).
     protected virtual void ApplyUpgradeStats(UpgradeLevelData upgradeData) { }
 
     #endregion

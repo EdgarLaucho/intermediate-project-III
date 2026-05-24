@@ -12,14 +12,14 @@ public class CellHoverIndicator : MonoBehaviour
     [SerializeField] private UIDocument uiDocument; // optional, only needed for tooltip
 
     [Header("Colors")]
-    [SerializeField] private Color buildableColor = new(1.00f, 0.66f, 0.12f, 0.26f);
-    [SerializeField] private Color occupiedColor = new(0.24f, 0.88f, 1.00f, 0.30f);
-    [SerializeField] private Color invalidColor = new(1.00f, 0.12f, 0.10f, 0.32f);
-    [SerializeField] private Color noGoldColor = new(1.00f, 0.78f, 0.12f, 0.30f);
-    [SerializeField] private Color phaseColor = new(0.55f, 0.58f, 0.66f, 0.24f);
-    [SerializeField] private Color outlineColor = new(1.00f, 1.00f, 1.00f, 0.70f);
-    [SerializeField] private Color validPlacementColor = new(0.28f, 1.00f, 0.46f, 0.26f);
-    [SerializeField] private Color validAccentColor = new(0.66f, 1.00f, 0.68f, 0.82f);
+    [SerializeField] private Color buildableColor = new(1.00f, 0.66f, 0.12f, 0.45f);
+    [SerializeField] private Color occupiedColor = new(0.24f, 0.88f, 1.00f, 0.55f);
+    [SerializeField] private Color invalidColor = new(1.00f, 0.12f, 0.10f, 0.65f);
+    [SerializeField] private Color noGoldColor = new(1.00f, 0.78f, 0.12f, 0.62f);
+    [SerializeField] private Color phaseColor = new(0.55f, 0.58f, 0.66f, 0.50f);
+    [SerializeField] private Color outlineColor = new(1.00f, 1.00f, 1.00f, 0.90f);
+    [SerializeField] private Color validPlacementColor = new(0.18f, 1.00f, 0.32f, 0.88f);
+    [SerializeField] private Color validAccentColor = new(1.00f, 1.00f, 1.00f, 1.00f);
 
     [Header("Pulse")]
     [SerializeField] private float pulseSpeed = 5f;
@@ -626,6 +626,9 @@ public class CellHoverIndicator : MonoBehaviour
 
     private Color ResolveBorderColor(GridCell cell, BuildManager.PlacementValidation? placement)
     {
+        if (placement.HasValue && placement.Value.IsValid)
+            return new Color(1f, 1f, 1f, 0.95f);
+
         if (placement.HasValue && !placement.Value.IsValid)
             return TooltipColorFor(placement.Value.State);
 
@@ -644,7 +647,7 @@ public class CellHoverIndicator : MonoBehaviour
             return invalidAccent;
         }
 
-        return cell.IsOccupied ? occupiedColor : new Color(1.00f, 0.82f, 0.32f, 0.76f);
+        return cell.IsOccupied ? occupiedColor : new Color(1.00f, 0.82f, 0.32f, 0.92f);
     }
 
     private Color FillColorFor(BuildManager.PlacementState state, GridCell cell)

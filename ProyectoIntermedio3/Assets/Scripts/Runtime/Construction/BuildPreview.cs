@@ -4,10 +4,6 @@ using UnityEngine.AI;
 using UnityEngine.UIElements;
 using System.Collections.Generic;
 
-// Renders the translucent "ghost" building and the cell highlight ring while the
-// player is choosing where to place a building. It listens to ConstructionEvents
-// so it stays decoupled from the input and state-management logic in
-// ConstructionPresenter.
 public class BuildPreview : MonoBehaviour
 {
     #region Inspector Fields
@@ -16,38 +12,27 @@ public class BuildPreview : MonoBehaviour
     [SerializeField] private Material validMaterial;
     [SerializeField] private Material invalidMaterial;
 
-    [Header("Cell Highlight")]
-    [SerializeField] private GameObject cellHighlightPrefab;
-
-    // "Feel" values control the subtle idle animation applied to the ghost every frame.
     [Header("Feel")]
     [SerializeField] private float ghostBobHeight = 0.045f;
     [SerializeField] private float ghostBobSpeed = 3.2f;
     [SerializeField] private float ghostBreathAmount = 0.025f;
     [SerializeField] private float ghostTiltDegrees = 1.4f;
     [SerializeField] private float invalidTiltDegrees = 3.6f;
-    [SerializeField] private float highlightSpinSpeed = 28f;
 
     #endregion
 
     #region Constants
 
-    private const float SnapDuration = 0.085f; // Time to lerp ghost to a new cell.
-    private const float InvalidShakeDuration = 0.18f; // Duration of the rejection shake.
-    private const float InvalidShakeDistance = 0.075f; // Peak lateral offset during shake.
+    private const float SnapDuration = 0.085f;
 
     #endregion
 
     #region Nested Types
 
-    // Per-material cache built once in CacheGhostRenderers.
-    // Storing HasBaseColor / HasColor avoids repeated HasProperty calls every frame.
-    private sealed class GhostMaterialState
+    private sealed class GhostRendererState
     {
-        public Material Material;
-        public Color BaseColor;
-        public bool HasBaseColor;
-        public bool HasColor;
+        public Renderer Renderer;
+        public int MaterialCount;
     }
 
     #endregion
@@ -56,24 +41,21 @@ public class BuildPreview : MonoBehaviour
 
     private BuildingData _data;
     private GameObject _ghost;
-    private GameObject _highlight;
     private Tower _previewTower;
     private Vector2Int _lastCell;
     private bool _hasLastCell;
     private Vector3 _displayPosition;
     private Vector3 _snapFrom;
     private Vector3 _snapTo;
-    private float _snapT = SnapDuration; // Start at end so no lerp on first frame.
-    private float _invalidT; // Counts down from InvalidShakeDuration to 0.
+    private float _snapT = SnapDuration;
     private Vector3 _ghostBaseScale = Vector3.one;
     private Quaternion _ghostBaseRotation = Quaternion.identity;
-    private Quaternion _ghostPrefabRotation = Quaternion.identity; // prefab's own rotation, kept separate for radial override
-    private Vector3 _highlightBaseScale = Vector3.one;
-    private Quaternion _highlightBaseRotation = Quaternion.identity;
-    private BuildManager.PlacementState _lastPlacementState = BuildManager.PlacementState.MissingData;
+    private Quaternion _ghostPrefabRotation = Quaternion.identity;
+    private BuildManager.PlacementState _lastPlacementState = BuildManager.PlacementState.Blocked;
 
-    private readonly List<GhostMaterialState> _ghostMaterials = new();
-    private readonly List<Renderer> _highlightRenderers = new();
+    private readonly List<GhostRendererState> _ghostRenderers = new();
+    private Material _validGhostMaterial;
+    private Material _invalidGhostMaterial;
 
     #endregion
 
@@ -83,16 +65,15 @@ public class BuildPreview : MonoBehaviour
     {
         EnsureRangeIndicatorExists();
         EnsurePaintPreviewExists();
+        EnsureGhostMaterials();
 
         if (validMaterial == null) Debug.LogError("[BuildPreview] 'validMaterial' not assigned.");
         if (invalidMaterial == null) Debug.LogError("[BuildPreview] 'invalidMaterial' not assigned.");
     }
 
-    // The range indicator may not be on this same GameObject; add it lazily so the
-    // scene can be set up without a pre-placed TowerRangeIndicator component.
     private void EnsureRangeIndicatorExists()
     {
-        if (FindFirstObjectByType<TowerRangeIndicator>() != null)
+        if (FindAnyObjectByType<TowerRangeIndicator>() != null)
             return;
 
         gameObject.AddComponent<TowerRangeIndicator>();
@@ -100,7 +81,7 @@ public class BuildPreview : MonoBehaviour
 
     private void EnsurePaintPreviewExists()
     {
-        if (FindFirstObjectByType<PaintPlacementPreviewRenderer>() != null)
+        if (FindAnyObjectByType<PaintPlacementPreviewRenderer>() != null)
             return;
 
         gameObject.AddComponent<PaintPlacementPreviewRenderer>();
@@ -128,15 +109,13 @@ public class BuildPreview : MonoBehaviour
     private void OnDestroy()
     {
         DestroyGhost();
-        DestroyHighlight();
+        DestroyGhostMaterials();
     }
 
     #endregion
 
     #region Public API
 
-    // Spawns the ghost and highlight for the given building data.
-    // Calls Hide() first so switching from one building to another cleans up correctly.
     public void Show(BuildingData data)
     {
         Hide();
@@ -155,31 +134,24 @@ public class BuildPreview : MonoBehaviour
         _previewTower = null;
         _ghost.TryGetComponent<Tower>(out _previewTower);
 
-        // Initialize the preview tower so TowerRangeIndicator can read its AttackRange.
         _previewTower?.Initialize(data);
         DisableGhostLevelIndicators(_ghost);
 
-        // Cell highlight plane removed.
 
         _hasLastCell = false;
         _snapT = SnapDuration;
-        _invalidT = 0f;
     }
 
     public void Hide()
     {
         DestroyGhost();
-        DestroyHighlight();
         ConstructionEvents.TowerFocused(null);
         _data = null;
         _previewTower = null;
-        _ghostMaterials.Clear();
-        _highlightRenderers.Clear();
+        _ghostRenderers.Clear();
         _hasLastCell = false;
     }
 
-    // Called every frame while placement is active. Moves the ghost to the snapped
-    // world position, applies idle animation, and refreshes visual tints on state changes.
     public void UpdatePreview(Vector2Int coords, Vector3 snappedWorldPosition, BuildManager.PlacementValidation validation)
     {
         if (_data == null) return;
@@ -189,20 +161,16 @@ public class BuildPreview : MonoBehaviour
 
         if (changedCell)
         {
-            // Record the current display position as the lerp origin so the ghost
-            // slides smoothly rather than teleporting when the cursor crosses a cell.
             _snapFrom = _hasLastCell ? _displayPosition : snappedWorldPosition;
             _snapTo = snappedWorldPosition;
             _snapT = 0f;
             _lastCell = coords;
             _hasLastCell = true;
 
-            // Swap to corner/normal prefab if the required visual changed for this cell.
             GameObject neededPrefab = BuildingRotationHelper.ResolvePrefab(coords, _data);
             if (_ghost == null || _ghost.name != "__BuildPreview_Ghost_" + neededPrefab.name)
                 RebuildGhost(neededPrefab);
 
-            // Recompute radial orientation so the ghost always shows the correct rotation.
             _ghostBaseRotation = BuildingRotationHelper.ComputePlacementRotationForCell(coords, _data) * _ghostPrefabRotation;
         }
 
@@ -210,25 +178,13 @@ public class BuildPreview : MonoBehaviour
         {
             _lastPlacementState = validation.State;
             ApplyGhostVisual(validation);
-            ApplyHighlightColor(validation);
         }
 
-        // Advance the snap lerp and evaluate the eased position.
         _snapT = Mathf.Min(SnapDuration, _snapT + Time.deltaTime);
         float snapEase = EaseOutCubic(SnapDuration <= 0f ? 1f : _snapT / SnapDuration);
         _displayPosition = Vector3.Lerp(_snapFrom, _snapTo, snapEase);
 
-        // Rejection shake: a damped sine that fades out over InvalidShakeDuration.
-        Vector3 shake = Vector3.zero;
-        if (_invalidT > 0f)
-        {
-            _invalidT = Mathf.Max(0f, _invalidT - Time.deltaTime);
-            float t = 1f - (_invalidT / InvalidShakeDuration);
-            float fade = 1f - t;
-            shake = Vector3.right * (Mathf.Sin(t * Mathf.PI * 8f) * InvalidShakeDistance * fade);
-        }
-
-        Vector3 finalPosition = _displayPosition + shake;
+        Vector3 finalPosition = _displayPosition;
         float time = Time.unscaledTime;
         float bob = Mathf.Sin(time * ghostBobSpeed) * ghostBobHeight;
         float breath = 1f + Mathf.Sin(time * ghostBobSpeed * 0.72f) * ghostBreathAmount;
@@ -238,7 +194,6 @@ public class BuildPreview : MonoBehaviour
 
         if (_ghost != null)
         {
-            // Dampen the bob when invalid so the ghost looks more "grounded" / stuck.
             _ghost.transform.position = finalPosition + Vector3.up * (validation.IsValid ? bob : bob * 0.35f);
             _ghost.transform.rotation = _ghostBaseRotation * Quaternion.Euler(tiltX, 0f, tiltZ);
             _ghost.transform.localScale = _ghostBaseScale * breath;
@@ -252,19 +207,10 @@ public class BuildPreview : MonoBehaviour
             ConstructionEvents.TowerFocused(null);
     }
 
-    // Kicks off the rejection shake animation. Called by ConstructionPresenter
-    // when the player clicks on an invalid cell.
-    public void PlayInvalidFeedback()
-    {
-        _invalidT = InvalidShakeDuration;
-    }
-
     #endregion
 
     #region Ghost Setup Helpers
 
-    // Colliders and NavMesh obstacles are disabled so the ghost doesn't interact
-    // with the physics world or carve the NavMesh while the player is deciding.
     private static void DisableColliders(GameObject go)
     {
         foreach (var col in go.GetComponentsInChildren<Collider>())
@@ -274,8 +220,6 @@ public class BuildPreview : MonoBehaviour
             obstacle.enabled = false;
     }
 
-    // The preview uses the real prefab for visuals and range data, but it must not
-    // run combat/trigger/UI logic before the building is actually placed.
     private static void DisableGhostGameplay(GameObject go)
     {
         foreach (var shooter in go.GetComponentsInChildren<TowerShooter>(true))
@@ -300,30 +244,24 @@ public class BuildPreview : MonoBehaviour
             indicator.enabled = false;
     }
 
-    // Walks every renderer in the ghost hierarchy, forces transparent rendering,
-    // and caches property availability to avoid repeated HasProperty calls later.
     private void CacheGhostRenderers(GameObject go)
     {
-        _ghostMaterials.Clear();
+        _ghostRenderers.Clear();
 
         foreach (var renderer in go.GetComponentsInChildren<Renderer>())
         {
             renderer.shadowCastingMode = ShadowCastingMode.Off;
             renderer.receiveShadows = false;
 
-            Material[] mats = renderer.materials;
-            for (int i = 0; i < mats.Length; i++)
+            int materialCount = renderer.sharedMaterials.Length;
+            if (materialCount == 0)
+                continue;
+
+            _ghostRenderers.Add(new GhostRendererState
             {
-                PrepareTransparentMaterial(mats[i]);
-                _ghostMaterials.Add(new GhostMaterialState
-                {
-                    Material = mats[i],
-                    HasBaseColor = mats[i].HasProperty("_BaseColor"),
-                    HasColor = mats[i].HasProperty("_Color"),
-                    BaseColor = ReadMaterialColor(mats[i], Color.white),
-                });
-            }
-            renderer.materials = mats;
+                Renderer = renderer,
+                MaterialCount = materialCount
+            });
         }
     }
 
@@ -331,81 +269,112 @@ public class BuildPreview : MonoBehaviour
 
     #region Visual Tinting
 
-    // Blends each material's original colour toward the state tint so the ghost
-    // retains some of the building's own colouring rather than going fully solid.
     private void ApplyGhostVisual(BuildManager.PlacementValidation validation)
     {
-        Color tint = GhostTintFor(validation.State);
-        foreach (var state in _ghostMaterials)
+        Material material = validation.IsValid ? _validGhostMaterial : _invalidGhostMaterial;
+        SetMaterialColor(material, GhostTintFor(validation.State));
+        ConfigureSurface(material, validation.IsValid);
+
+        foreach (var state in _ghostRenderers)
         {
-            if (state.Material == null) continue;
-            Color color = Color.Lerp(state.BaseColor, tint, 0.45f);
-            color.a = validation.IsValid ? 0.50f : 0.42f;
-            if (state.HasBaseColor) state.Material.SetColor("_BaseColor", color);
-            if (state.HasColor) state.Material.SetColor("_Color", color);
+            if (state.Renderer == null) continue;
+            Material[] mats = new Material[state.MaterialCount];
+            for (int i = 0; i < mats.Length; i++)
+                mats[i] = material;
+            state.Renderer.sharedMaterials = mats;
         }
     }
 
-    private void ApplyHighlightColor(BuildManager.PlacementValidation validation)
-    {
-        Color target = HighlightColorFor(validation.State);
-
-        foreach (var renderer in _highlightRenderers)
-        {
-            if (renderer == null) continue;
-            foreach (var mat in renderer.materials)
-            {
-                if (mat == null) continue;
-                SetMaterialColorIfSupported(mat, target);
-            }
-        }
-    }
-
-    // Ghost tint falls back to the assigned material's colour so designers can
-    // override the exact green/red via the Inspector without touching code.
     private Color GhostTintFor(BuildManager.PlacementState state)
     {
         if (state == BuildManager.PlacementState.Valid)
-            return ReadMaterialColor(validMaterial, new Color(0.25f, 1f, 0.35f, 0.5f));
+            return new Color(0.72f, 0.72f, 0.72f, 1f);
 
         if (state == BuildManager.PlacementState.InsufficientGold)
-            return new Color(1.00f, 0.78f, 0.16f, 0.45f);
+            return new Color(1.00f, 0.78f, 0.16f, 0.65f);
 
         if (state == BuildManager.PlacementState.InvalidPhase)
-            return new Color(0.55f, 0.58f, 0.66f, 0.42f);
+            return new Color(0.55f, 0.58f, 0.66f, 0.55f);
 
-        return ReadMaterialColor(invalidMaterial, new Color(1f, 0.16f, 0.12f, 0.42f));
-    }
-
-    private static Color HighlightColorFor(BuildManager.PlacementState state)
-    {
-        return state switch
-        {
-            BuildManager.PlacementState.Valid => new Color(0.25f, 1.00f, 0.35f, 0.42f),
-            BuildManager.PlacementState.Occupied => new Color(1.00f, 0.18f, 0.13f, 0.45f),
-            BuildManager.PlacementState.InsufficientGold => new Color(1.00f, 0.78f, 0.16f, 0.48f),
-            BuildManager.PlacementState.InvalidPhase => new Color(0.55f, 0.58f, 0.66f, 0.40f),
-            _ => new Color(0.95f, 0.08f, 0.08f, 0.42f),
-        };
+        return ReadMaterialColor(invalidMaterial, new Color(1f, 0.16f, 0.12f, 0.65f));
     }
 
     #endregion
 
     #region Material Utilities
 
-    // Forces URP/HDRP materials into transparent mode at runtime so they render
-    // correctly as a ghost even if the original material is fully opaque.
-    private static void PrepareTransparentMaterial(Material mat)
+    private void EnsureGhostMaterials()
+    {
+        if (_validGhostMaterial == null)
+            _validGhostMaterial = CreateGhostMaterial("BuildPreview_Valid", new Color(0.72f, 0.72f, 0.72f, 1f), true);
+
+        if (_invalidGhostMaterial == null)
+            _invalidGhostMaterial = CreateGhostMaterial("BuildPreview_Invalid", new Color(1f, 0.16f, 0.12f, 0.68f), false);
+    }
+
+    private static Material CreateGhostMaterial(string name, Color color, bool opaque)
+    {
+        var shader = Shader.Find("Universal Render Pipeline/Unlit")
+            ?? Shader.Find("Unlit/Color")
+            ?? Shader.Find("Sprites/Default")
+            ?? Shader.Find("Standard");
+
+        Material mat = shader != null ? new Material(shader) : new Material(Shader.Find("Sprites/Default"));
+        mat.name = name;
+        SetMaterialColor(mat, color);
+        ConfigureSurface(mat, opaque);
+        return mat;
+    }
+
+    private static void SetMaterialColor(Material mat, Color color)
     {
         if (mat == null) return;
-        if (mat.HasProperty("_Surface")) mat.SetFloat("_Surface", 1f);
+        if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", color);
+        if (mat.HasProperty("_Color")) mat.SetColor("_Color", color);
+    }
+
+    private void DestroyGhostMaterials()
+    {
+        DestroyRuntimeMaterial(_validGhostMaterial);
+        DestroyRuntimeMaterial(_invalidGhostMaterial);
+        _validGhostMaterial = null;
+        _invalidGhostMaterial = null;
+    }
+
+    private static void DestroyRuntimeMaterial(Material material)
+    {
+        if (material == null) return;
+        if (Application.isPlaying)
+            Destroy(material);
+        else
+            DestroyImmediate(material);
+    }
+
+    private static void ConfigureSurface(Material mat, bool opaque)
+    {
+        if (mat == null) return;
+
+        if (mat.HasProperty("_Surface")) mat.SetFloat("_Surface", opaque ? 0f : 1f);
         if (mat.HasProperty("_Blend")) mat.SetFloat("_Blend", 0f);
-        if (mat.HasProperty("_ZWrite")) mat.SetFloat("_ZWrite", 0f);
+        if (mat.HasProperty("_SrcBlend")) mat.SetFloat("_SrcBlend", opaque ? (float)BlendMode.One : (float)BlendMode.SrcAlpha);
+        if (mat.HasProperty("_DstBlend")) mat.SetFloat("_DstBlend", opaque ? (float)BlendMode.Zero : (float)BlendMode.OneMinusSrcAlpha);
+        if (mat.HasProperty("_ZWrite")) mat.SetFloat("_ZWrite", opaque ? 1f : 0f);
+        if (mat.HasProperty("_Cull")) mat.SetFloat("_Cull", (float)CullMode.Off);
+        if (opaque)
+        {
+            mat.SetOverrideTag("RenderType", "Opaque");
+            mat.DisableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            mat.DisableKeyword("_ALPHABLEND_ON");
+            mat.renderQueue = (int)RenderQueue.Geometry;
+            return;
+        }
+
+        mat.SetOverrideTag("RenderType", "Transparent");
         mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+        mat.EnableKeyword("_ALPHABLEND_ON");
         mat.renderQueue = (int)RenderQueue.Transparent;
     }
 
-    // Reads _BaseColor first (URP), falls back to _Color (Built-in), then returns defaultColor.
     private static Color ReadMaterialColor(Material mat, Color defaultColor)
     {
         if (mat == null) return defaultColor;
@@ -414,34 +383,19 @@ public class BuildPreview : MonoBehaviour
         return defaultColor;
     }
 
-    private static void SetMaterialColorIfSupported(Material mat, Color color)
-    {
-        if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", color);
-        if (mat.HasProperty("_Color")) mat.SetColor("_Color", color);
-    }
-
     #endregion
 
-    #region Math Helpers
-
-    // EaseOutCubic produces a smooth deceleration for the cell-to-cell snap lerp.
     private static float EaseOutCubic(float t)
     {
         t = Mathf.Clamp01(t);
         return 1f - Mathf.Pow(1f - t, 3f);
     }
 
-    #endregion
-
-    #region Cleanup
-
     private void DestroyGhost()
     {
         if (_ghost != null) { Destroy(_ghost); _ghost = null; }
     }
 
-    // Destroys the current ghost and instantiates a new one from the given prefab.
-    // Used to swap between the normal wall mesh and the corner wall mesh.
     private void RebuildGhost(GameObject prefab)
     {
         DestroyGhost();
@@ -460,11 +414,4 @@ public class BuildPreview : MonoBehaviour
         ApplyGhostVisual(new BuildManager.PlacementValidation(
             _lastPlacementState, null, string.Empty));
     }
-
-    private void DestroyHighlight()
-    {
-        if (_highlight != null) { Destroy(_highlight); _highlight = null; }
-    }
-
-    #endregion
 }

@@ -11,11 +11,11 @@ public sealed class PaintPlacementPreviewRenderer : MonoBehaviour
     [SerializeField] private UIDocument uiDocument;
 
     [Header("Colors")]
-    [SerializeField] private Color placeableColor = new(0.24f, 1.00f, 0.42f, 0.34f);
-    [SerializeField] private Color placeableBorderColor = new(0.76f, 1.00f, 0.78f, 0.90f);
-    [SerializeField] private Color noGoldColor = new(1.00f, 0.78f, 0.18f, 0.36f);
-    [SerializeField] private Color invalidColor = new(1.00f, 0.18f, 0.14f, 0.34f);
-    [SerializeField] private Color blockedBorderColor = new(1.00f, 0.46f, 0.30f, 0.92f);
+    [SerializeField] private Color placeableColor = new(0.24f, 1.00f, 0.42f, 0.75f);
+    [SerializeField] private Color placeableBorderColor = new(0.76f, 1.00f, 0.78f, 1.00f);
+    [SerializeField] private Color noGoldColor = new(1.00f, 0.78f, 0.18f, 0.65f);
+    [SerializeField] private Color invalidColor = new(1.00f, 0.18f, 0.14f, 0.65f);
+    [SerializeField] private Color blockedBorderColor = new(1.00f, 0.46f, 0.30f, 1.00f);
     [SerializeField] private float yOffset = 0.095f;
 
     private readonly List<PaintPlacementCell> _cells = new();
@@ -178,7 +178,7 @@ public sealed class PaintPlacementPreviewRenderer : MonoBehaviour
             return uiDocument;
 
         UIDocument fallback = null;
-        foreach (UIDocument doc in FindObjectsByType<UIDocument>(FindObjectsSortMode.None))
+        foreach (UIDocument doc in FindObjectsByType<UIDocument>())
         {
             if (doc == null || doc.rootVisualElement == null)
                 continue;

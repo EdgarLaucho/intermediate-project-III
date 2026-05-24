@@ -52,6 +52,7 @@ public class PlayerInputHandler : MonoBehaviour
     private void Update()
     {
         HandlePointerMovement();
+        HandleTertiaryClick();
         HandlePrimaryHeld();
     }
 
@@ -150,6 +151,18 @@ public class PlayerInputHandler : MonoBehaviour
     }
 
     #endregion
+
+    private void HandleTertiaryClick()
+    {
+        if (Mouse.current == null || !Mouse.current.middleButton.wasPressedThisFrame)
+            return;
+
+        if (IsPointerOverUi())
+            return;
+
+        if (TryGetGroundHit(out Vector3 worldPos))
+            InputEvents.TertiaryPressed(worldPos);
+    }
 
     #region General Input
 

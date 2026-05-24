@@ -2,9 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-// Sits between raw input events and BuildManager. It owns the placement state
-// machine (Idle / Placing / MenuOpen), feeds the radial menu with contextual
-// entries, and translates user decisions into BuildManager calls.
 public sealed class BuildModeManager : MonoBehaviour
 {
     #region Inspector Fields
@@ -26,12 +23,10 @@ public sealed class BuildModeManager : MonoBehaviour
     private BuildingData _selectedBuilding;
     private Vector2Int _hoveredCell;
     private Vector3 _hoveredWorldPos;
-    // Cached when opening a context menu so radial callbacks know which cell/building they target.
     private Vector2Int _menuCell;
     private BuildingBase _menuBuilding;
     private bool _hasPointer;
 
-    // Paint mode: true while the player holds left-click during a paint-capable placement.
     private bool _isPainting;
     private Vector2Int _lastPaintCell;
     private bool _hasLastPaintCell;
@@ -41,7 +36,6 @@ public sealed class BuildModeManager : MonoBehaviour
     private readonly HashSet<Vector2Int> _paintStrokeSet = new();
     private bool _isGamePaused;
 
-    // Filtered copy of availableBuildings with null entries removed.
     private BuildingData[] _catalogue;
 
     #endregion
@@ -98,8 +92,6 @@ public sealed class BuildModeManager : MonoBehaviour
         UnsubscribeRadial();
     }
 
-    // If the radial menu closes externally (e.g. clicking outside it), snap back to Idle
-    // so the state machine doesn't get stuck in MenuOpen with no visible menu.
     private void Update()
     {
         if (_isGamePaused)
@@ -198,8 +190,6 @@ public sealed class BuildModeManager : MonoBehaviour
 
     #region State Transitions
 
-    // Broadcasts hover info while idle so the range indicator and cell highlight
-    // stay responsive even when no building is selected.
     private void UpdateIdleHover(Vector2Int coords)
     {
         GridCell cell = grid.GetCell(coords);
@@ -228,8 +218,6 @@ public sealed class BuildModeManager : MonoBehaviour
         if (_selectedBuilding == null) return;
 
         BuildManager.PlacementValidation validation = construction.GetPlacementValidation(coords, _selectedBuilding);
-        // Use the cell from the validation when available; fall back to GetCell so the
-        // highlight still appears for out-of-range or invalid cells.
         GridCell cell = validation.Cell ?? grid.GetCell(coords);
         Vector3 snappedPos = grid.GridToWorld(coords);
 
@@ -254,19 +242,16 @@ public sealed class BuildModeManager : MonoBehaviour
 
         if (cell.IsOccupied)
         {
-            // Show actions relevant to the existing building (repair / upgrade / demolish).
             ConstructionEvents.TowerFocused(cell.CurrentBuilding as Tower);
             radialMenu?.ShowEntries(BuildActionEntries(coords, cell.CurrentBuilding));
         }
         else if (cell.IsBuildable && construction != null && construction.CanBuild)
         {
-            // Show the category browser so the player can pick what to build.
             ConstructionEvents.TowerFocused(null);
             radialMenu?.ShowEntries(BuildCategoryEntries());
         }
         else
         {
-            // Non-buildable cell (path, water, etc.) — nothing to show.
             CancelToIdle();
         }
     }
@@ -294,12 +279,11 @@ public sealed class BuildModeManager : MonoBehaviour
     {
         if (_selectedBuilding == null) { CancelToIdle(); return; }
 
-        BuildManager.PlacementValidation validation = 
+        BuildManager.PlacementValidation validation =
             construction.GetPlacementValidation(_hoveredCell, _selectedBuilding);
 
         if (!validation.IsValid)
         {
-            // Re-broadcast the updated state so BuildPreview shows the rejection shake.
             ConstructionEvents.PlacementUpdated(new PlacementUpdatedArgs(
                 _hoveredCell, _hoveredWorldPos, validation,
                 validation.Cell ?? grid.GetCell(_hoveredCell)));
@@ -360,8 +344,6 @@ public sealed class BuildModeManager : MonoBehaviour
         ConstructionEvents.PlacementStarted(data);
         ConstructionEvents.CellLost();
 
-        // If the cursor is already over the grid, prime the preview immediately
-        // so it doesn't wait for the next pointer-moved event.
         if (_hasPointer)
             UpdatePlacementPreview(_hoveredCell, _hoveredWorldPos);
     }
@@ -600,7 +582,6 @@ public sealed class BuildModeManager : MonoBehaviour
 
         if (!entry.Interactable) return;
 
-        // Payload is typed, so each case handles one kind of data without casting unsafely.
         switch (entry.Payload)
         {
             case BuildingCategory category:
@@ -640,8 +621,6 @@ public sealed class BuildModeManager : MonoBehaviour
         }
     }
 
-    // While hovering the Upgrade entry, show the post-upgrade stat preview on the
-    // tower indicator; revert to the current stats when the cursor moves away.
     private void HandleRadialEntryHovered(RadialMenu.Entry? entry)
     {
         if (_isGamePaused)
@@ -659,8 +638,6 @@ public sealed class BuildModeManager : MonoBehaviour
 
     #region Entry Builders
 
-    // One entry per distinct building category, sorted by the enum value so the
-    // order in the menu is deterministic and matches the asset authoring intent.
     private IReadOnlyList<RadialMenu.Entry> BuildCategoryEntries()
     {
         return CleanCatalogue(_catalogue)
@@ -708,16 +685,9 @@ public sealed class BuildModeManager : MonoBehaviour
 
     #region Helpers
 
-    // Strips nulls so the rest of the class never needs to null-check catalogue entries.
     private static IEnumerable<BuildingData> CleanCatalogue(IEnumerable<BuildingData> catalogue)
         => catalogue?.Where(d => d != null) ?? Enumerable.Empty<BuildingData>();
 
-    // Sub-label shown under the building name: cost when valid, rejection reason when not.
-    private static string BuildSubLabel(BuildingData data, BuildManager.PlacementValidation v)
-        => v.IsValid ? $"{data.buyCost}g" : v.Reason;
-
-    // Builds a compact stat-delta string like "150g  +12 DMG  +1.5 RNG" so the
-    // player can see exactly what the upgrade will change before committing gold.
     private static string BuildUpgradeSubLabel(BuildingBase building, int upgradeCost)
     {
         if (building is Tower tower &&
@@ -756,7 +726,6 @@ public sealed class BuildModeManager : MonoBehaviour
         return $"{upgradeCost}g";
     }
 
-    // Format floats compactly: whole numbers for values >= 10, one decimal place otherwise.
     private static string FormatStat(float v) => v >= 10f ? v.ToString("0") : v.ToString("0.#");
 
     #endregion

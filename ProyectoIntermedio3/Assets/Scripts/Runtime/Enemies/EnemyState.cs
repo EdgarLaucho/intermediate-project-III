@@ -9,5 +9,5 @@ public enum  EnemyState
     ChasingPlayer,
     AttackingConstruction,
     Dead
-    
+
 }

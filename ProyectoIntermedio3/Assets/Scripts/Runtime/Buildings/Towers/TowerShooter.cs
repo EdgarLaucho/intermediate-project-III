@@ -1,9 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Drives the per-frame combat loop for a tower: find the closest target, rotate to
-// face it, and fire when aligned. All stats are read from the sibling Tower component
-// so this class only handles the "how to shoot" mechanics.
 [RequireComponent(typeof(Tower))]
 public sealed class TowerShooter : MonoBehaviour
 {
@@ -17,8 +14,6 @@ public sealed class TowerShooter : MonoBehaviour
     [SerializeField] private float idleSweepFrequency = 0.35f;
     [SerializeField] private float idleTurnSpeed = 90f;
     [SerializeField] private float targetTurnSpeed = 420f;
-    // The turret must be within this angle of the target before it may fire,
-    // preventing shots that would clearly miss due to rotation lag.
     [SerializeField] private float fireAlignmentAngle = 10f;
 
     #endregion
@@ -32,13 +27,9 @@ public sealed class TowerShooter : MonoBehaviour
 
     #region Runtime State
 
-    // Pre-allocated overlap buffer to avoid heap allocations every frame.
     private readonly Collider[] _hits = new Collider[64];
-    // Secondary buffer reused for cannon splash-evaluation queries.
     private readonly Collider[] _clusterHits = new Collider[64];
-    // Reused by the instant-hit splash path (no projectile).
     private readonly HashSet<ITargetable> _splashTargets = new();
-    // Reused while scoring clustered targets for cannon towers.
     private readonly HashSet<ITargetable> _clusterTargets = new();
     private Tower _tower;
     private BuildingVisualController _visualController;
@@ -47,10 +38,7 @@ public sealed class TowerShooter : MonoBehaviour
     private Transform _resolvedAimPivot;
     private Transform[] _resolvedShootPoints;
     private float _cooldown;
-    // Captured when the visual is resolved so idle sweep rotates relative to the
-    // turret's rest orientation, not world zero.
     private Quaternion _aimPivotRestRotation;
-    // Per-instance seed so towers placed at the same time sweep out of sync.
     private float _idleSeed;
     private bool _isGamePaused;
     private bool _fireSequenceInProgress;
@@ -94,8 +82,6 @@ public sealed class TowerShooter : MonoBehaviour
 
     #region Event Handlers
 
-    // Re-resolve references whenever the visual mesh is swapped so aim pivot and
-    // shoot points always belong to the currently active model.
     private void HandleVisualChanged(Transform visualRoot)
     {
         ResolveVisualReferences();
@@ -120,7 +106,7 @@ public sealed class TowerShooter : MonoBehaviour
         if (_isGamePaused) return;
         if (_tower == null || !_tower.IsAlive) return;
 
-        ITargetable target = _fireSequenceInProgress && _sequenceTarget != null && _sequenceTarget.IsAlive
+        var target = _fireSequenceInProgress && _sequenceTarget != null && _sequenceTarget.IsAlive
             ? _sequenceTarget
             : FindTarget();
         UpdateAim(target);
@@ -141,33 +127,30 @@ public sealed class TowerShooter : MonoBehaviour
 
     #region Target Selection
 
-    // Selects the target with the smallest squared distance inside AttackRange.
-    // OverlapBoxNonAlloc uses Chebyshev (square) distance matching the grid layout;
-    // half-extent = (cellRadius + 0.5) * cellSize covers exactly the targeted cells.
     private ITargetable FindTarget()
     {
-        float cs = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
-        float half = (_tower.AttackRange + 0.5f) * cs;
-        int count = Physics.OverlapBoxNonAlloc(transform.position, new Vector3(half, half, half), _hits, Quaternion.identity, targetMask, QueryTriggerInteraction.Ignore);
-        ITargetable bestTarget = null;
-        float bestDistanceSqr = float.MaxValue;
-        int bestClusterSize = int.MinValue;
-        float bestIcePriority = float.MinValue;
+        var cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
+        var half = (_tower.AttackRange + 0.5f) * cellSize;
+        var count = Physics.OverlapBoxNonAlloc(transform.position, new Vector3(half, half, half), _hits, Quaternion.identity, targetMask, QueryTriggerInteraction.Ignore);
+        var bestTarget = default(ITargetable);
+        var bestDistanceSqr = float.MaxValue;
+        var bestClusterSize = int.MinValue;
+        var bestIcePriority = float.MinValue;
 
-        for (int index = 0; index < count; index++)
+        for (var index = 0; index < count; index++)
         {
-            Collider hit = _hits[index];
+            var hit = _hits[index];
             if (hit == null) continue;
 
-            ITargetable target = hit.GetComponentInParent<ITargetable>();
+            var target = hit.GetComponentInParent<ITargetable>();
             if (target == null || !target.IsAlive) continue;
 
-            float distanceSqr = (hit.transform.position - transform.position).sqrMagnitude;
+            var distanceSqr = (hit.transform.position - transform.position).sqrMagnitude;
             switch (_tower.Role)
             {
                 case TowerRole.Cannon:
                 {
-                    int clusterSize = EstimateClusterSize(hit.transform.position);
+                    var clusterSize = EstimateClusterSize(hit.transform.position);
                     if (clusterSize > bestClusterSize
                         || (clusterSize == bestClusterSize && distanceSqr < bestDistanceSqr))
                     {
@@ -179,8 +162,8 @@ public sealed class TowerShooter : MonoBehaviour
                 }
                 case TowerRole.Ice:
                 {
-                    float icePriority = EvaluateIcePriority(target, distanceSqr);
-                    bool isBetter = icePriority > bestIcePriority + 0.0001f
+                    var icePriority = EvaluateIcePriority(target, distanceSqr);
+                    var isBetter = icePriority > bestIcePriority + 0.0001f
                         || (Mathf.Abs(icePriority - bestIcePriority) <= 0.0001f && distanceSqr < bestDistanceSqr);
                     if (isBetter)
                     {
@@ -212,7 +195,7 @@ public sealed class TowerShooter : MonoBehaviour
     {
         if (_resolvedAimPivot == null) return;
 
-        if (target != null && TryGetTargetPosition(target, out Vector3 targetPosition))
+        if (target != null && TryGetTargetPosition(target, out var targetPosition))
         {
             RotateToward(targetPosition);
             return;
@@ -223,30 +206,28 @@ public sealed class TowerShooter : MonoBehaviour
 
     private void RotateToward(Vector3 targetPosition)
     {
-        Vector3 direction = targetPosition - _resolvedAimPivot.position;
-        direction.y = 0f; // Keep rotation horizontal – no pitch toward the target.
+        var direction = targetPosition - _resolvedAimPivot.position;
+        direction.y = 0f;
         if (direction.sqrMagnitude <= 0.0001f) return;
 
-        Quaternion targetRotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
+        var targetRotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
         _resolvedAimPivot.rotation = Quaternion.RotateTowards(_resolvedAimPivot.rotation, targetRotation, targetTurnSpeed * Time.deltaTime);
     }
 
-    // Oscillates the turret back and forth while idle so it looks alive.
-    // Sine wave on Time.time with a per-tower seed avoids synchronized sweeping.
     private void SweepIdle()
     {
-        float phase = (Time.time + _idleSeed) * Mathf.PI * 2f * idleSweepFrequency;
-        float yaw = Mathf.Sin(phase) * idleSweepAngle;
-        Quaternion targetRotation = _aimPivotRestRotation * Quaternion.Euler(0f, yaw, 0f);
+        var phase = (Time.time + _idleSeed) * Mathf.PI * 2f * idleSweepFrequency;
+        var yaw = Mathf.Sin(phase) * idleSweepAngle;
+        var targetRotation = _aimPivotRestRotation * Quaternion.Euler(0f, yaw, 0f);
         _resolvedAimPivot.localRotation = Quaternion.RotateTowards(_resolvedAimPivot.localRotation, targetRotation, idleTurnSpeed * Time.deltaTime);
     }
 
     private bool IsAlignedWith(ITargetable target)
     {
         if (_resolvedAimPivot == null || fireAlignmentAngle <= 0f) return true;
-        if (!TryGetTargetPosition(target, out Vector3 targetPosition)) return true;
+        if (!TryGetTargetPosition(target, out var targetPosition)) return true;
 
-        Vector3 direction = targetPosition - _resolvedAimPivot.position;
+        var direction = targetPosition - _resolvedAimPivot.position;
         direction.y = 0f;
         if (direction.sqrMagnitude <= 0.0001f) return true;
 
@@ -270,28 +251,28 @@ public sealed class TowerShooter : MonoBehaviour
     {
         if (target == null || !target.IsAlive) return;
 
-        int projectileCount = Mathf.Max(1, _tower.ProjectilesPerAttack);
+        var projectileCount = Mathf.Max(1, _tower.ProjectilesPerAttack);
 
-        for (int projectileIndex = 0; projectileIndex < projectileCount; projectileIndex++)
+        for (var projectileIndex = 0; projectileIndex < projectileCount; projectileIndex++)
         {
-            Transform launchPoint = GetLaunchPoint(projectileIndex);
+            var launchPoint = GetLaunchPoint(projectileIndex);
             PlayShootEffects(launchPoint);
             PlayIceBeamIfNeeded(target, launchPoint);
 
             if (projectilePrefab != null && target is Component)
                 SpawnProjectile(target, launchPoint);
             else
-                ApplyImpact(target); // Instant-hit fallback when no projectile prefab is set.
+                ApplyImpact(target);
         }
     }
 
     private void PlayIceBeamIfNeeded(ITargetable target, Transform launchPoint)
     {
         if (_tower == null || _tower.Role != TowerRole.Ice) return;
-        if (!TryGetTargetPosition(target, out Vector3 targetPosition)) return;
+        if (!TryGetTargetPosition(target, out var targetPosition)) return;
 
-        Vector3 startPosition = ResolveIceBeamOrigin(launchPoint, targetPosition);
-        Vector3 endPosition = targetPosition + Vector3.up * 0.55f;
+        var startPosition = ResolveIceBeamOrigin(launchPoint, targetPosition);
+        var endPosition = targetPosition + Vector3.up * 0.55f;
         IceBeamEffect.Play(startPosition, endPosition);
     }
 
@@ -300,11 +281,11 @@ public sealed class TowerShooter : MonoBehaviour
         if (launchPoint != null && launchPoint != transform)
             return launchPoint.position;
 
-        Bounds bounds = CalculateVisibleBounds();
-        Vector3 origin = bounds.center;
+        var bounds = CalculateVisibleBounds();
+        var origin = bounds.center;
         origin.y = bounds.max.y - bounds.size.y * 0.18f;
 
-        Vector3 direction = targetPosition - origin;
+        var direction = targetPosition - origin;
         direction.y = 0f;
         if (direction.sqrMagnitude > 0.0001f)
             origin += direction.normalized * Mathf.Min(0.35f, Mathf.Max(bounds.extents.x, bounds.extents.z) * 0.55f);
@@ -314,11 +295,11 @@ public sealed class TowerShooter : MonoBehaviour
 
     private Bounds CalculateVisibleBounds()
     {
-        Bounds bounds = new Bounds(transform.position, Vector3.one);
-        bool hasBounds = false;
-        Transform searchRoot = GetVisualSearchRoot();
+        var bounds = new Bounds(transform.position, Vector3.one);
+        var hasBounds = false;
+        var searchRoot = GetVisualSearchRoot();
 
-        foreach (Renderer renderer in searchRoot.GetComponentsInChildren<Renderer>(true))
+        foreach (var renderer in searchRoot.GetComponentsInChildren<Renderer>(true))
         {
             if (renderer == null || !renderer.enabled || !renderer.gameObject.activeInHierarchy)
                 continue;
@@ -348,16 +329,14 @@ public sealed class TowerShooter : MonoBehaviour
         if (_cannonAnimator == null || _cannonAnimator.IsPlaying)
             return false;
 
-        Transform launchPoint = GetLaunchPoint(0);
+        var launchPoint = GetLaunchPoint(0);
         _cannonAnimator.Configure(projectilePrefab, launchPoint, GetVisualSearchRoot());
         if (!_cannonAnimator.CanAnimate)
             return false;
 
         _fireSequenceInProgress = true;
         _sequenceTarget = target;
-        bool started = _cannonAnimator.Play(
-            () => FireNow(target),
-            () =>
+        var started = _cannonAnimator.Play(() => FireNow(target), () =>
             {
                 _fireSequenceInProgress = false;
                 _sequenceTarget = null;
@@ -375,8 +354,8 @@ public sealed class TowerShooter : MonoBehaviour
     private void SpawnProjectile(ITargetable target, Transform launchPoint)
     {
         launchPoint = launchPoint != null ? launchPoint : transform;
-        GameObject projectileObject = Instantiate(projectilePrefab, launchPoint.position, launchPoint.rotation);
-        TowerProjectile projectile = projectileObject.GetComponent<TowerProjectile>();
+        var projectileObject = Instantiate(projectilePrefab, launchPoint.position, launchPoint.rotation);
+        var projectile = projectileObject.GetComponent<TowerProjectile>();
         if (projectile == null)
             projectile = projectileObject.AddComponent<TowerProjectile>();
 
@@ -387,19 +366,17 @@ public sealed class TowerShooter : MonoBehaviour
     {
         if (launchPoint == null) return;
 
-        ParticleSystem[] shootEffects = launchPoint.GetComponentsInChildren<ParticleSystem>(true);
-        for (int index = 0; index < shootEffects.Length; index++)
+        var shootEffects = launchPoint.GetComponentsInChildren<ParticleSystem>(true);
+        for (var index = 0; index < shootEffects.Length; index++)
         {
-            ParticleSystem effect = shootEffects[index];
+            var effect = shootEffects[index];
             if (effect == null) continue;
 
-            // Stop-and-clear before playing so rapid fire resets the effect cleanly.
             effect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             effect.Play(true);
         }
     }
 
-    // Instant-hit fallback: applies damage directly without spawning a projectile.
     private void ApplyImpact(ITargetable target)
     {
         if (_tower.SplashRadius > 0 && target is Component targetComponent)
@@ -415,17 +392,17 @@ public sealed class TowerShooter : MonoBehaviour
     private void DamageSplash(Vector3 center)
     {
         _splashTargets.Clear();
-        Vector3 boxCenter = SnapToGridCenter(center);
-        float cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
-        float half = (_tower.SplashRadius + 0.5f) * cellSize;
-        int count = Physics.OverlapBoxNonAlloc(boxCenter, new Vector3(half, half, half), _hits, Quaternion.identity, targetMask, QueryTriggerInteraction.Ignore);
+        var boxCenter = SnapToGridCenter(center);
+        var cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
+        var half = (_tower.SplashRadius + 0.5f) * cellSize;
+        var count = Physics.OverlapBoxNonAlloc(boxCenter, new Vector3(half, half, half), _hits, Quaternion.identity, targetMask, QueryTriggerInteraction.Ignore);
 
-        for (int index = 0; index < count; index++)
+        for (var index = 0; index < count; index++)
         {
-            Collider hit = _hits[index];
+            var hit = _hits[index];
             if (hit == null) continue;
 
-            ITargetable target = hit.GetComponentInParent<ITargetable>();
+            var target = hit.GetComponentInParent<ITargetable>();
             if (target == null || !target.IsAlive || !_splashTargets.Add(target)) continue;
             target.TakeDamage(_tower.AttackDamage);
             if (target.IsAlive) ApplySlow(target);
@@ -434,7 +411,7 @@ public sealed class TowerShooter : MonoBehaviour
 
     private static Vector3 SnapToGridCenter(Vector3 worldPosition)
     {
-        GridManager grid = GridManager.Instance;
+        var grid = GridManager.Instance;
         return grid != null ? grid.GridToWorld(grid.WorldToGrid(worldPosition)) : worldPosition;
     }
 
@@ -445,25 +422,23 @@ public sealed class TowerShooter : MonoBehaviour
             slowable.ApplySlow(_tower.SlowPercent, _tower.SlowDuration);
     }
 
-    // Cannon towers are most valuable when they splash multiple enemies at once.
-    // When no splash radius is configured, fall back to single-target behaviour.
     private int EstimateClusterSize(Vector3 center)
     {
         if (_tower == null || _tower.SplashRadius <= 0)
             return 1;
 
         _clusterTargets.Clear();
-        Vector3 boxCenter = SnapToGridCenter(center);
-        float cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
-        float half = (_tower.SplashRadius + 0.5f) * cellSize;
-        int count = Physics.OverlapBoxNonAlloc(boxCenter, new Vector3(half, half, half), _clusterHits, Quaternion.identity, targetMask, QueryTriggerInteraction.Ignore);
+        var boxCenter = SnapToGridCenter(center);
+        var cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
+        var half = (_tower.SplashRadius + 0.5f) * cellSize;
+        var count = Physics.OverlapBoxNonAlloc(boxCenter, new Vector3(half, half, half), _clusterHits, Quaternion.identity, targetMask, QueryTriggerInteraction.Ignore);
 
-        for (int index = 0; index < count; index++)
+        for (var index = 0; index < count; index++)
         {
-            Collider hit = _clusterHits[index];
+            var hit = _clusterHits[index];
             if (hit == null) continue;
 
-            ITargetable target = hit.GetComponentInParent<ITargetable>();
+            var target = hit.GetComponentInParent<ITargetable>();
             if (target != null && target.IsAlive)
                 _clusterTargets.Add(target);
         }
@@ -471,15 +446,12 @@ public sealed class TowerShooter : MonoBehaviour
         return Mathf.Max(1, _clusterTargets.Count);
     }
 
-    // Ice towers prefer enemies that are still moving at (or near) full speed so
-    // they spread the slow across the wave instead of overcommitting to one target.
     private static float EvaluateIcePriority(ITargetable target, float distanceSqr)
     {
-        float unslowedPriority = 0f;
+        var unslowedPriority = 0f;
         if (target is ISlowable slowable)
             unslowedPriority = Mathf.Clamp01(slowable.MoveSpeedMultiplier);
 
-        // Prioritise fresh targets first, then use distance as a gentle tie-breaker.
         return unslowedPriority * 1000f - distanceSqr;
     }
 
@@ -487,11 +459,9 @@ public sealed class TowerShooter : MonoBehaviour
 
     #region Reference Resolution
 
-    // Called on Awake and again whenever the visual mesh changes.
-    // Priority order: TowerLaunchSockets on the visual > named child in visual > Inspector field > named child on root.
     private void ResolveVisualReferences()
     {
-        Transform searchRoot = GetVisualSearchRoot();
+        var searchRoot = GetVisualSearchRoot();
 
         _launchSockets = searchRoot.GetComponentInChildren<TowerLaunchSockets>(true);
         _resolvedAimPivot = ResolveAimPivot(searchRoot);
@@ -504,7 +474,7 @@ public sealed class TowerShooter : MonoBehaviour
 
     private Transform GetVisualSearchRoot()
     {
-        Transform visualRoot = _visualController != null ? _visualController.ActiveVisualRoot : null;
+        var visualRoot = _visualController != null ? _visualController.ActiveVisualRoot : null;
         return visualRoot != null ? visualRoot : transform;
     }
 
@@ -516,7 +486,7 @@ public sealed class TowerShooter : MonoBehaviour
         if (_cannonAnimator == null && !TryGetComponent(out _cannonAnimator))
             _cannonAnimator = gameObject.AddComponent<CannonCatapultAnimator>();
 
-        Transform launchPoint = GetLaunchPoint(0);
+        var launchPoint = GetLaunchPoint(0);
         _cannonAnimator.Configure(projectilePrefab, launchPoint, searchRoot);
     }
 
@@ -525,7 +495,7 @@ public sealed class TowerShooter : MonoBehaviour
         if (_launchSockets != null && _launchSockets.AimPivot != null)
             return _launchSockets.AimPivot;
 
-        Transform visualMatch = FindChildRecursive(searchRoot, DefaultAimPivotName);
+        var visualMatch = FindChildRecursive(searchRoot, DefaultAimPivotName);
         if (visualMatch != null) return visualMatch;
 
         if (aimPivot != null) return aimPivot;
@@ -536,9 +506,9 @@ public sealed class TowerShooter : MonoBehaviour
     private Transform[] ResolveShootPoints(Transform searchRoot)
     {
         if (_launchSockets != null && _launchSockets.ShootPointCount > 0)
-            return null; // TowerLaunchSockets will be used directly; no array needed.
+            return null;
 
-        Transform[] visualShootPoints = TowerLaunchSockets.FindChildrenRecursive(searchRoot, DefaultShootPointName);
+        var visualShootPoints = TowerLaunchSockets.FindChildrenRecursive(searchRoot, DefaultShootPointName);
         if (visualShootPoints.Length > 0) return visualShootPoints;
 
         if (shootPoint != null) return new[] { shootPoint };
@@ -573,16 +543,14 @@ public sealed class TowerShooter : MonoBehaviour
         return false;
     }
 
-    // Local recursive search used for aim pivot resolution.
-    // TowerLaunchSockets exposes the same algorithm as a public static for reuse.
     private static Transform FindChildRecursive(Transform parent, string childName)
     {
-        for (int index = 0; index < parent.childCount; index++)
+        for (var index = 0; index < parent.childCount; index++)
         {
-            Transform child = parent.GetChild(index);
+            var child = parent.GetChild(index);
             if (child.name == childName) return child;
 
-            Transform match = FindChildRecursive(child, childName);
+            var match = FindChildRecursive(child, childName);
             if (match != null) return match;
         }
 

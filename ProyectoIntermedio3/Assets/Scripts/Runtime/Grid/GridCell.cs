@@ -1,8 +1,5 @@
 using UnityEngine;
 
-// A single logical tile on the build grid. Holds occupancy state and a reference
-// to whatever building is currently placed on it. GridManager owns all GridCell
-// instances; nothing outside the grid system should create them directly.
 public class GridCell
 {
     #region Properties

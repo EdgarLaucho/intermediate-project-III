@@ -7,7 +7,7 @@ public class EnemyData : ScriptableObject
     public string enemyName;
 
     [Header("Economy")]
-    public int goldReward; // gold awarded to the player on kill
+    public int goldReward;
 
     [Header("Stats")]
     public int baseHealth;

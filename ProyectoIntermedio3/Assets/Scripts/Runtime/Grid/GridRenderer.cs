@@ -1,9 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-// Builds simple per-cell sprite markers to visualise the grid.
-// The grid is intentionally object-based instead of procedural mesh-based so the
-// visual language stays easy to understand and tune from code.
 public class GridRenderer : MonoBehaviour
 {
     #region Inspector Fields
@@ -12,13 +9,12 @@ public class GridRenderer : MonoBehaviour
 
     [Header("Layout")]
     [SerializeField] private float markerScale = 0.52f;
-    // Lifts the grid mesh slightly above the terrain to prevent z-fighting.
     [SerializeField] private float yOffset = 0.02f;
 
     [Header("Materials")]
-    [SerializeField] private Material buildableMaterial; // Submesh 0
-    [SerializeField] private Material nexusMaterial; // Submesh 1
-    [SerializeField] private Material occupiedMaterial; // Submesh 2
+    [SerializeField] private Material buildableMaterial;
+    [SerializeField] private Material nexusMaterial;
+    [SerializeField] private Material occupiedMaterial;
 
     #endregion
 
@@ -27,7 +23,6 @@ public class GridRenderer : MonoBehaviour
     private readonly List<GameObject> _markers = new();
     private Sprite _cellSprite;
 
-    // Prevents double-subscription: OnEnable can fire before Start in some cases.
     private bool _subscribed;
 
     #endregion
@@ -129,7 +124,6 @@ public class GridRenderer : MonoBehaviour
                 AddMarker(cell, c, occupiedMaterial, "Occupied");
             else if (cell.IsBuildable)
                 AddMarker(cell, c, buildableMaterial, "Buildable");
-            // Out-of-range cells are intentionally skipped (not rendered).
         }
 
         ApplyPhaseVisibility(PhaseEvents.CurrentPhase);

@@ -788,14 +788,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TD.Construction.CellHoverIndicator
   grid: {fileID: 622606618}
   uiDocument: {fileID: 343229871}
-  buildableColor: {r: 1, g: 0.66, b: 0.12, a: 0.26}
-  occupiedColor: {r: 0.24, g: 0.88, b: 1, a: 0.3}
-  invalidColor: {r: 1, g: 0.12, b: 0.1, a: 0.32}
-  noGoldColor: {r: 1, g: 0.78, b: 0.12, a: 0.3}
-  phaseColor: {r: 0.55, g: 0.58, b: 0.66, a: 0.24}
-  outlineColor: {r: 1, g: 1, b: 1, a: 0.7}
-  validPlacementColor: {r: 0.28, g: 1, b: 0.46, a: 0.26}
-  validAccentColor: {r: 0.66, g: 1, b: 0.68, a: 0.82}
+  buildableColor: {r: 1, g: 0.66, b: 0.12, a: 0.45}
+  occupiedColor: {r: 0.24, g: 0.88, b: 1, a: 0.55}
+  invalidColor: {r: 1, g: 0.12, b: 0.1, a: 0.65}
+  noGoldColor: {r: 1, g: 0.78, b: 0.12, a: 0.62}
+  phaseColor: {r: 0.55, g: 0.58, b: 0.66, a: 0.50}
+  outlineColor: {r: 1, g: 1, b: 1, a: 0.90}
+  validPlacementColor: {r: 0.18, g: 1, b: 0.32, a: 0.88}
+  validAccentColor: {r: 1, g: 1, b: 1, a: 1}
   pulseSpeed: 5
   pulseAmplitude: 0.14
   reticleRotationSpeed: 34

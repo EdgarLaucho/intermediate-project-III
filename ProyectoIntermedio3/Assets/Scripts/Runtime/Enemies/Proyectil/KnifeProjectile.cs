@@ -8,7 +8,7 @@ public class KnifeProjectile : EnemyProjectileBase
             return;
 
         base.Update();
-        
+
         transform.Rotate(0f,0f,500f * Time.deltaTime);
     }
 }

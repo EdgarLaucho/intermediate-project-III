@@ -21,8 +21,9 @@ public sealed class IceBeamEffect : MonoBehaviour
 
     public static void Play(Vector3 start, Vector3 end)
     {
-        GameObject beamObject = new GameObject("__IceBeamEffect");
-        IceBeamEffect effect = beamObject.AddComponent<IceBeamEffect>();
+        var beamObject = new GameObject("__IceBeamEffect");
+        var effect = beamObject.AddComponent<IceBeamEffect>();
+
         effect.Initialize(start, end);
     }
 
@@ -32,11 +33,12 @@ public sealed class IceBeamEffect : MonoBehaviour
         endPosition = end;
         randomSeed = Random.Range(0f, 1000f);
 
-        Vector3 direction = endPosition - startPosition;
-        Vector3 flatDirection = new Vector3(direction.x, 0f, direction.z);
-        Vector3 side = flatDirection.sqrMagnitude > 0.0001f
+        var direction = endPosition - startPosition;
+        var flatDirection = new Vector3(direction.x, 0f, direction.z);
+        var side = flatDirection.sqrMagnitude > 0.0001f
             ? Vector3.Cross(Vector3.up, flatDirection.normalized)
             : Vector3.right;
+
         sideOffset = side * 0.035f;
         upOffset = Vector3.up * 0.05f;
 
@@ -50,8 +52,8 @@ public sealed class IceBeamEffect : MonoBehaviour
         if (GamePauseEvents.IsPaused) return;
 
         timer += Time.deltaTime;
-        float t = Mathf.Clamp01(timer / Mathf.Max(0.01f, duration));
-        float alpha = 1f - Smooth01(t);
+        var t = Mathf.Clamp01(timer / Mathf.Max(0.01f, duration));
+        var alpha = 1f - Smooth01(t);
         UpdateLines(alpha);
 
         if (timer >= duration)
@@ -66,10 +68,10 @@ public sealed class IceBeamEffect : MonoBehaviour
 
     private LineRenderer CreateLine(string lineName, float widthStart, float widthEnd, Color color, int sortingOrder)
     {
-        GameObject lineObject = new GameObject(lineName);
+        var lineObject = new GameObject(lineName);
         lineObject.transform.SetParent(transform, false);
 
-        LineRenderer line = lineObject.AddComponent<LineRenderer>();
+        var line = lineObject.AddComponent<LineRenderer>();
         line.positionCount = 5;
         line.useWorldSpace = true;
         line.textureMode = LineTextureMode.Stretch;
@@ -87,11 +89,9 @@ public sealed class IceBeamEffect : MonoBehaviour
 
     private Material CreateMaterial(Color color, bool isCore)
     {
-        Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit")
-                     ?? Shader.Find("Sprites/Default")
-                     ?? Shader.Find("Unlit/Color");
+        var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
 
-        Material material = new Material(shader)
+        var material = new Material(shader)
         {
             name = isCore ? "IceBeamCore" : "IceBeamGlow",
             hideFlags = HideFlags.HideAndDontSave
@@ -107,9 +107,9 @@ public sealed class IceBeamEffect : MonoBehaviour
 
     private void UpdateLines(float alpha)
     {
-        float pulse = Mathf.Sin((Time.time + randomSeed) * 45f) * 0.5f + 0.5f;
-        Vector3 jitter = sideOffset * (pulse - 0.5f);
-        Vector3[] points =
+        var pulse = Mathf.Sin((Time.time + randomSeed) * 45f) * 0.5f + 0.5f;
+        var jitter = sideOffset * (pulse - 0.5f);
+        var points = new[]
         {
             startPosition,
             Vector3.Lerp(startPosition, endPosition, 0.28f) + upOffset + jitter,
@@ -127,7 +127,7 @@ public sealed class IceBeamEffect : MonoBehaviour
         if (line == null) return;
 
         line.SetPositions(points);
-        Color faded = new Color(color.r, color.g, color.b, color.a * alpha);
+        var faded = new Color(color.r, color.g, color.b, color.a * alpha);
         line.startColor = faded;
         line.endColor = new Color(faded.r, faded.g, faded.b, 0f);
     }

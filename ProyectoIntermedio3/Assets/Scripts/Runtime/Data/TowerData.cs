@@ -18,13 +18,11 @@ public enum DamageKind
 [System.Serializable]
 public struct TowerStatsData
 {
-    // Range in grid cells (integer). Converted to world units at runtime using GridManager.CellSize.
     public int attackRange;
     public int attackDamage;
     public float fireRate;
     public float projectileSpeed;
     public int projectilesPerAttack;
-    // Splash radius in grid cells. 0 = single target only.
     public int splashRadius;
     [Range(0f, 1f)] public float slowPercent;
     public float slowDuration;

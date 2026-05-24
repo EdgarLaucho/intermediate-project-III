@@ -1,15 +1,11 @@
 using UnityEngine;
 
-// Tower extends BuildingBase with ranged-combat stats.
-// TowerShooter (a sibling component) reads these properties each frame to decide
-// when and what to fire – Tower itself has no Update logic.
 public class Tower : BuildingBase
 {
     #region Combat Stats
 
     public TowerRole Role { get; private set; }
     public DamageKind DamageKind { get; private set; }
-    // Attack range in grid cells. Multiply by GridManager.Instance.CellSize for world units.
     public int AttackRange { get; private set; }
     public int AttackDamage { get; private set; }
     public float FireRate { get; private set; }
@@ -23,8 +19,6 @@ public class Tower : BuildingBase
 
     #region Upgrade Preview
 
-    // Returns what the stats will look like after the next upgrade without actually
-    // applying it. Useful for showing upgrade tooltips in the UI.
     public bool TryPreviewNextUpgrade(out int nextDamage, out int nextRange, out float nextFireRate)
     {
         nextDamage = AttackDamage;
@@ -83,10 +77,7 @@ public class Tower : BuildingBase
 
     #region Private Helpers
 
-    // A multiplier of 0 in the data asset means "no change" – treat it as 1 to
-    // keep all stats unchanged rather than zeroing them out.
-    private static float NormalizedMultiplier(float multiplier)
-        => multiplier > 0f ? multiplier : 1f;
+    private static float NormalizedMultiplier(float multiplier) => multiplier > 0f ? multiplier : 1f;
 
     #endregion
 }

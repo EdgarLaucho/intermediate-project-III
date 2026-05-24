@@ -6,47 +6,29 @@ using UnityEngine.Rendering;
 [RequireComponent(typeof(BuildingBase))]
 public sealed class BuildingLevelIndicator : MonoBehaviour
 {
-    private const string RootName = "__BuildingLevelIndicator";
+    private const string RootName = "BuildingLevelIndicator";
+    private const string PipSpriteResourcePath = "LevelPip";
     private const int BackSortingOrder = 5000;
     private const int FillSortingOrder = 5001;
 
     [Header("Placement")]
     [SerializeField] private Camera targetCamera;
-    [SerializeField] private float verticalPadding = 0.12f;
-    [SerializeField] private bool useUniformPipSize = true;
-    [SerializeField] private float uniformPipSize = 0.135f;
-    [SerializeField] private float pipSizeFromFootprint = 0.11f;
-    [SerializeField] private float minPipSize = 0.08f;
-    [SerializeField] private float maxPipSize = 0.16f;
+    [SerializeField] private Vector3 localOffset = new(0f, 1.6f, 0f);
+    [SerializeField] private float pipSize = 0.135f;
     [SerializeField] private float pipSpacingMultiplier = 1.08f;
-    [SerializeField] private float screenVerticalOffset = 14f;
-    [SerializeField] private float cameraForwardPadding = 0.05f;
-    [SerializeField] private bool usePivotAsHorizontalAnchor = true;
     [SerializeField, Min(1)] private int maxVisiblePips = 5;
 
-    [Header("Camera Scaling")]
-    [SerializeField] private bool scaleWithDistance = true;
-    [SerializeField] private float referenceDistance = 12f;
-    [SerializeField] private float minScale = 0.85f;
-    [SerializeField] private float maxScale = 1.2f;
-
     [Header("Visuals")]
-    [SerializeField] private Color pipColor = new Color(1f, 0.9f, 0.26f, 1f);
-    [SerializeField] private Color backdropColor = new Color(0.025f, 0.02f, 0.012f, 0.82f);
+    [SerializeField] private Color pipColor = new(1f, 0.9f, 0.26f, 1f);
+    [SerializeField] private Color backdropColor = new(0.025f, 0.02f, 0.012f, 0.82f);
     [SerializeField] private float backdropScale = 1.42f;
 
     private readonly List<PipView> pips = new();
     private BuildingBase building;
     private Transform indicatorRoot;
     private Camera cachedCamera;
-    private Bounds cachedBounds;
-    private bool hasCachedBounds;
-    private bool boundsDirty = true;
     private bool subscribed;
     private int renderedLevel = -1;
-    private int renderedMaxLevel = -1;
-    private float currentPipSize = 0.12f;
-    private float nextCameraSearchTime;
 
     private static Sprite pipSprite;
 
@@ -60,9 +42,8 @@ public sealed class BuildingLevelIndicator : MonoBehaviour
         }
 
         EnsureRoot();
-        boundsDirty = true;
-        RefreshPipsIfNeeded(true);
-        SetIndicatorVisible(enabled && building != null && building.Data != null);
+        RefreshPips(true);
+        UpdateVisibility();
     }
 
     private void Awake()
@@ -77,8 +58,8 @@ public sealed class BuildingLevelIndicator : MonoBehaviour
             building = GetComponent<BuildingBase>();
 
         Subscribe();
-        boundsDirty = true;
-        RefreshPipsIfNeeded(true);
+        RefreshPips(true);
+        UpdateVisibility();
     }
 
     private void OnDisable()
@@ -94,20 +75,11 @@ public sealed class BuildingLevelIndicator : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (building == null || building.Data == null || !building.IsAlive)
-        {
-            SetIndicatorVisible(false);
+        if (!UpdateVisibility())
             return;
-        }
 
-        EnsureRoot();
-        RefreshPipsIfNeeded(false);
-
-        if (boundsDirty || !hasCachedBounds)
-            RecalculateBounds();
-
-        PositionForTopDownCamera();
-        SetIndicatorVisible(true);
+        RefreshPips(false);
+        PositionIndicator();
     }
 
     private void Subscribe()
@@ -126,43 +98,46 @@ public sealed class BuildingLevelIndicator : MonoBehaviour
 
     private void HandleBuildingUpgraded(BuildingBase upgradedBuilding, UpgradeLevelData upgradeData)
     {
-        boundsDirty = true;
-        RefreshPipsIfNeeded(true);
+        RefreshPips(true);
+    }
+
+    private bool UpdateVisibility()
+    {
+        var visible = enabled && building != null && building.Data != null && building.IsAlive;
+        SetIndicatorVisible(visible);
+        return visible;
     }
 
     private void EnsureRoot()
     {
         if (indicatorRoot != null) return;
 
-        Transform existingRoot = transform.Find(RootName);
+        var existingRoot = transform.Find(RootName);
         if (existingRoot != null)
         {
             indicatorRoot = existingRoot;
             return;
         }
 
-        GameObject rootObject = new GameObject(RootName);
-        rootObject.layer = gameObject.layer;
+        var rootObject = new GameObject(RootName) { layer = gameObject.layer };
         indicatorRoot = rootObject.transform;
         indicatorRoot.SetParent(transform, false);
     }
 
-    private void RefreshPipsIfNeeded(bool force)
+    private void RefreshPips(bool force)
     {
         if (building == null || building.Data == null)
             return;
 
-        int currentLevel = Mathf.Max(1, building.CurrentLevel + 1);
-        int designedMaxLevel = Mathf.Max(1, building.Data.maxLevel + 1);
-        int visibleLevel = Mathf.Clamp(currentLevel, 1, Mathf.Min(designedMaxLevel, maxVisiblePips));
+        var maxLevel = Mathf.Max(1, building.Data.maxLevel + 1);
+        var level = Mathf.Clamp(building.CurrentLevel + 1, 1, Mathf.Min(maxLevel, maxVisiblePips));
 
-        if (!force && visibleLevel == renderedLevel && designedMaxLevel == renderedMaxLevel)
+        if (!force && level == renderedLevel)
             return;
 
-        renderedLevel = visibleLevel;
-        renderedMaxLevel = designedMaxLevel;
-        EnsurePipCount(visibleLevel);
-        LayoutPips();
+        renderedLevel = level;
+        EnsurePipCount(level);
+        LayoutPips(level);
     }
 
     private void EnsurePipCount(int count)
@@ -178,14 +153,13 @@ public sealed class BuildingLevelIndicator : MonoBehaviour
 
     private PipView CreatePip(int index)
     {
-        Transform pipRoot = new GameObject($"Pip_{index + 1}").transform;
+        var pipRoot = new GameObject($"Pip_{index + 1}") { layer = gameObject.layer }.transform;
         pipRoot.SetParent(indicatorRoot, false);
-        pipRoot.gameObject.layer = gameObject.layer;
 
-        SpriteRenderer backdrop = CreateRenderer("Backdrop", pipRoot, backdropColor, BackSortingOrder);
+        var backdrop = CreateRenderer("Backdrop", pipRoot, backdropColor, BackSortingOrder);
         backdrop.transform.localScale = Vector3.one * backdropScale;
 
-        SpriteRenderer fill = CreateRenderer("Fill", pipRoot, pipColor, FillSortingOrder);
+        var fill = CreateRenderer("Fill", pipRoot, pipColor, FillSortingOrder);
         fill.transform.localScale = Vector3.one;
 
         return new PipView(pipRoot, backdrop, fill);
@@ -193,12 +167,10 @@ public sealed class BuildingLevelIndicator : MonoBehaviour
 
     private SpriteRenderer CreateRenderer(string rendererName, Transform parent, Color color, int sortingOrder)
     {
-        GameObject rendererObject = new GameObject(rendererName);
-        rendererObject.layer = gameObject.layer;
-        Transform rendererTransform = rendererObject.transform;
-        rendererTransform.SetParent(parent, false);
+        var rendererObject = new GameObject(rendererName) { layer = gameObject.layer };
+        rendererObject.transform.SetParent(parent, false);
 
-        SpriteRenderer renderer = rendererObject.AddComponent<SpriteRenderer>();
+        var renderer = rendererObject.AddComponent<SpriteRenderer>();
         renderer.sprite = GetPipSprite();
         renderer.color = color;
         renderer.sortingOrder = sortingOrder;
@@ -207,143 +179,30 @@ public sealed class BuildingLevelIndicator : MonoBehaviour
         return renderer;
     }
 
-    private void LayoutPips()
+    private void LayoutPips(int visibleCount)
     {
-        int visibleCount = Mathf.Max(0, renderedLevel);
-        if (visibleCount == 0) return;
-
-        float spacing = currentPipSize * pipSpacingMultiplier;
-        float startOffset = -spacing * (visibleCount - 1) * 0.5f;
+        var spacing = pipSize * pipSpacingMultiplier;
+        var startOffset = -spacing * (visibleCount - 1) * 0.5f;
 
         for (int index = 0; index < visibleCount; index++)
         {
-            PipView pip = pips[index];
-            pip.Root.localPosition = new Vector3(startOffset + spacing * index, 0f, 0f);
-            pip.Root.localRotation = Quaternion.identity;
-            pip.Root.localScale = Vector3.one * currentPipSize;
+            var pip = pips[index];
+            pip.Root.SetLocalPositionAndRotation(new Vector3(startOffset + spacing * index, 0f, 0f), Quaternion.identity);
+            pip.Root.localScale = Vector3.one * pipSize;
             pip.Backdrop.color = backdropColor;
             pip.Fill.color = pipColor;
         }
     }
 
-    private void RecalculateBounds()
+    private void PositionIndicator()
     {
-        Bounds bounds = new Bounds(transform.position, Vector3.one);
-        bool hasBounds = false;
+        EnsureRoot();
+        indicatorRoot.localPosition = localOffset;
+        indicatorRoot.localScale = Vector3.one;
 
-        foreach (Renderer renderer in GetComponentsInChildren<Renderer>(true))
-        {
-            if (!ShouldUseRenderer(renderer)) continue;
-            if (!hasBounds)
-            {
-                bounds = renderer.bounds;
-                hasBounds = true;
-            }
-            else
-            {
-                bounds.Encapsulate(renderer.bounds);
-            }
-        }
-
-        if (!hasBounds)
-        {
-            foreach (Collider collider in GetComponentsInChildren<Collider>(true))
-            {
-                if (!ShouldUseCollider(collider)) continue;
-                if (!hasBounds)
-                {
-                    bounds = collider.bounds;
-                    hasBounds = true;
-                }
-                else
-                {
-                    bounds.Encapsulate(collider.bounds);
-                }
-            }
-        }
-
-        cachedBounds = bounds;
-        hasCachedBounds = true;
-        boundsDirty = false;
-
-        float footprint = Mathf.Max(cachedBounds.size.x, cachedBounds.size.z);
-        currentPipSize = useUniformPipSize
-            ? uniformPipSize
-            : Mathf.Clamp(footprint * pipSizeFromFootprint, minPipSize, maxPipSize);
-        LayoutPips();
-    }
-
-    private bool ShouldUseRenderer(Renderer renderer)
-    {
-        if (renderer == null || !renderer.enabled || !renderer.gameObject.activeInHierarchy)
-            return false;
-
-        if (renderer is ParticleSystemRenderer || renderer is TrailRenderer || renderer is LineRenderer)
-            return false;
-
-        if (indicatorRoot != null && renderer.transform.IsChildOf(indicatorRoot))
-            return false;
-
-        if (renderer.GetComponentInParent<BuildingHealthBar>() != null)
-            return false;
-
-        return true;
-    }
-
-    private bool ShouldUseCollider(Collider collider)
-    {
-        if (collider == null || !collider.enabled || !collider.gameObject.activeInHierarchy)
-            return false;
-
-        if (collider.isTrigger)
-            return false;
-
-        if (indicatorRoot != null && collider.transform.IsChildOf(indicatorRoot))
-            return false;
-
-        if (collider.GetComponentInParent<BuildingHealthBar>() != null)
-            return false;
-
-        return true;
-    }
-
-    private void PositionForTopDownCamera()
-    {
         Camera camera = ResolveCamera();
-        Vector3 horizontalAnchor = usePivotAsHorizontalAnchor ? transform.position : cachedBounds.center;
-        Vector3 position = new Vector3(
-            horizontalAnchor.x,
-            cachedBounds.max.y + verticalPadding + currentPipSize * 0.5f,
-            horizontalAnchor.z);
-
         if (camera != null)
-        {
             indicatorRoot.rotation = camera.transform.rotation;
-
-            Vector3 anchor = new Vector3(horizontalAnchor.x, cachedBounds.max.y, horizontalAnchor.z);
-            Vector3 screenPosition = camera.WorldToScreenPoint(anchor);
-            if (screenPosition.z > 0.01f)
-            {
-                screenPosition.y += screenVerticalOffset;
-                position = camera.ScreenToWorldPoint(screenPosition);
-                position -= camera.transform.forward * cameraForwardPadding;
-            }
-        }
-
-        indicatorRoot.position = position;
-
-        float distanceScale = 1f;
-        if (scaleWithDistance && camera != null)
-        {
-            float distance = Vector3.Distance(camera.transform.position, position);
-            distanceScale = Mathf.Clamp(distance / Mathf.Max(0.01f, referenceDistance), minScale, maxScale);
-        }
-
-        Vector3 parentScale = transform.lossyScale;
-        indicatorRoot.localScale = new Vector3(
-            distanceScale / Mathf.Max(0.001f, Mathf.Abs(parentScale.x)),
-            distanceScale / Mathf.Max(0.001f, Mathf.Abs(parentScale.y)),
-            distanceScale / Mathf.Max(0.001f, Mathf.Abs(parentScale.z)));
     }
 
     private Camera ResolveCamera()
@@ -351,10 +210,6 @@ public sealed class BuildingLevelIndicator : MonoBehaviour
         if (targetCamera != null) return targetCamera;
         if (cachedCamera != null) return cachedCamera;
 
-        if (Time.unscaledTime < nextCameraSearchTime)
-            return null;
-
-        nextCameraSearchTime = Time.unscaledTime + 0.5f;
         cachedCamera = Camera.main;
         return cachedCamera;
     }
@@ -367,37 +222,13 @@ public sealed class BuildingLevelIndicator : MonoBehaviour
 
     private static Sprite GetPipSprite()
     {
-        if (pipSprite != null) return pipSprite;
+        if (pipSprite != null)
+            return pipSprite;
 
-        const int size = 64;
-        const float radius = 28f;
-        const float feather = 3f;
-        Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
-        {
-            name = "GeneratedLevelPip",
-            hideFlags = HideFlags.HideAndDontSave,
-            filterMode = FilterMode.Bilinear,
-            wrapMode = TextureWrapMode.Clamp
-        };
+        pipSprite = Resources.Load<Sprite>(PipSpriteResourcePath);
+        if (pipSprite == null)
+            Debug.LogError($"[BuildingLevelIndicator] Missing sprite at Resources/{PipSpriteResourcePath}.");
 
-        Vector2 center = new Vector2((size - 1) * 0.5f, (size - 1) * 0.5f);
-        Color[] pixels = new Color[size * size];
-        for (int y = 0; y < size; y++)
-        {
-            for (int x = 0; x < size; x++)
-            {
-                float distance = Vector2.Distance(new Vector2(x, y), center);
-                float alpha = Mathf.Clamp01((radius + feather - distance) / feather);
-                pixels[y * size + x] = new Color(1f, 1f, 1f, alpha);
-            }
-        }
-
-        texture.SetPixels(pixels);
-        texture.Apply(false, true);
-
-        pipSprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
-        pipSprite.name = "GeneratedLevelPipSprite";
-        pipSprite.hideFlags = HideFlags.HideAndDontSave;
         return pipSprite;
     }
 

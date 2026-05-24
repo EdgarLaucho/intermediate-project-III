@@ -1,9 +1,6 @@
 using System;
 using UnityEngine;
 
-// Manages the active visual mesh of a building and swaps it out when an upgrade
-// provides a new visual prefab. Keeping visuals separate from logic lets designers
-// iterate on art without touching gameplay code.
 [DisallowMultipleComponent]
 [RequireComponent(typeof(BuildingBase))]
 public sealed class BuildingVisualController : MonoBehaviour
@@ -26,7 +23,6 @@ public sealed class BuildingVisualController : MonoBehaviour
 
     public event Action<Transform> OnVisualChanged;
 
-    // Lazily resolved so it works correctly even when the visual is spawned after Awake.
     public Transform ActiveVisualRoot
     {
         get
@@ -78,22 +74,18 @@ public sealed class BuildingVisualController : MonoBehaviour
 
     private void ApplyVisualOverride(GameObject visualPrefab)
     {
-        Transform parent = visualParent != null ? visualParent : transform;
-        Transform previousVisual = ActiveVisualRoot;
+        var parent = visualParent != null ? visualParent : transform;
+        var previousVisual = ActiveVisualRoot;
 
-        // visualParent is a container on several prefabs; never treat the container
-        // itself as the disposable visual root.
         if (previousVisual == parent)
             previousVisual = null;
 
-        GameObject visualObject = Instantiate(visualPrefab, parent, false);
+        var visualObject = Instantiate(visualPrefab, parent, false);
         visualObject.name = visualChildName;
-        Transform visualTransform = visualObject.transform;
+        var visualTransform = visualObject.transform;
 
         if (previousVisual != null)
         {
-            // Preserve the local transform of the old visual so the new mesh slots in
-            // at the exact same position, rotation, and scale.
             visualTransform.localPosition = previousVisual.localPosition;
             visualTransform.localRotation = previousVisual.localRotation;
             visualTransform.localScale = previousVisual.localScale;
@@ -106,13 +98,10 @@ public sealed class BuildingVisualController : MonoBehaviour
         OnVisualChanged?.Invoke(_activeVisualRoot);
     }
 
-    // When visualParent is assigned, it acts as a stable container. Prefer a named
-    // child, then the first child, and only fall back to the parent when no container
-    // was configured.
     private Transform FindVisualRoot()
     {
-        Transform parent = visualParent != null ? visualParent : transform;
-        Transform directChild = parent.Find(visualChildName);
+        var parent = visualParent != null ? visualParent : transform;
+        var directChild = parent.Find(visualChildName);
         if (directChild != null)
             return directChild;
 
