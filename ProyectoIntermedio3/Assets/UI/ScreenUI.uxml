@@ -23,20 +23,38 @@
     </ui:VisualElement>
     <ui:VisualElement name="screen-overlays" picking-mode="Ignore" class="screen-overlays">
         <ui:VisualElement name="victory-panel" class="screen-panel victory-panel" style="display: none;">
-            <ui:Label text="VICTORY!!!" class="screen-title victory-title"/>
-            <ui:Button name="victory-restart-button" text="RESTART" class="screen-menu-button"/>
-            <ui:Button name="victory-main-menu-button" text="MAIN MENU" class="screen-menu-button"/>
+            <ui:VisualElement class="screen-card victory-card">
+                <ui:VisualElement class="screen-card-accent victory-accent"/>
+                <ui:Label text="VICTORY" class="screen-title victory-title"/>
+                <ui:Label text="The nexus stands. The realm is safe." class="screen-subtitle"/>
+                <ui:VisualElement class="screen-button-row">
+                    <ui:Button name="victory-restart-button" text="RESTART" class="screen-menu-button primary-button"/>
+                    <ui:Button name="victory-main-menu-button" text="MAIN MENU" class="screen-menu-button"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="pause-panel" class="screen-panel pause-panel" style="display: none;">
-            <ui:Label text="PAUSE" class="screen-title pause-title"/>
-            <ui:Button name="pause-resume-button" text="RESUME" class="screen-menu-button"/>
-            <ui:Button name="pause-restart-button" text="RESTART" class="screen-menu-button"/>
-            <ui:Button name="pause-main-menu-button" text="MAIN MENU" class="screen-menu-button"/>
+            <ui:VisualElement class="screen-card pause-card">
+                <ui:VisualElement class="screen-card-accent pause-accent"/>
+                <ui:Label text="PAUSED" class="screen-title pause-title"/>
+                <ui:Label text="Take a breath. Your defenses are waiting." class="screen-subtitle"/>
+                <ui:VisualElement class="screen-button-row">
+                    <ui:Button name="pause-resume-button" text="RESUME" class="screen-menu-button primary-button"/>
+                    <ui:Button name="pause-restart-button" text="RESTART" class="screen-menu-button"/>
+                    <ui:Button name="pause-main-menu-button" text="MAIN MENU" class="screen-menu-button"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="game-over-panel" class="screen-panel game-over-panel" style="display: none;">
-            <ui:Label text="GAME OVER..." class="screen-title game-over-title"/>
-            <ui:Button name="game-over-restart-button" text="RESTART" class="screen-menu-button"/>
-            <ui:Button name="game-over-main-menu-button" text="MAIN MENU" class="screen-menu-button"/>
+            <ui:VisualElement class="screen-card game-over-card">
+                <ui:VisualElement class="screen-card-accent game-over-accent"/>
+                <ui:Label text="DEFEAT" class="screen-title game-over-title"/>
+                <ui:Label text="The line broke. Rebuild and try again." class="screen-subtitle"/>
+                <ui:VisualElement class="screen-button-row">
+                    <ui:Button name="game-over-restart-button" text="RESTART" class="screen-menu-button primary-button"/>
+                    <ui:Button name="game-over-main-menu-button" text="MAIN MENU" class="screen-menu-button"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
     <ui:VisualElement name="radial-root" class="radial-root"/>

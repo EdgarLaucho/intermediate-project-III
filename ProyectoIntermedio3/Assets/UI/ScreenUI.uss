@@ -511,34 +511,86 @@
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    border-width: 1px;
-    border-color: rgba(235, 240, 238, 0.78);
+    padding-left: 28px;
+    padding-right: 28px;
+    padding-top: 28px;
+    padding-bottom: 28px;
 }
 
 .victory-panel {
-    background-color: rgba(67, 117, 133, 0.82);
+    background-color: rgba(18, 42, 36, 0.82);
 }
 
 .pause-panel {
-    background-color: rgba(202, 217, 220, 0.34);
+    background-color: rgba(9, 18, 27, 0.62);
 }
 
 .game-over-panel {
-    background-color: rgba(55, 7, 8, 0.86);
+    background-color: rgba(42, 7, 9, 0.86);
+}
+
+.screen-card {
+    width: 500px;
+    min-height: 250px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding-left: 34px;
+    padding-right: 34px;
+    padding-top: 30px;
+    padding-bottom: 30px;
+    background-color: rgba(13, 18, 24, 0.92);
+    border-width: 1px;
+    border-color: rgba(232, 236, 226, 0.42);
+    border-radius: 7px;
+}
+
+.victory-card {
+    background-color: rgba(16, 34, 29, 0.94);
+    border-color: rgba(243, 220, 112, 0.72);
+}
+
+.pause-card {
+    background-color: rgba(16, 24, 32, 0.94);
+    border-color: rgba(150, 208, 224, 0.58);
+}
+
+.game-over-card {
+    background-color: rgba(32, 13, 15, 0.95);
+    border-color: rgba(234, 88, 70, 0.68);
+}
+
+.screen-card-accent {
+    width: 150px;
+    height: 4px;
+    margin-bottom: 18px;
+    border-radius: 2px;
+}
+
+.victory-accent {
+    background-color: rgb(245, 210, 86);
+}
+
+.pause-accent {
+    background-color: rgb(130, 209, 230);
+}
+
+.game-over-accent {
+    background-color: rgb(235, 82, 64);
 }
 
 .screen-title {
-    width: 520px;
-    height: 70px;
+    width: 100%;
+    height: 54px;
     margin-left: 0;
     margin-right: 0;
     margin-top: 0;
-    margin-bottom: 54px;
+    margin-bottom: 4px;
     padding-left: 0;
     padding-right: 0;
     padding-top: 0;
     padding-bottom: 0;
-    font-size: 42px;
+    font-size: 45px;
     letter-spacing: 0;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
@@ -546,51 +598,84 @@
 }
 
 .victory-title {
-    color: rgb(252, 246, 104);
-    -unity-text-outline-color: rgba(238, 230, 86, 0.45);
+    color: rgb(255, 231, 104);
+    -unity-text-outline-color: rgba(72, 48, 8, 0.72);
 }
 
 .pause-title {
-    color: rgb(51, 72, 91);
-    -unity-text-outline-color: rgba(225, 236, 245, 0.32);
+    color: rgb(202, 238, 247);
+    -unity-text-outline-color: rgba(23, 46, 58, 0.7);
 }
 
 .game-over-title {
-    color: rgb(244, 244, 244);
-    -unity-text-outline-color: rgba(255, 255, 255, 0.38);
+    color: rgb(255, 214, 205);
+    -unity-text-outline-color: rgba(83, 15, 14, 0.82);
+}
+
+.screen-subtitle {
+    width: 100%;
+    min-height: 22px;
+    margin-bottom: 28px;
+    color: rgba(230, 236, 231, 0.78);
+    font-size: 15px;
+    letter-spacing: 0;
+    -unity-text-align: middle-center;
+}
+
+.screen-button-row {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
 }
 
 .screen-menu-button {
-    width: 148px;
-    height: 32px;
-    margin-left: 0;
-    margin-right: 0;
+    width: 132px;
+    height: 38px;
+    margin-left: 5px;
+    margin-right: 5px;
     margin-top: 0;
-    margin-bottom: 16px;
+    margin-bottom: 0;
     padding-left: 10px;
     padding-right: 10px;
     padding-top: 0;
     padding-bottom: 1px;
-    background-color: rgba(250, 250, 247, 0.92);
+    background-color: rgba(225, 232, 226, 0.12);
     border-width: 1px;
-    border-color: rgba(255, 255, 255, 0.94);
+    border-color: rgba(230, 238, 232, 0.44);
     border-radius: 5px;
-    color: rgb(137, 137, 137);
-    font-size: 19px;
+    color: rgb(229, 235, 229);
+    font-size: 16px;
     letter-spacing: 0;
-    -unity-font-style: normal;
+    -unity-font-style: bold;
     -unity-text-align: middle-center;
-    -unity-text-outline-width: 1px;
-    -unity-text-outline-color: rgba(255, 255, 255, 0.3);
+    -unity-text-outline-width: 0;
+}
+
+.primary-button {
+    background-color: rgba(245, 210, 86, 0.92);
+    border-color: rgb(255, 235, 126);
+    color: rgb(35, 29, 13);
 }
 
 .screen-menu-button:hover {
-    background-color: rgb(255, 255, 255);
-    border-color: rgb(255, 255, 255);
-    color: rgb(78, 78, 78);
+    background-color: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.78);
+    color: rgb(255, 255, 255);
+}
+
+.primary-button:hover {
+    background-color: rgb(255, 230, 100);
+    border-color: rgb(255, 247, 174);
+    color: rgb(32, 25, 10);
 }
 
 .screen-menu-button:active {
-    background-color: rgb(220, 220, 216);
-    color: rgb(58, 58, 58);
+    background-color: rgba(188, 196, 190, 0.24);
+    color: rgb(218, 224, 218);
+}
+
+.primary-button:active {
+    background-color: rgb(202, 166, 48);
+    color: rgb(24, 19, 8);
 }
