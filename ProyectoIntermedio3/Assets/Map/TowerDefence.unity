@@ -1791,10 +1791,10 @@ PrefabInstance:
       propertyPath: buildManager
       value: 
       objectReference: {fileID: 1892159425}
-    - target: {fileID: 2547945516176996483, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
-      propertyPath: m_Speed
-      value: 4
-      objectReference: {fileID: 0}
+    - target: {fileID: 4414810406357939930, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
+      propertyPath: screenUIDocument
+      value: 
+      objectReference: {fileID: 1247947510}
     - target: {fileID: 6127395625895404759, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: m_LocalPosition.x
       value: -4
@@ -1847,10 +1847,6 @@ PrefabInstance:
       propertyPath: constructionPresenter
       value: 
       objectReference: {fileID: 870263343}
-    - target: {fileID: 7536291386188499425, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
-      propertyPath: startingWeapon
-      value: 
-      objectReference: {fileID: 11400000, guid: 00ea3f71f070b934ab08021fdecbeae7, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
