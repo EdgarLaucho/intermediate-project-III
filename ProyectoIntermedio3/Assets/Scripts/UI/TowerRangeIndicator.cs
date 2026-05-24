@@ -70,6 +70,9 @@ public class TowerRangeIndicator : MonoBehaviour
     {
         if (_poolRoot != null)
             Destroy(_poolRoot.gameObject);
+
+        _poolRoot = null;
+        _cells.Clear();
     }
 
     private void LateUpdate()
@@ -240,10 +243,19 @@ public class TowerRangeIndicator : MonoBehaviour
 
     private CellView GetCell()
     {
-        if (_visibleCellCount >= _cells.Count)
-            _cells.Add(CreateCell(_cells.Count));
+        while (_visibleCellCount < _cells.Count)
+        {
+            var existingCell = _cells[_visibleCellCount];
+            if (existingCell != null && existingCell.IsValid)
+                return _cells[_visibleCellCount++];
 
-        return _cells[_visibleCellCount++];
+            _cells.RemoveAt(_visibleCellCount);
+        }
+
+        var cell = CreateCell(_cells.Count);
+        _cells.Add(cell);
+        _visibleCellCount++;
+        return cell;
     }
 
     private CellView CreateCell(int index)
@@ -296,8 +308,17 @@ public class TowerRangeIndicator : MonoBehaviour
 
     private void HideUnusedCells()
     {
-        for (var index = _visibleCellCount; index < _cells.Count; index++)
-            _cells[index].Root.SetActive(false);
+        for (var index = _cells.Count - 1; index >= _visibleCellCount; index--)
+        {
+            var cell = _cells[index];
+            if (cell == null || !cell.IsValid)
+            {
+                _cells.RemoveAt(index);
+                continue;
+            }
+
+            cell.Root.SetActive(false);
+        }
     }
 
     private void HideCells()
@@ -317,5 +338,7 @@ public class TowerRangeIndicator : MonoBehaviour
         public GameObject Root;
         public SpriteRenderer Fill;
         public SpriteRenderer Outline;
+
+        public bool IsValid => Root != null && Fill != null && Outline != null;
     }
 }

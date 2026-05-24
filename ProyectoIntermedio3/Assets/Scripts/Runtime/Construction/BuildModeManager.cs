@@ -268,7 +268,7 @@ public class BuildModeManager : MonoBehaviour
 
         if (!construction.CanBeginPlacement(data, out string reason))
         {
-            Debug.Log($"[ConstructionPresenter] Cannot duplicate '{data.buildingName}' from {_hoveredCell}: {reason}.");
+            Debug.Log($"[BuildModeManager] Cannot duplicate '{data.buildingName}' from {_hoveredCell}: {reason}.");
             return;
         }
 

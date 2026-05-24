@@ -5,10 +5,9 @@ using UnityEngine.UIElements;
 public class GameOverScreen : MonoBehaviour
 {
     [Header("UI References")]
-    [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private UIDocument screenUIDocument;
 
-    private VisualElement gameOverToolkitPanel;
+    private VisualElement gameOverPanel;
     private VisualElement screenOverlays;
     private Button restartButton;
     private Button mainMenuButton;
@@ -28,7 +27,7 @@ public class GameOverScreen : MonoBehaviour
         GameOverTrigger.OnGameOverRequested -= OnGameOverRequested;
     }
 
-    void Start()
+    private void Start()
     {
         ResolveScreenUI();
         SetPanelVisible(false);
@@ -63,21 +62,23 @@ public class GameOverScreen : MonoBehaviour
 
     private void ResolveScreenUI()
     {
-        UIDocument doc = screenUIDocument != null ? screenUIDocument : FindScreenUIDocument();
-        if (doc == null || doc.rootVisualElement == null)
+        if (screenUIDocument == null || screenUIDocument.rootVisualElement == null)
+        {
+            Debug.LogError("[GameOverScreen] Screen UIDocument not assigned.", this);
             return;
+        }
 
-        screenUIDocument = doc;
-        screenOverlays = doc.rootVisualElement.Q<VisualElement>("screen-overlays");
-        gameOverToolkitPanel = doc.rootVisualElement.Q<VisualElement>("game-over-panel");
-        restartButton = doc.rootVisualElement.Q<Button>("game-over-restart-button");
-        mainMenuButton = doc.rootVisualElement.Q<Button>("game-over-main-menu-button");
+        var root = screenUIDocument.rootVisualElement;
+        screenOverlays = root.Q<VisualElement>("screen-overlays");
+        gameOverPanel = root.Q<VisualElement>("game-over-panel");
+        restartButton = root.Q<Button>("game-over-restart-button");
+        mainMenuButton = root.Q<Button>("game-over-main-menu-button");
 
         if (screenOverlays != null)
             screenOverlays.pickingMode = PickingMode.Ignore;
 
-        if (gameOverToolkitPanel != null)
-            gameOverToolkitPanel.pickingMode = PickingMode.Ignore;
+        if (gameOverPanel != null)
+            gameOverPanel.pickingMode = PickingMode.Ignore;
 
         if (restartButton != null)
         {
@@ -96,32 +97,13 @@ public class GameOverScreen : MonoBehaviour
 
     private void SetPanelVisible(bool visible)
     {
-        if (gameOverToolkitPanel != null)
-        {
-            if (screenOverlays != null)
-                screenOverlays.pickingMode = visible ? PickingMode.Position : PickingMode.Ignore;
-
-            gameOverToolkitPanel.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
-            gameOverToolkitPanel.pickingMode = visible ? PickingMode.Position : PickingMode.Ignore;
-
-            if (gameOverPanel != null)
-                gameOverPanel.SetActive(false);
-
+        if (gameOverPanel == null)
             return;
-        }
 
-        if (gameOverPanel != null)
-            gameOverPanel.SetActive(visible);
-    }
+        if (screenOverlays != null)
+            screenOverlays.pickingMode = visible ? PickingMode.Position : PickingMode.Ignore;
 
-    private static UIDocument FindScreenUIDocument()
-    {
-        foreach (UIDocument doc in FindObjectsByType<UIDocument>(FindObjectsInactive.Include))
-        {
-            if (doc?.rootVisualElement?.Q<VisualElement>("game-over-panel") != null)
-                return doc;
-        }
-
-        return null;
+        gameOverPanel.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+        gameOverPanel.pickingMode = visible ? PickingMode.Position : PickingMode.Ignore;
     }
 }
