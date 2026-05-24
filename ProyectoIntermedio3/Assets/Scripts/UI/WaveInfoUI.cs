@@ -17,7 +17,7 @@ public class WaveInfoUI : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI timerText;
 
-    public void ShowTutorial(string tutorialMessage)
+    /*public void ShowTutorial(string tutorialMessage)
     {
         panel.SetActive(true);
 
@@ -25,25 +25,25 @@ public class WaveInfoUI : MonoBehaviour
         phaseText.text = tutorialMessage;
 
         timerText.gameObject.SetActive(false);
-    }
+    }*/
 
     public void ShowBuildPhaseWithTimer(int waveIndex, int totalWaves, float timeRemaining)
     {
         panel.SetActive(true);
 
-        waveTitleText.text = $"Oleada {waveIndex + 1} / {totalWaves}";
-        phaseText.text = "Tiempo de construcción";
+        waveTitleText.text = $"Wave {waveIndex + 1} / {totalWaves}";
+        phaseText.text = "Construction phase";
 
         timerText.gameObject.SetActive(true);
-        timerText.text = $"Siguiente oleada en: {Mathf.CeilToInt(timeRemaining)}";
+        timerText.text = $"Next wave: {Mathf.CeilToInt(timeRemaining)}";
     }
 
     public void ShowBuildPhaseWithButton(int waveIndex, int totalWaves)
     {
         panel.SetActive(true);
 
-        waveTitleText.text = $"Oleada {waveIndex + 1} / {totalWaves}";
-        phaseText.text = "Tiempo de construcción";
+        waveTitleText.text = $"Wave {waveIndex + 1} / {totalWaves}";
+        phaseText.text = "Construction phase";
 
         timerText.gameObject.SetActive(false);
     }
@@ -52,8 +52,8 @@ public class WaveInfoUI : MonoBehaviour
     {
         panel.SetActive(true);
 
-        waveTitleText.text = $"Oleada {waveIndex + 1} / {totalWaves}";
-        phaseText.text = "Combate";
+        waveTitleText.text = $"Wave {waveIndex + 1} / {totalWaves}";
+        phaseText.text = "Combat phase";
 
         timerText.gameObject.SetActive(false);
     }
