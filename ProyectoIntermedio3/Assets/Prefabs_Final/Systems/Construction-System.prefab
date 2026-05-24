@@ -444,10 +444,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1aa4ead403c31e6418771f5784b2c0ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TD.UI.RadialAudio
-  hoverClip: {fileID: 0}
-  clickClip: {fileID: 0}
-  openClip: {fileID: 0}
-  closeClip: {fileID: 0}
+  hoverClip: {fileID: 8300000, guid: 09382d1e87484144b0af6c81e6bebe35, type: 3}
+  clickClip: {fileID: 8300000, guid: d9f5aeb8a91b4c41a43980436f88eea1, type: 3}
+  openClip: {fileID: 8300000, guid: d294753fd2b54693a38c96b3c799045c, type: 3}
+  closeClip: {fileID: 8300000, guid: 1007b02878e64c28a5e1c9e50bc3919c, type: 3}
   hoverVolume: 0.35
   clickVolume: 0.7
   openVolume: 0.55
