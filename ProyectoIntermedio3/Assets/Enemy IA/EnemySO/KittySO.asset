@@ -34,6 +34,6 @@ MonoBehaviour:
   ConstructionDetectionRange: 5
   playerDetectionRange: 4
   damage: 18
-  attackRange: 2
+  attackRange: 2.2
   attackCooldown: 2.6
   attackSound: {fileID: 8300000, guid: 22107cbae590a5b458dddfead293a6c3, type: 3}
