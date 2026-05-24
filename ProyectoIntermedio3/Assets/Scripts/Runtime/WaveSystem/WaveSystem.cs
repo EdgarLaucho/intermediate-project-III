@@ -25,10 +25,8 @@ public class WaveSystem : MonoBehaviour
 
     private int currentWaveIndex = 0;
     private int currentEnemiesAlive = 0;
-    private int totalKills = 0;
     private bool startNextWavePressed = false;
     private Button battleButton;
-    private Label killsLabel;
     private Label waveMessageLabel;
     private VisualElement waveHud;
     private VisualElement lifePanel;
@@ -48,7 +46,6 @@ public class WaveSystem : MonoBehaviour
         }
 
         SetWaveMessage("");
-        UpdateKillsCounter();
 
         StartCoroutine(SpawnWave());
     }
@@ -224,16 +221,6 @@ public class WaveSystem : MonoBehaviour
         }
 
         currentEnemiesAlive--;
-        totalKills++;
-        UpdateKillsCounter();
-    }
-
-    private void UpdateKillsCounter()
-    {
-        string text = "KILLS: " + totalKills;
-
-        if (killsLabel != null)
-            killsLabel.text = text;
     }
 
     private void ResolveScreenUI()
@@ -247,7 +234,6 @@ public class WaveSystem : MonoBehaviour
 
         waveHud = root.Q<VisualElement>("wave-hud");
         lifePanel = root.Q<VisualElement>("life-panel");
-        killsLabel = root.Q<Label>("kills-label");
         waveMessageLabel = root.Q<Label>("wave-message-label");
         battleButton = root.Q<Button>("battle-button");
 
@@ -256,9 +242,6 @@ public class WaveSystem : MonoBehaviour
 
         if (lifePanel != null)
             lifePanel.pickingMode = PickingMode.Ignore;
-
-        if (killsLabel != null)
-            killsLabel.pickingMode = PickingMode.Ignore;
 
         if (waveMessageLabel != null)
             waveMessageLabel.pickingMode = PickingMode.Ignore;
@@ -272,7 +255,7 @@ public class WaveSystem : MonoBehaviour
             battleButton.pickingMode = PickingMode.Position;
         }
 
-        if (battleButton == null || killsLabel == null || waveMessageLabel == null)
+        if (battleButton == null || waveMessageLabel == null)
             ReportMissingToolkitUI();
     }
 
@@ -286,7 +269,7 @@ public class WaveSystem : MonoBehaviour
             VisualElement root = doc.rootVisualElement;
             if (root.Q<VisualElement>("wave-hud") != null
                 || root.Q<Button>("battle-button") != null
-                || root.Q<Label>("kills-label") != null)
+                || root.Q<Label>("wave-message-label") != null)
                 return doc;
         }
 
@@ -329,7 +312,7 @@ public class WaveSystem : MonoBehaviour
         if (reportedMissingToolkitUI)
             return;
 
-        Debug.LogError("[WaveSystem] ScreenUI UIDocument must provide 'battle-button', 'kills-label' and 'wave-message-label' UI Toolkit elements.", this);
+        Debug.LogError("[WaveSystem] ScreenUI UIDocument must provide 'battle-button' and 'wave-message-label' UI Toolkit elements.", this);
         reportedMissingToolkitUI = true;
     }
 }
