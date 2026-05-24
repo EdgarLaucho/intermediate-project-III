@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -31,21 +32,32 @@ public class GridManager : MonoBehaviour
 
     public float CellSize => cellSize;
     public IEnumerable<GridCell> GetAllCells() => cells.Values;
+    public event Action OnCellsChanged;
 
     public void BlockCells(IReadOnlyList<Vector2Int> coords)
     {
+        var changed = false;
+
         foreach (Vector2Int c in coords)
         {
             _blockerCounts.TryGetValue(c, out var count);
             _blockerCounts[c] = count + 1;
 
             if (cells.TryGetValue(c, out var cell))
+            {
                 cell.IsBuildable = false;
+                changed = true;
+            }
         }
+
+        if (changed)
+            OnCellsChanged?.Invoke();
     }
 
     public void UnblockCells(IReadOnlyList<Vector2Int> coords)
     {
+        var changed = false;
+
         foreach (Vector2Int c in coords)
         {
             if (!_blockerCounts.TryGetValue(c, out var count)) continue;
@@ -56,13 +68,19 @@ public class GridManager : MonoBehaviour
                 _blockerCounts.Remove(c);
 
                 if (cells.TryGetValue(c, out var cell) && !cell.IsOccupiedByNexus)
+                {
                     cell.IsBuildable = IsInsideBuildRadius(c, nexusMin, nexusMax);
+                    changed = true;
+                }
             }
             else
             {
                 _blockerCounts[c] = next;
             }
         }
+
+        if (changed)
+            OnCellsChanged?.Invoke();
     }
 
     public GridCell GetCell(Vector2Int coords)

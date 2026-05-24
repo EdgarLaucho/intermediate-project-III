@@ -80,6 +80,8 @@ public class GridRenderer : MonoBehaviour
     private void Subscribe()
     {
         if (_subscribed) return;
+        if (grid != null)
+            grid.OnCellsChanged += OnGridCellsChanged;
         ConstructionEvents.OnBuildingPlaced += OnBuildingPlaced;
         ConstructionEvents.OnBuildingDemolished += OnBuildingDemolished;
         PhaseEvents.OnPhaseChanged += ApplyPhaseVisibility;
@@ -89,12 +91,15 @@ public class GridRenderer : MonoBehaviour
     private void Unsubscribe()
     {
         if (!_subscribed) return;
+        if (grid != null)
+            grid.OnCellsChanged -= OnGridCellsChanged;
         ConstructionEvents.OnBuildingPlaced -= OnBuildingPlaced;
         ConstructionEvents.OnBuildingDemolished -= OnBuildingDemolished;
         PhaseEvents.OnPhaseChanged -= ApplyPhaseVisibility;
         _subscribed = false;
     }
 
+    private void OnGridCellsChanged() => RebuildGrid();
     private void OnBuildingPlaced(BuildingActionArgs _) => RebuildGrid();
     private void OnBuildingDemolished(Vector2Int _) => RebuildGrid();
 
