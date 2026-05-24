@@ -220,9 +220,6 @@ PrefabInstance:
       addedObject: {fileID: 9184859082204815688}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 175f61ea8048eb143a75016d2762ceed, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1208677054491889208}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 175f61ea8048eb143a75016d2762ceed, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 2830393890366564386}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 175f61ea8048eb143a75016d2762ceed, type: 3}
       insertIndex: -1
@@ -230,6 +227,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 175f61ea8048eb143a75016d2762ceed, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1088862050027638000}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 175f61ea8048eb143a75016d2762ceed, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7334408474993832273}
   m_SourcePrefab: {fileID: 100100000, guid: 175f61ea8048eb143a75016d2762ceed, type: 3}
 --- !u!1 &8139339833990427168 stripped
 GameObject:
@@ -281,22 +281,6 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!114 &1208677054491889208
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8139339833990427168}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 07d9e41e517ecd145bc8e4428c55b347, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ExplodingEnemyAI
-  enemySO: {fileID: 11400000, guid: f8e6e6052d010364dbaf9bb3f7cad1de, type: 2}
-  explosionRadius: 2
-  explosionDamage: 40
-  explosionEffect: {fileID: -5716473066537565790, guid: ebae6107c5a71c84ab661ed7b7c8b374, type: 3}
 --- !u!54 &2830393890366564386
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -336,7 +320,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f368764ec0b9c9f498248bc13bc48db6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDrop
-  enemy: {fileID: 1208677054491889208}
+  enemy: {fileID: 0}
   possibleDrops:
   - pickupPrefab: {fileID: 1162392375372998, guid: 1d15740f85f3032459f5e7118e3e859b, type: 3}
     dropChance: 10
@@ -449,3 +433,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &7334408474993832273
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8139339833990427168}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ebb30dc33dd4f74e8419e962466bd4a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::KittyEnemyAI
+  enemySO: {fileID: 11400000, guid: f8e6e6052d010364dbaf9bb3f7cad1de, type: 2}
+  explosionRadius: 3
+  explosionDamage: 40
+  explosionEffect: {fileID: 0}

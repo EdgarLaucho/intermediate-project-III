@@ -52,34 +52,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5999196838363805413, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
-      propertyPath: possibleDrops.Array.data[0].dropChance
-      value: 10
-      objectReference: {fileID: 0}
-    - target: {fileID: 5999196838363805413, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
-      propertyPath: possibleDrops.Array.data[1].dropChance
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 5999196838363805413, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
-      propertyPath: possibleDrops.Array.data[2].dropChance
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 5999196838363805413, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
-      propertyPath: possibleDrops.Array.data[3].dropChance
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 5999196838363805413, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
-      propertyPath: possibleDrops.Array.data[4].dropChance
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 5999196838363805413, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
-      propertyPath: possibleDrops.Array.data[5].dropChance
-      value: 8
-      objectReference: {fileID: 0}
-    - target: {fileID: 5999196838363805413, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
-      propertyPath: possibleDrops.Array.data[6].dropChance
-      value: 6
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

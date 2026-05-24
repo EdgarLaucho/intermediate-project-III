@@ -12,8 +12,8 @@ GameObject:
   - component: {fileID: 8481506010896783115}
   - component: {fileID: 1270244208350386445}
   - component: {fileID: 4631814245991082317}
-  - component: {fileID: 1392352978762795624}
   - component: {fileID: 1725047085306825796}
+  - component: {fileID: 5872911270648137225}
   m_Layer: 7
   m_Name: ChickenPenguinEnemy
   m_TagString: Untagged
@@ -111,25 +111,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &1392352978762795624
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9173542017446471154}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 73af1aaad39ab934ea30236c916eae97, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ChickenPenguinEnemyAI
-  enemySO: {fileID: 11400000, guid: 6ac8e711626cd8a4f8abbddabc1fbf36, type: 2}
-  shootPoint: {fileID: 8612667003677710187}
-  chickenVisual: {fileID: 6100173710308923195}
-  mountedPenguinVisual: {fileID: 8356213230975135164}
-  standingPenguinVisual: {fileID: 552587759696363628}
-  secondPhaseHealth: 100
-  secondPhaseSpeed: 5
 --- !u!82 &1725047085306825796
 AudioSource:
   m_ObjectHideFlags: 0
@@ -227,6 +208,25 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &5872911270648137225
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9173542017446471154}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73af1aaad39ab934ea30236c916eae97, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChickenPenguinEnemyAI
+  enemySO: {fileID: 11400000, guid: 6ac8e711626cd8a4f8abbddabc1fbf36, type: 2}
+  shootPoint: {fileID: 277608032344439483}
+  chickenVisual: {fileID: 6100173710308923195}
+  mountedPenguinVisual: {fileID: 8356213230975135164}
+  standingPenguinVisual: {fileID: 552587759696363628}
+  secondPhaseHealth: 100
+  secondPhaseSpeed: 5
 --- !u!1001 &1752103220238273363
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -291,6 +291,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6249409341218907499, guid: cfe1cea44be218740a3a824c42c06bbe, type: 3}
+      propertyPath: enemy
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 8064149846209428361, guid: cfe1cea44be218740a3a824c42c06bbe, type: 3}
       propertyPath: enemy
       value: 
@@ -301,21 +305,41 @@ PrefabInstance:
     - {fileID: 3632257810091161083, guid: cfe1cea44be218740a3a824c42c06bbe, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2304601915195951935, guid: cfe1cea44be218740a3a824c42c06bbe, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 196268344237303327}
   m_SourcePrefab: {fileID: 100100000, guid: cfe1cea44be218740a3a824c42c06bbe, type: 3}
 --- !u!1 &552587759696363628 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2304601915195951935, guid: cfe1cea44be218740a3a824c42c06bbe, type: 3}
   m_PrefabInstance: {fileID: 1752103220238273363}
   m_PrefabAsset: {fileID: 0}
+--- !u!195 &196268344237303327
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 552587759696363628}
+  m_Enabled: 1
+  m_AgentTypeID: 0
+  m_Radius: 0.5
+  m_Speed: 3.5
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 0
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 2
+  m_BaseOffset: 0
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4
 --- !u!4 &928021964627253974 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1490770194237280645, guid: cfe1cea44be218740a3a824c42c06bbe, type: 3}
-  m_PrefabInstance: {fileID: 1752103220238273363}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &8612667003677710187 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 8058892030328101944, guid: cfe1cea44be218740a3a824c42c06bbe, type: 3}
   m_PrefabInstance: {fileID: 1752103220238273363}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &5806153508625431139
@@ -380,13 +404,38 @@ PrefabInstance:
     - {fileID: 2918133106599682706, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 305033601637051736, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4143623605530730263}
   m_SourcePrefab: {fileID: 100100000, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
 --- !u!1 &6100173710308923195 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 305033601637051736, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
   m_PrefabInstance: {fileID: 5806153508625431139}
   m_PrefabAsset: {fileID: 0}
+--- !u!195 &4143623605530730263
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6100173710308923195}
+  m_Enabled: 1
+  m_AgentTypeID: 0
+  m_Radius: 0.5
+  m_Speed: 3.5
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 0
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 2
+  m_BaseOffset: 0
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4
 --- !u!4 &6909642264114597249 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1112497810706675682, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
@@ -452,6 +501,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: PenguinSlidingVisual
       objectReference: {fileID: 0}
+    - target: {fileID: 6249409341218907499, guid: cfe1cea44be218740a3a824c42c06bbe, type: 3}
+      propertyPath: enemy
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 8064149846209428361, guid: cfe1cea44be218740a3a824c42c06bbe, type: 3}
       propertyPath: enemy
       value: 
@@ -462,13 +515,43 @@ PrefabInstance:
     - {fileID: 3632257810091161083, guid: cfe1cea44be218740a3a824c42c06bbe, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2304601915195951935, guid: cfe1cea44be218740a3a824c42c06bbe, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5564404982715779519}
   m_SourcePrefab: {fileID: 100100000, guid: cfe1cea44be218740a3a824c42c06bbe, type: 3}
+--- !u!4 &277608032344439483 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8058892030328101944, guid: cfe1cea44be218740a3a824c42c06bbe, type: 3}
+  m_PrefabInstance: {fileID: 7785787600295536259}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &8356213230975135164 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2304601915195951935, guid: cfe1cea44be218740a3a824c42c06bbe, type: 3}
   m_PrefabInstance: {fileID: 7785787600295536259}
   m_PrefabAsset: {fileID: 0}
+--- !u!195 &5564404982715779519
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8356213230975135164}
+  m_Enabled: 1
+  m_AgentTypeID: 0
+  m_Radius: 0.5
+  m_Speed: 3.5
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 0
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 2
+  m_BaseOffset: 0
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4
 --- !u!4 &8700086989178894086 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1490770194237280645, guid: cfe1cea44be218740a3a824c42c06bbe, type: 3}

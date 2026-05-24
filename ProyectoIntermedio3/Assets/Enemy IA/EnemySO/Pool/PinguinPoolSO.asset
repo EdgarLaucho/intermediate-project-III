@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: PinguinPoolSO
   m_EditorClassIdentifier: Assembly-CSharp::EnemyPoolDataSO
   EnemyType: 1
-  prefab: {fileID: 2347924195473327487, guid: 185a0543ff680344c85117f948047424, type: 3}
+  prefab: {fileID: 3877519554310180353, guid: 185a0543ff680344c85117f948047424, type: 3}
   defaultCapacity: 30
   maxSize: 40

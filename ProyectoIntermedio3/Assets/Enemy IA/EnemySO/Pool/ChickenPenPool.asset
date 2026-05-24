@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: ChickenPenPool
   m_EditorClassIdentifier: Assembly-CSharp::EnemyPoolDataSO
   EnemyType: 3
-  prefab: {fileID: 1392352978762795624, guid: 5c438a2a58b2f3a418cf410eaeaba5b7, type: 3}
+  prefab: {fileID: 5872911270648137225, guid: 5c438a2a58b2f3a418cf410eaeaba5b7, type: 3}
   defaultCapacity: 30
   maxSize: 40
