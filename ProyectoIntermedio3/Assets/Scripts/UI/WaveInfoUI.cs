@@ -17,7 +17,7 @@ public class WaveInfoUI : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI timerText;
 
-    /*public void ShowTutorial(string tutorialMessage)
+    public void ShowTutorial(string tutorialMessage)
     {
         panel.SetActive(true);
 
@@ -25,7 +25,7 @@ public class WaveInfoUI : MonoBehaviour
         phaseText.text = tutorialMessage;
 
         timerText.gameObject.SetActive(false);
-    }*/
+    }
 
     public void ShowBuildPhaseWithTimer(int waveIndex, int totalWaves, float timeRemaining)
     {
