@@ -1,14 +1,9 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
-using System.Collections.Generic;
 
-// Persistent on-screen gold display driven by UI Toolkit.
-// Subscribes to EconomyEvents.OnGoldChanged — no direct dependency on EconomyManager.
-// Animates the displayed value, pulses the panel on change, and spawns floating +/- delta popups.
 public class GoldHUD : MonoBehaviour
 {
-    #region Inspector Fields
-
     [Header("Feel")]
     [SerializeField] private float valueAnimationDuration = 0.38f;
     [SerializeField] private float pulseDuration = 0.28f;
@@ -16,56 +11,32 @@ public class GoldHUD : MonoBehaviour
     [SerializeField] private float deltaRise = 26f;
     [SerializeField] private int lowGoldThreshold = 30;
 
-    #endregion
+    private static readonly Color NormalAmountColor = new(1.00f, 0.87f, 0.34f, 1f);
+    private static readonly Color GainColor = new(0.55f, 1.00f, 0.38f, 1f);
+    private static readonly Color SpendColor = new(1.00f, 0.45f, 0.28f, 1f);
+    private static readonly Color LowGoldColor = new(1.00f, 0.58f, 0.22f, 1f);
+    private static readonly Color BaseBorderColor = new(1.00f, 0.76f, 0.25f, 0.68f);
+    private static readonly Color TitleColor = new(1f, 0.875f, 0.56f, 0.74f);
+    private static readonly Color IconBaseColor = new(0.94f, 0.68f, 0.16f);
 
-    #region Runtime State
-
+    private readonly List<DeltaPopup> _deltaPopups = new();
     private VisualElement _goldPanel;
     private VisualElement _goldIcon;
     private VisualElement _deltaLayer;
     private Label _goldLabel;
     private Label _goldTitle;
     private UIDocument _uiDocument;
-
-    private readonly List<DeltaPopup> _deltaPopups = new();
     private int _targetGold;
     private int _animationStartGold;
+    private int _lastDelta;
     private float _displayedGold;
     private float _valueAnimationTime;
     private float _pulseTime = 999f;
-    private int _lastDelta;
     private bool _hasValue;
     private bool _uiReady;
     private bool _subscribed;
     private bool _reportedMissingDocument;
     private bool _reportedMissingGoldLabel;
-
-    #endregion
-
-    #region Color Constants
-
-    private static readonly Color NormalAmountColor = new(1.00f, 0.87f, 0.34f, 1f);
-    private static readonly Color GainColor = new(0.55f, 1.00f, 0.38f, 1f);
-    private static readonly Color SpendColor = new(1.00f, 0.45f, 0.28f, 1f);
-    private static readonly Color LowGoldColor = new(1.00f, 0.58f, 0.22f, 1f);
-    private static readonly Color BaseBorderColor = new(1.00f, 0.76f, 0.25f, 0.68f);
-
-    #endregion
-
-    #region Inner Types
-
-    private sealed class DeltaPopup
-    {
-        public Label Label;
-        public float Age;
-        public float StartLeft; // resolved pixel position in _deltaLayer local space
-        public float StartTop;
-        public float DriftX; // horizontal drift direction per stack slot (+/-)
-    }
-
-    #endregion
-
-    #region Unity Lifecycle
 
     private void Awake()
     {
@@ -87,34 +58,23 @@ public class GoldHUD : MonoBehaviour
         Unsubscribe();
     }
 
-    #endregion
-
-    #region Initialization
-
-    private void TrySubscribe()
-    {
-        if (!_uiReady || _subscribed) return;
-        EconomyEvents.OnGoldChanged += HandleGoldChanged;
-        _subscribed = true;
-    }
-
     private bool TryInitializeUI()
     {
         if (_uiReady) return true;
 
-        // UIDocument lives on the same GameObject; cache it lazily so Awake order doesn't matter
-        UIDocument doc = CacheDocument();
-        if (doc == null)
+        var document = CacheDocument();
+        if (document == null)
         {
             if (!_reportedMissingDocument)
             {
                 Debug.LogError("[GoldHUD] UIDocument not found on this GameObject.", this);
                 _reportedMissingDocument = true;
             }
+
             return false;
         }
 
-        VisualElement root = doc.rootVisualElement;
+        var root = document.rootVisualElement;
         if (root == null)
             return false;
 
@@ -123,6 +83,7 @@ public class GoldHUD : MonoBehaviour
         _deltaLayer = root.Q<VisualElement>("gold-delta-layer");
         _goldTitle = root.Q<Label>("gold-title");
         _goldLabel = root.Q<Label>("gold-label");
+
         if (_goldLabel == null)
         {
             if (!_reportedMissingGoldLabel)
@@ -130,24 +91,21 @@ public class GoldHUD : MonoBehaviour
                 Debug.LogError("[GoldHUD] 'gold-label' element not found in UXML.", this);
                 _reportedMissingGoldLabel = true;
             }
+
             return false;
         }
 
         if (_deltaLayer != null)
             _deltaLayer.pickingMode = PickingMode.Ignore;
 
-        // Anchor scale transforms to the visual centre so punch animations expand symmetrically
-        if (_goldPanel != null)
-            _goldPanel.style.transformOrigin = new TransformOrigin(Length.Percent(50), Length.Percent(50), 0);
-        if (_goldIcon != null)
-            _goldIcon.style.transformOrigin = new TransformOrigin(Length.Percent(50), Length.Percent(50), 0);
+        SetCenteredOrigin(_goldPanel);
+        SetCenteredOrigin(_goldIcon);
 
         _uiReady = true;
-        TrySubscribe();
+        Subscribe();
         return true;
     }
 
-    // Lazy-cache the UIDocument so the component can be queried before Awake runs on it
     private UIDocument CacheDocument()
     {
         if (_uiDocument == null)
@@ -156,25 +114,33 @@ public class GoldHUD : MonoBehaviour
         return _uiDocument;
     }
 
+    private void Subscribe()
+    {
+        if (_subscribed) return;
+
+        EconomyEvents.OnGoldChanged += HandleGoldChanged;
+        _subscribed = true;
+    }
+
     private void Unsubscribe()
     {
         if (!_subscribed) return;
+
         EconomyEvents.OnGoldChanged -= HandleGoldChanged;
         _subscribed = false;
     }
 
-    #endregion
-
-    #region Gold Display
-
-    // ── Display ──────────────────────────────────────────────────────────────
+    private static void SetCenteredOrigin(VisualElement element)
+    {
+        if (element != null)
+            element.style.transformOrigin = new TransformOrigin(Length.Percent(50), Length.Percent(50), 0);
+    }
 
     private void HandleGoldChanged(int gold)
     {
-        int previousGold = _hasValue ? _targetGold : gold;
-        int delta = gold - previousGold;
+        var previousGold = _hasValue ? _targetGold : gold;
+        var delta = gold - previousGold;
 
-        // Restart the count-up from wherever the display currently sits (smooth chaining)
         _animationStartGold = Mathf.RoundToInt(_displayedGold);
         _targetGold = gold;
         _valueAnimationTime = 0f;
@@ -184,16 +150,6 @@ public class GoldHUD : MonoBehaviour
 
         if (delta != 0)
             SpawnDelta(delta);
-    }
-
-    private void SetImmediate(int gold)
-    {
-        _targetGold = gold;
-        _animationStartGold = gold;
-        _displayedGold = gold;
-        _hasValue = true;
-        SetDisplayedGold(gold);
-        ApplyEventColor(0f, 0);
     }
 
     private void UpdateValueAnimation()
@@ -207,10 +163,9 @@ public class GoldHUD : MonoBehaviour
         }
 
         _valueAnimationTime += Time.unscaledDeltaTime;
-        float duration = Mathf.Max(0.01f, valueAnimationDuration);
-        float t = Mathf.Clamp01(_valueAnimationTime / duration);
-        // EaseOutCubic: fast start → slow finish for a natural counter roll-up
-        float ease = 1f - Mathf.Pow(1f - t, 3f);
+        var duration = Mathf.Max(0.01f, valueAnimationDuration);
+        var t = Mathf.Clamp01(_valueAnimationTime / duration);
+        var ease = EaseOutCubic(t);
 
         _displayedGold = Mathf.Lerp(_animationStartGold, _targetGold, ease);
         SetDisplayedGold(Mathf.RoundToInt(_displayedGold));
@@ -223,22 +178,20 @@ public class GoldHUD : MonoBehaviour
     {
         if (_pulseTime > pulseDuration)
         {
-            // Pulse expired — reset scale and return label color to steady-state
-            if (_goldPanel != null) _goldPanel.style.scale = new Scale(Vector3.one);
-            if (_goldIcon != null) _goldIcon.style.scale = new Scale(Vector3.one);
+            SetScale(_goldPanel, Vector3.one);
+            SetScale(_goldIcon, Vector3.one);
             ApplyEventColor(0f, 0);
             return;
         }
 
         _pulseTime += Time.unscaledDeltaTime;
-        float t = Mathf.Clamp01(_pulseTime / Mathf.Max(0.01f, pulseDuration));
-        // Sine arch: peaks at t=0.5, returns to zero at both ends — gives a clean punch then settle
-        float punch = Mathf.Sin(t * Mathf.PI);
-        float panelScale = 1f + punch * (_lastDelta >= 0 ? 0.035f : 0.024f);
-        float iconScale = 1f + punch * (_lastDelta >= 0 ? 0.13f : 0.08f);
+        var t = Mathf.Clamp01(_pulseTime / Mathf.Max(0.01f, pulseDuration));
+        var punch = Mathf.Sin(t * Mathf.PI);
+        var panelScale = 1f + punch * (_lastDelta >= 0 ? 0.035f : 0.024f);
+        var iconScale = 1f + punch * (_lastDelta >= 0 ? 0.13f : 0.08f);
 
-        if (_goldPanel != null) _goldPanel.style.scale = new Scale(new Vector3(panelScale, panelScale, 1f));
-        if (_goldIcon != null) _goldIcon.style.scale = new Scale(new Vector3(iconScale, iconScale, 1f));
+        SetScale(_goldPanel, new Vector3(panelScale, panelScale, 1f));
+        SetScale(_goldIcon, new Vector3(iconScale, iconScale, 1f));
         ApplyEventColor(punch, _lastDelta);
     }
 
@@ -248,143 +201,147 @@ public class GoldHUD : MonoBehaviour
             _goldLabel.text = gold.ToString();
 
         if (_goldTitle != null)
-            _goldTitle.style.color = new StyleColor(gold <= lowGoldThreshold ? LowGoldColor : new Color(1f, 0.875f, 0.56f, 0.74f));
+            _goldTitle.style.color = new StyleColor(gold <= lowGoldThreshold ? LowGoldColor : TitleColor);
     }
 
     private void ApplyEventColor(float amount, int delta)
     {
-        // Blend between the neutral border color and the event color (green gain / red spend)
-        Color eventColor = delta > 0 ? GainColor : delta < 0 ? SpendColor : BaseBorderColor;
-        Color amountColor = _targetGold <= lowGoldThreshold ? LowGoldColor : NormalAmountColor;
+        var eventColor = delta > 0 ? GainColor : delta < 0 ? SpendColor : BaseBorderColor;
+        var amountColor = _targetGold <= lowGoldThreshold ? LowGoldColor : NormalAmountColor;
         amountColor = Color.Lerp(amountColor, eventColor, Mathf.Clamp01(amount));
 
         if (_goldLabel != null)
             _goldLabel.style.color = new StyleColor(amountColor);
 
-        Color border = Color.Lerp(BaseBorderColor, eventColor, Mathf.Clamp01(amount));
-        SetPanelBorder(border);
+        SetPanelBorder(Color.Lerp(BaseBorderColor, eventColor, Mathf.Clamp01(amount)));
 
         if (_goldIcon != null)
-            _goldIcon.style.backgroundColor = new StyleColor(Color.Lerp(new Color(0.94f, 0.68f, 0.16f), eventColor, amount * 0.28f));
+            _goldIcon.style.backgroundColor = new StyleColor(Color.Lerp(IconBaseColor, eventColor, amount * 0.28f));
     }
 
     private void SetPanelBorder(Color color)
     {
         if (_goldPanel == null) return;
-        _goldPanel.style.borderTopColor = new StyleColor(color);
-        _goldPanel.style.borderRightColor = new StyleColor(color);
-        _goldPanel.style.borderBottomColor = new StyleColor(color);
-        _goldPanel.style.borderLeftColor = new StyleColor(color);
+
+        var styleColor = new StyleColor(color);
+        _goldPanel.style.borderTopColor = styleColor;
+        _goldPanel.style.borderRightColor = styleColor;
+        _goldPanel.style.borderBottomColor = styleColor;
+        _goldPanel.style.borderLeftColor = styleColor;
     }
 
     private void SpawnDelta(int amount)
     {
         if (_deltaLayer == null) return;
 
-        // Cap the active popup count; evict the oldest before adding a new one
         while (_deltaPopups.Count >= 4)
-        {
-            _deltaPopups[0].Label?.RemoveFromHierarchy();
-            _deltaPopups.RemoveAt(0);
-        }
+            RemovePopupAt(0);
 
-        Label label = new(amount > 0 ? $"+{amount}" : amount.ToString());
+        var label = new Label(amount > 0 ? $"+{amount}" : amount.ToString());
         label.AddToClassList("gold-delta");
         label.AddToClassList(amount > 0 ? "gold-delta-gain" : "gold-delta-spend");
         label.style.width = DeltaLabelWidth(label.text.Length);
         label.style.transformOrigin = new TransformOrigin(Length.Percent(50), Length.Percent(50), 0);
         label.pickingMode = PickingMode.Ignore;
 
-        int stackIndex = _deltaPopups.Count;
-        float startLeft = ResolveDeltaStartLeft(label.text.Length, stackIndex);
-        float startTop = ResolveDeltaStartTop(stackIndex);
+        var stackIndex = _deltaPopups.Count;
+        var startLeft = ResolveDeltaStartLeft(label.text.Length, stackIndex);
+        var startTop = ResolveDeltaStartTop(stackIndex);
         label.style.left = startLeft;
         label.style.top = startTop;
         label.style.opacity = 0f;
         label.style.scale = new Scale(new Vector3(0.86f, 0.86f, 1f));
 
         _deltaLayer.Add(label);
-
-        // Alternate left/right drift so stacked popups don't overlap exactly
-        _deltaPopups.Add(new DeltaPopup
-        {
-            Label = label,
-            Age = 0f,
-            StartLeft = startLeft,
-            StartTop = startTop,
-            DriftX = (stackIndex % 2 == 0 ? 1f : -1f) * 4f,
-        });
+        _deltaPopups.Add(new DeltaPopup(label, startLeft, startTop, (stackIndex % 2 == 0 ? 1f : -1f) * 4f));
     }
 
     private void UpdateDeltaPopups()
     {
-        for (int index = _deltaPopups.Count - 1; index >= 0; index--)
+        for (var index = _deltaPopups.Count - 1; index >= 0; index--)
         {
-            DeltaPopup popup = _deltaPopups[index];
+            var popup = _deltaPopups[index];
             popup.Age += Time.unscaledDeltaTime;
-            float t = Mathf.Clamp01(popup.Age / Mathf.Max(0.01f, deltaDuration));
-            float ease = 1f - Mathf.Pow(1f - t, 3f);
+            var t = Mathf.Clamp01(popup.Age / Mathf.Max(0.01f, deltaDuration));
 
             if (popup.Label != null)
-            {
-                // intro: fast ease-in over first 14% of lifetime
-                // exit:  fade out over the last 38% of lifetime
-                float intro = Mathf.Clamp01(t / 0.14f);
-                float exit = Mathf.Clamp01((t - 0.62f) / 0.38f);
-                float pop = 1f - Mathf.Pow(1f - intro, 3f);
-
-                popup.Label.style.left = popup.StartLeft + popup.DriftX * ease;
-                popup.Label.style.top = popup.StartTop - deltaRise * ease - Mathf.Sin(t * Mathf.PI) * 3f;
-                popup.Label.style.opacity = intro * (1f - exit);
-
-                float scale = Mathf.Lerp(0.86f, 1.04f, pop);
-                scale = Mathf.Lerp(scale, 0.96f, exit);
-                popup.Label.style.scale = new Scale(new Vector3(scale, scale, 1f));
-            }
+                AnimatePopup(popup, t);
 
             if (t >= 1f)
-            {
-                popup.Label?.RemoveFromHierarchy();
-                _deltaPopups.RemoveAt(index);
-            }
-            else
-            {
-                _deltaPopups[index] = popup;
-            }
+                RemovePopupAt(index);
         }
     }
 
-    #endregion
+    private void AnimatePopup(DeltaPopup popup, float t)
+    {
+        var ease = EaseOutCubic(t);
+        var intro = Mathf.Clamp01(t / 0.14f);
+        var exit = Mathf.Clamp01((t - 0.62f) / 0.38f);
+        var pop = EaseOutCubic(intro);
+        var scale = Mathf.Lerp(Mathf.Lerp(0.86f, 1.04f, pop), 0.96f, exit);
 
-    #region Layout Helpers
+        popup.Label.style.left = popup.StartLeft + popup.DriftX * ease;
+        popup.Label.style.top = popup.StartTop - deltaRise * ease - Mathf.Sin(t * Mathf.PI) * 3f;
+        popup.Label.style.opacity = intro * (1f - exit);
+        popup.Label.style.scale = new Scale(new Vector3(scale, scale, 1f));
+    }
 
-    // Resolves the horizontal start position of a delta popup relative to _deltaLayer,
-    // aligning it near the right edge of the gold label when its world bounds are available
+    private void RemovePopupAt(int index)
+    {
+        _deltaPopups[index].Label?.RemoveFromHierarchy();
+        _deltaPopups.RemoveAt(index);
+    }
+
     private float ResolveDeltaStartLeft(int textLength, int stackIndex)
     {
-        float labelWidth = DeltaLabelWidth(textLength);
+        var labelWidth = DeltaLabelWidth(textLength);
         if (_deltaLayer == null || _goldLabel == null || _goldLabel.worldBound.width <= 0f)
             return 126f - labelWidth * 0.5f + stackIndex * 2f;
 
-        Vector2 labelRight = _deltaLayer.WorldToLocal(new Vector2(_goldLabel.worldBound.xMax, _goldLabel.worldBound.center.y));
+        var labelRight = _deltaLayer.WorldToLocal(new Vector2(_goldLabel.worldBound.xMax, _goldLabel.worldBound.center.y));
         return Mathf.Clamp(labelRight.x - labelWidth * 0.72f + stackIndex * 2f, 86f, 136f);
     }
 
-    // Resolves the vertical start position, centred on the gold label when its bounds are known
     private float ResolveDeltaStartTop(int stackIndex)
     {
         if (_deltaLayer == null || _goldLabel == null || _goldLabel.worldBound.height <= 0f)
             return 34f + stackIndex * 5f;
 
-        Vector2 labelCenter = _deltaLayer.WorldToLocal(_goldLabel.worldBound.center);
+        var labelCenter = _deltaLayer.WorldToLocal(_goldLabel.worldBound.center);
         return Mathf.Clamp(labelCenter.y - 9f + stackIndex * 5f, 22f, 46f);
     }
 
-    // Width grows with character count so "+1000" and "-99" both fit without clipping
     private static float DeltaLabelWidth(int textLength)
     {
         return Mathf.Clamp(32f + textLength * 7f, 54f, 78f);
     }
 
-    #endregion
+    private static void SetScale(VisualElement element, Vector3 scale)
+    {
+        if (element != null)
+            element.style.scale = new Scale(scale);
+    }
+
+    private static float EaseOutCubic(float t)
+    {
+        t = Mathf.Clamp01(t);
+        return 1f - Mathf.Pow(1f - t, 3f);
+    }
+
+    private class DeltaPopup
+    {
+        public readonly Label Label;
+        public readonly float StartLeft;
+        public readonly float StartTop;
+        public readonly float DriftX;
+        public float Age;
+
+        public DeltaPopup(Label label, float startLeft, float startTop, float driftX)
+        {
+            Label = label;
+            StartLeft = startLeft;
+            StartTop = startTop;
+            DriftX = driftX;
+        }
+    }
 }

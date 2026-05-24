@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public sealed class TarMudPatchVisual : MonoBehaviour
+public class TarMudPatchVisual : MonoBehaviour
 {
     [SerializeField] private Transform visualRoot;
     [SerializeField] private float yOffset = 0.012f;

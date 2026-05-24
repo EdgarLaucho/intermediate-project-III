@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public sealed class TarSlowField : MonoBehaviour
+public class TarSlowField : MonoBehaviour
 {
     #region Inspector Fields
 

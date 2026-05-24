@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public sealed class TowerProjectile : MonoBehaviour
+public class TowerProjectile : MonoBehaviour
 {
     #region Inspector Fields
 

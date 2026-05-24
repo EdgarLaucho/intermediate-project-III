@@ -2,14 +2,18 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 
-// Draws a colored overlay on the grid cell currently under the cursor.
-// The visuals use generated sprites, matching GridRenderer's simpler object-based approach.
 public class CellHoverIndicator : MonoBehaviour
 {
     #region Inspector Fields
 
     [SerializeField] private GridManager grid;
     [SerializeField] private UIDocument uiDocument; // optional, only needed for tooltip
+
+    [Header("Sprites")]
+    [SerializeField] private Sprite fillSprite;
+    [SerializeField] private Sprite borderSprite;
+    [SerializeField] private Sprite focusSprite;
+    [SerializeField] private Sprite hatchSprite;
 
     [Header("Colors")]
     [SerializeField] private Color buildableColor = new(1.00f, 0.66f, 0.12f, 0.45f);
@@ -33,10 +37,6 @@ public class CellHoverIndicator : MonoBehaviour
 
     #region Runtime State
 
-    private Sprite _fillSprite;
-    private Sprite _borderSprite;
-    private Sprite _focusSprite;
-    private Sprite _hatchSprite;
     private SpriteRenderer _fillRenderer;
     private SpriteRenderer _borderRenderer;
     private SpriteRenderer _focusRenderer;
@@ -101,25 +101,17 @@ public class CellHoverIndicator : MonoBehaviour
 
     private void Start()
     {
-        _fillSprite = CreateRoundedBoxSprite("CellHoverFillSprite", 0.34f, 0.08f, false);
-        _borderSprite = CreateRoundedBoxSprite("CellHoverBorderSprite", 0.44f, 0.08f, true);
-        _focusSprite = CreateDiamondBorderSprite();
-        _hatchSprite = CreateHatchSprite();
-        _fillRenderer = CreateLayer("Cell Hover Fill", _fillSprite, 20);
-        _hatchRenderer = CreateLayer("Cell Hover Hatch", _hatchSprite, 21);
-        _reticleRenderer = CreateLayer("Cell Hover Reticle", _borderSprite, 22);
-        _focusRenderer = CreateLayer("Cell Hover Focus", _focusSprite, 23);
-        _borderRenderer = CreateLayer("Cell Hover Border", _borderSprite, 24);
+        _fillRenderer = CreateLayer("Cell Hover Fill", fillSprite, 20);
+        _hatchRenderer = CreateLayer("Cell Hover Hatch", hatchSprite, 21);
+        _reticleRenderer = CreateLayer("Cell Hover Reticle", borderSprite, 22);
+        _focusRenderer = CreateLayer("Cell Hover Focus", focusSprite, 23);
+        _borderRenderer = CreateLayer("Cell Hover Border", borderSprite, 24);
         SetVisualsVisible(false);
         BuildTooltip();
     }
 
     private void OnDestroy()
     {
-        DestroySprite(_fillSprite);
-        DestroySprite(_borderSprite);
-        DestroySprite(_focusSprite);
-        DestroySprite(_hatchSprite);
         StopObservingTooltipBuilding();
         _tooltip?.RemoveFromHierarchy();
     }
@@ -130,40 +122,39 @@ public class CellHoverIndicator : MonoBehaviour
 
         RefreshTooltipIfNeeded();
 
-        float bounce = 1f;
+        var bounce = 1f;
         if (_bounceT < BounceDur)
         {
             _bounceT += Time.deltaTime;
-            float t = Mathf.Clamp01(_bounceT / BounceDur);
+            var t = Mathf.Clamp01(_bounceT / BounceDur);
             bounce = Mathf.Lerp(BounceStartScale, 1f, EaseOutCubic(t))
                    + Mathf.Sin(t * Mathf.PI) * BounceOver;
         }
 
-        float alpha = _currentColor.a
-                      * (1f + Mathf.Sin(Time.unscaledTime * pulseSpeed) * pulseAmplitude);
-        Color fillColor = _currentColor;
+        var alpha = _currentColor.a * (1f + Mathf.Sin(Time.unscaledTime * pulseSpeed) * pulseAmplitude);
+        var fillColor = _currentColor;
         fillColor.a = Mathf.Clamp01(alpha);
 
-        float scanPulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * scanPulseSpeed);
+        var scanPulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * scanPulseSpeed);
         DrawLayer(_fillRenderer, true, _currentCenter, _currentCellSize * 0.88f * bounce, fillColor, 0f);
 
-        Color hatchColor = _currentBorderColor;
+        var hatchColor = _currentBorderColor;
         hatchColor.a = Mathf.Clamp01(hatchColor.a * (0.42f + scanPulse * 0.18f));
         DrawLayer(_hatchRenderer, _drawHatch, _currentCenter + Vector3.up * 0.003f,
             _currentCellSize * 0.78f * bounce, hatchColor, 0f);
 
-        Color reticleColor = _currentAccentColor;
+        var reticleColor = _currentAccentColor;
         reticleColor.a = Mathf.Clamp01(_currentAccentColor.a * (0.16f + scanPulse * 0.16f));
         DrawLayer(_reticleRenderer, _drawReticle, _currentCenter + Vector3.up * 0.006f,
             _currentCellSize * Mathf.Lerp(0.38f, 0.50f, scanPulse) * bounce, reticleColor,
             Time.unscaledTime * reticleRotationSpeed);
 
-        Color focusColor = _currentAccentColor;
+        var focusColor = _currentAccentColor;
         focusColor.a = Mathf.Clamp01(_currentAccentColor.a * (0.58f + scanPulse * 0.20f));
         DrawLayer(_focusRenderer, _drawFocusMarker, _currentCenter + Vector3.up * 0.009f,
             _currentCellSize * Mathf.Lerp(0.72f, 0.82f, scanPulse) * bounce, focusColor, 0f);
 
-        Color borderColor = _currentBorderColor;
+        var borderColor = _currentBorderColor;
         borderColor.a = Mathf.Clamp01(_currentBorderColor.a * (0.82f + scanPulse * 0.22f));
         DrawLayer(_borderRenderer, _drawBorder, _currentCenter + Vector3.up * 0.012f,
             _currentCellSize * 0.96f * bounce, borderColor, 0f);
@@ -209,7 +200,7 @@ public class CellHoverIndicator : MonoBehaviour
             return;
         }
 
-        bool isNewCell = !_lastCoords.HasValue || _lastCoords.Value != coords;
+        var isNewCell = !_lastCoords.HasValue || _lastCoords.Value != coords;
         _lastCoords = coords;
         _currentColor = ResolveFillColor(cell, placement);
         _currentBorderColor = ResolveBorderColor(cell, placement);
@@ -224,7 +215,7 @@ public class CellHoverIndicator : MonoBehaviour
         SetVisualsVisible(true);
         _tooltipCell = cell;
         _tooltipPlacement = placement;
-        bool changedObservedBuilding = cell.CurrentBuilding != _observedTooltipBuilding;
+        var changedObservedBuilding = cell.CurrentBuilding != _observedTooltipBuilding;
         ObserveTooltipBuilding(cell, placement);
 
         if (isNewCell || placement.HasValue || changedObservedBuilding)
@@ -265,7 +256,7 @@ public class CellHoverIndicator : MonoBehaviour
 
     private SpriteRenderer CreateLayer(string layerName, Sprite sprite, int sortingOrder)
     {
-        GameObject layer = new(layerName);
+        var layer = new GameObject(layerName);
         layer.transform.SetParent(transform, false);
         var renderer = layer.AddComponent<SpriteRenderer>();
         renderer.sprite = sprite;
@@ -300,124 +291,6 @@ public class CellHoverIndicator : MonoBehaviour
     {
         if (renderer != null)
             renderer.enabled = visible;
-    }
-
-    private static Sprite CreateRoundedBoxSprite(string spriteName, float halfSize, float cornerRadius, bool borderOnly)
-    {
-        const int size = 64;
-        var texture = CreateTexture(spriteName + "Texture", size);
-        var pixels = new Color32[size * size];
-        Vector2 center = new((size - 1) * 0.5f, (size - 1) * 0.5f);
-        float half = size * halfSize;
-        float radius = size * cornerRadius;
-        float borderStart = half - size * 0.08f;
-
-        for (int y = 0; y < size; y++)
-        {
-            for (int x = 0; x < size; x++)
-            {
-                Vector2 p = new(x, y);
-                Vector2 q = Abs(p - center) - new Vector2(half - radius, half - radius);
-                float outside = Length(Max(q, Vector2.zero)) - radius;
-                float shapeAlpha = Mathf.Clamp01(1f - outside / 2.2f);
-                float maxAxis = Mathf.Max(Mathf.Abs(p.x - center.x), Mathf.Abs(p.y - center.y));
-                float borderAlpha = Mathf.SmoothStep(0f, 1f, Mathf.Abs(maxAxis - borderStart) / 4.2f);
-                float alpha = borderOnly ? shapeAlpha * borderAlpha : shapeAlpha;
-                pixels[y * size + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(255f * alpha));
-            }
-        }
-
-        return FinishSprite(texture, pixels, spriteName, size);
-    }
-
-    private static Sprite CreateDiamondBorderSprite()
-    {
-        const int size = 64;
-        var texture = CreateTexture("CellHoverFocusTexture", size);
-        var pixels = new Color32[size * size];
-        Vector2 center = new((size - 1) * 0.5f, (size - 1) * 0.5f);
-        float outer = size * 0.31f;
-        float inner = size * 0.22f;
-
-        for (int y = 0; y < size; y++)
-        {
-            for (int x = 0; x < size; x++)
-            {
-                Vector2 p = new Vector2(x, y) - center;
-                float diamondDistance = Mathf.Abs(p.x) + Mathf.Abs(p.y);
-                float outerAlpha = Mathf.Clamp01(1f - Mathf.Abs(diamondDistance - outer) / 2.8f);
-                float innerCut = Mathf.SmoothStep(0f, 1f, Mathf.Abs(diamondDistance - inner) / 3.8f);
-                float alpha = outerAlpha * innerCut;
-                pixels[y * size + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(255f * alpha));
-            }
-        }
-
-        return FinishSprite(texture, pixels, "CellHoverFocusSprite", size);
-    }
-
-    private static Sprite CreateHatchSprite()
-    {
-        const int size = 64;
-        var texture = CreateTexture("CellHoverHatchTexture", size);
-        var pixels = new Color32[size * size];
-        Vector2 center = new((size - 1) * 0.5f, (size - 1) * 0.5f);
-        float half = size * 0.33f;
-
-        for (int y = 0; y < size; y++)
-        {
-            for (int x = 0; x < size; x++)
-            {
-                Vector2 p = new Vector2(x, y) - center;
-                bool inside = Mathf.Abs(p.x) <= half && Mathf.Abs(p.y) <= half;
-                float stripe = Mathf.Abs(Mathf.Repeat((p.x + p.y) * 0.22f, 1f) - 0.5f);
-                float alpha = inside ? Mathf.Clamp01(1f - stripe / 0.11f) : 0f;
-                pixels[y * size + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(255f * alpha));
-            }
-        }
-
-        return FinishSprite(texture, pixels, "CellHoverHatchSprite", size);
-    }
-
-    private static Texture2D CreateTexture(string textureName, int size)
-    {
-        return new Texture2D(size, size, TextureFormat.RGBA32, false)
-        {
-            name = textureName,
-            filterMode = FilterMode.Bilinear,
-            wrapMode = TextureWrapMode.Clamp,
-        };
-    }
-
-    private static Sprite FinishSprite(Texture2D texture, Color32[] pixels, string spriteName, int size)
-    {
-        texture.SetPixels32(pixels);
-        texture.Apply(false, true);
-        Sprite sprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
-        sprite.name = spriteName;
-        return sprite;
-    }
-
-    private static void DestroySprite(Sprite sprite)
-    {
-        if (sprite == null) return;
-        if (sprite.texture != null)
-            Destroy(sprite.texture);
-        Destroy(sprite);
-    }
-
-    private static Vector2 Abs(Vector2 value)
-    {
-        return new Vector2(Mathf.Abs(value.x), Mathf.Abs(value.y));
-    }
-
-    private static Vector2 Max(Vector2 value, Vector2 min)
-    {
-        return new Vector2(Mathf.Max(value.x, min.x), Mathf.Max(value.y, min.y));
-    }
-
-    private static float Length(Vector2 value)
-    {
-        return Mathf.Sqrt(value.x * value.x + value.y * value.y);
     }
 
     #endregion
@@ -461,7 +334,7 @@ public class CellHoverIndicator : MonoBehaviour
 
         if (placement.HasValue && !placement.Value.IsValid)
         {
-            Color c = TooltipColorFor(placement.Value.State);
+            var c = TooltipColorFor(placement.Value.State);
             _tooltipLabel.text = placement.Value.Reason;
             _tooltipLabel.style.color = new StyleColor(c);
             _tooltip.style.borderLeftColor = new StyleColor(c);
@@ -471,7 +344,7 @@ public class CellHoverIndicator : MonoBehaviour
         if (cell.IsOccupied && cell.CurrentBuilding != null)
         {
             var b = cell.CurrentBuilding;
-            string level = b.IsMaxLevel ? "MAX" : $"Lv {b.CurrentLevel + 1}";
+            var level = b.IsMaxLevel ? "MAX" : $"Lv {b.CurrentLevel + 1}";
             _tooltipLabel.text = $"{b.Data.buildingName}  {level}\nHP  {b.CurrentHealth} / {b.MaxHealth}";
             _tooltipLabel.style.color = new StyleColor(new Color(0.30f, 0.92f, 1.00f));
             _tooltip.style.borderLeftColor = new StyleColor(occupiedColor);
@@ -488,7 +361,7 @@ public class CellHoverIndicator : MonoBehaviour
 
     private void ObserveTooltipBuilding(GridCell cell, BuildManager.PlacementValidation? placement)
     {
-        BuildingBase building = placement.HasValue ? null : cell?.CurrentBuilding;
+        var building = placement.HasValue ? null : cell?.CurrentBuilding;
         if (_observedTooltipBuilding == building) return;
 
         StopObservingTooltipBuilding();
@@ -535,7 +408,7 @@ public class CellHoverIndicator : MonoBehaviour
     {
         if (_tooltipCell == null || _tooltipLabel == null) return;
 
-        BuildingBase building = _tooltipCell.CurrentBuilding;
+        var building = _tooltipCell.CurrentBuilding;
         if (building != _observedTooltipBuilding)
         {
             ObserveTooltipBuilding(_tooltipCell, _tooltipPlacement);
@@ -589,18 +462,18 @@ public class CellHoverIndicator : MonoBehaviour
         if (uiDocument?.rootVisualElement?.panel == null) return;
         if (Mouse.current == null) return;
 
-        Vector2 screen = Mouse.current.position.ReadValue();
+        var screen = Mouse.current.position.ReadValue();
         screen.y = Screen.height - screen.y;
-        Vector2 panel = RuntimePanelUtils.ScreenToPanel(uiDocument.rootVisualElement.panel, screen);
-        float tipH = Mathf.Max(_tooltip.resolvedStyle.height, 36f);
-        float tipW = Mathf.Max(_tooltip.resolvedStyle.width, 90f);
-        Rect panelRect = uiDocument.rootVisualElement.panel.visualTree.layout;
+        var panel = RuntimePanelUtils.ScreenToPanel(uiDocument.rootVisualElement.panel, screen);
+        var tipH = Mathf.Max(_tooltip.resolvedStyle.height, 36f);
+        var tipW = Mathf.Max(_tooltip.resolvedStyle.width, 90f);
+        var panelRect = uiDocument.rootVisualElement.panel.visualTree.layout;
 
         const float offsetX = 20f;
         const float offsetY = 16f;
 
-        float left = panel.x + offsetX;
-        float top = panel.y + offsetY;
+        var left = panel.x + offsetX;
+        var top = panel.y + offsetY;
 
         if (left + tipW > panelRect.width) left = panel.x - tipW - offsetX * 0.5f;
         if (top + tipH > panelRect.height) top = panel.y - tipH - offsetY * 0.5f;
@@ -642,7 +515,7 @@ public class CellHoverIndicator : MonoBehaviour
             if (placement.Value.State == BuildManager.PlacementState.Valid)
                 return validAccentColor;
 
-            Color invalidAccent = TooltipColorFor(placement.Value.State);
+            var invalidAccent = TooltipColorFor(placement.Value.State);
             invalidAccent.a = 0.78f;
             return invalidAccent;
         }

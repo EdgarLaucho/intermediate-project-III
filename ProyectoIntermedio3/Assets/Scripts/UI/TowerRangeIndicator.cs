@@ -1,15 +1,11 @@
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
 
-// Draws cell-based attack/effect ranges for tower focus, upgrade preview, and placement preview.
-// The indicator uses procedural cell meshes so square grid ranges read as discrete tiles.
 [DisallowMultipleComponent]
-public sealed class TowerRangeIndicator : MonoBehaviour
+public class TowerRangeIndicator : MonoBehaviour
 {
-    #region Inspector Fields
-
     [Header("Position")]
-    [SerializeField] private float yOffset = 0.08f;
+    [SerializeField] private float yOffset = 0.13f;
 
     [Header("Visuals")]
     [SerializeField] private bool drawSubtleFill = true;
@@ -24,47 +20,31 @@ public sealed class TowerRangeIndicator : MonoBehaviour
     [SerializeField] private float pulseSpeed = 2.2f;
     [SerializeField] private float pulseAmount = 0.035f;
 
-    #endregion
+    private const string FillSpriteResource = "TowerRangeFill";
+    private const string OutlineSpriteResource = "TowerRangeOutline";
+    private const float OutlineYOffset = 0.004f;
+    private static readonly Quaternion GroundRotation = Quaternion.Euler(90f, 0f, 0f);
 
-    #region Runtime State
-
-    private Mesh _discMesh;
-    private Mesh _ringMesh;
-    private Material _fillMaterial;
-    private Material _ringMaterial;
-
+    private readonly List<CellView> _cells = new();
+    private Transform _poolRoot;
+    private Sprite _fillSprite;
+    private Sprite _outlineSprite;
     private Vector3 _center;
-    // Range stored as cell count (integer). Converted to world units on draw.
     private int _currentRange;
     private int _upgradeRange;
+    private int _visibleCellCount;
     private bool _hasUpgradeRange;
     private bool _isValid = true;
     private bool _requestedVisible;
-    private float _visibility;
-
-    // Placement preview is independent from Tower instances because the building may not exist yet.
     private bool _inPlacementMode;
     private int _placementRange;
-
-    #endregion
-
-    #region Mesh Constants
-
-    // Unit cell mesh dimensions. Values below 0.5 leave a visible gap between cells.
-    private const float FillHalfExtent = 0.42f;
-    private const float OutlineOuterHalfExtent = 0.47f;
-    private const float OutlineInnerHalfExtent = 0.39f;
-
-    #endregion
-
-    #region Unity Lifecycle
+    private float _visibility;
 
     private void Awake()
     {
-        _discMesh = BuildDiscMesh();
-        _ringMesh = BuildRingMesh();
-        _fillMaterial = BuildMaterial("TowerRangeFill", currentFillColor);
-        _ringMaterial = BuildMaterial("TowerRangeRing", currentRingColor);
+        _fillSprite = Resources.Load<Sprite>(FillSpriteResource);
+        _outlineSprite = Resources.Load<Sprite>(OutlineSpriteResource);
+        CreatePoolRoot();
     }
 
     private void OnEnable()
@@ -83,111 +63,45 @@ public sealed class TowerRangeIndicator : MonoBehaviour
         ConstructionEvents.OnPlacementStarted -= OnPlacementStarted;
         ConstructionEvents.OnPlacementUpdated -= OnPlacementUpdated;
         ConstructionEvents.OnPlacementEnded -= OnPlacementEnded;
+        HideCells();
     }
-
-    #endregion
-
-    #region Event Handlers
-
-    private void OnTowerFocused(Tower tower)
-    {
-        // Placement owns the indicator while active, so focus events should not steal it.
-        if (_inPlacementMode) return;
-        if (tower == null) Hide();
-        else ShowCurrent(tower);
-    }
-
-    private void OnTowerUpgradeHovered(Tower tower)
-    {
-        if (!_inPlacementMode && tower != null) ShowUpgradePreview(tower);
-    }
-
-    private void OnPlacementStarted(BuildingData data)
-    {
-        int previewRange = 0;
-
-        if (data is TowerData td && td.towerStats.attackRange > 0)
-            previewRange = td.towerStats.attackRange;
-        else if (data is TrapData trapData && trapData.role != TrapRole.Spikes && trapData.trapStats.effectRadius > 0)
-            previewRange = trapData.trapStats.effectRadius;
-
-        if (previewRange > 0)
-        {
-            _inPlacementMode = true;
-            _placementRange = previewRange;
-            // Start hidden at origin until the first snapped placement position arrives.
-            Show(Vector3.zero, _placementRange, 0, false, true);
-        }
-        else
-        {
-            _inPlacementMode = false;
-            Hide();
-        }
-    }
-
-    private void OnPlacementUpdated(PlacementUpdatedArgs args)
-    {
-        if (!_inPlacementMode) return;
-        // Follow the snapped grid position every frame during placement preview.
-        _center = args.WorldPos + Vector3.up * yOffset;
-        _currentRange = _placementRange;
-        _isValid = args.Validation.IsValid;
-        _requestedVisible = _currentRange > 0;
-    }
-
-    private void OnPlacementEnded()
-    {
-        _inPlacementMode = false;
-        Hide();
-    }
-
-    #endregion
-
-    #region Cleanup
 
     private void OnDestroy()
     {
-        if (_discMesh != null) Destroy(_discMesh);
-        if (_ringMesh != null) Destroy(_ringMesh);
-        if (_fillMaterial != null) Destroy(_fillMaterial);
-        if (_ringMaterial != null) Destroy(_ringMaterial);
+        if (_poolRoot != null)
+            Destroy(_poolRoot.gameObject);
     }
-
-    #endregion
-
-    #region Frame Rendering
 
     private void LateUpdate()
     {
-        // Fade visibility instead of toggling instantly so range previews feel grounded.
-        float target = _requestedVisible && _currentRange > 0 ? 1f : 0f;
+        var target = _requestedVisible && _currentRange > 0 ? 1f : 0f;
         _visibility = Mathf.MoveTowards(_visibility, target, fadeSpeed * Time.unscaledDeltaTime);
-        if (_visibility <= 0f) return;
+        _visibleCellCount = 0;
 
-        float time = Time.unscaledTime;
-        float pulse = 1f + Mathf.Sin(time * pulseSpeed) * pulseAmount;
-        float alpha = Mathf.Clamp01(_visibility * pulse);
-
-        if (_hasUpgradeRange && _upgradeRange > _currentRange)
+        if (_visibility > 0f)
         {
+            var pulse = 1f + Mathf.Sin(Time.unscaledTime * pulseSpeed) * pulseAmount;
+            var alpha = Mathf.Clamp01(_visibility * pulse);
+
+            if (_hasUpgradeRange && _upgradeRange > _currentRange)
+            {
+                DrawCellArea(
+                    _upgradeRange,
+                    _currentRange,
+                    WithAlpha(upgradeFillColor, upgradeFillColor.a * alpha),
+                    WithAlpha(upgradeRingColor, upgradeRingColor.a * alpha));
+            }
+
+            var activeRingColor = _isValid ? currentRingColor : invalidRingColor;
             DrawCellArea(
-                _upgradeRange,
                 _currentRange,
-                WithAlpha(upgradeFillColor, upgradeFillColor.a * alpha),
-                WithAlpha(upgradeRingColor, upgradeRingColor.a * alpha));
+                -1,
+                WithAlpha(currentFillColor, currentFillColor.a * alpha),
+                WithAlpha(activeRingColor, activeRingColor.a * alpha));
         }
 
-        Color activeRingColor = _isValid ? currentRingColor : invalidRingColor;
-        DrawCellArea(
-            _currentRange,
-            -1,
-            WithAlpha(currentFillColor, currentFillColor.a * alpha),
-            WithAlpha(activeRingColor, activeRingColor.a * alpha));
+        HideUnusedCells();
     }
-
-    #endregion
-
-    #region Public API
 
     public void ShowBuildPreview(Vector3 worldCenter, int range, bool isValid)
     {
@@ -217,8 +131,8 @@ public sealed class TowerRangeIndicator : MonoBehaviour
             return;
         }
 
-        int upgradeRange = 0;
-        bool hasUpgradeRange = includeUpgradePreview
+        var upgradeRange = 0;
+        var hasUpgradeRange = includeUpgradePreview
             && tower.TryPreviewNextUpgrade(out _, out upgradeRange, out _)
             && upgradeRange > tower.AttackRange;
 
@@ -231,9 +145,58 @@ public sealed class TowerRangeIndicator : MonoBehaviour
         _hasUpgradeRange = false;
     }
 
-    #endregion
+    private void OnTowerFocused(Tower tower)
+    {
+        if (_inPlacementMode) return;
 
-    #region State Helpers
+        if (tower == null)
+            Hide();
+        else
+            ShowCurrent(tower);
+    }
+
+    private void OnTowerUpgradeHovered(Tower tower)
+    {
+        if (!_inPlacementMode && tower != null)
+            ShowUpgradePreview(tower);
+    }
+
+    private void OnPlacementStarted(BuildingData data)
+    {
+        var previewRange = 0;
+
+        if (data is TowerData towerData && towerData.towerStats.attackRange > 0)
+            previewRange = towerData.towerStats.attackRange;
+        else if (data is TrapData trapData && trapData.role != TrapRole.Spikes && trapData.trapStats.effectRadius > 0)
+            previewRange = trapData.trapStats.effectRadius;
+
+        if (previewRange > 0)
+        {
+            _inPlacementMode = true;
+            _placementRange = previewRange;
+            Show(Vector3.zero, _placementRange, 0, false, true);
+            return;
+        }
+
+        _inPlacementMode = false;
+        Hide();
+    }
+
+    private void OnPlacementUpdated(PlacementUpdatedArgs args)
+    {
+        if (!_inPlacementMode) return;
+
+        _center = args.WorldPos + Vector3.up * yOffset;
+        _currentRange = _placementRange;
+        _isValid = args.Validation.IsValid;
+        _requestedVisible = _currentRange > 0;
+    }
+
+    private void OnPlacementEnded()
+    {
+        _inPlacementMode = false;
+        Hide();
+    }
 
     private void Show(Vector3 worldCenter, int currentRange, int upgradeRange, bool hasUpgradeRange, bool isValid)
     {
@@ -245,142 +208,102 @@ public sealed class TowerRangeIndicator : MonoBehaviour
         _requestedVisible = _currentRange > 0;
     }
 
-    #endregion
-
-    #region Drawing Helpers
-
-    // Draws every cell whose Chebyshev distance is <= outerRadius and > innerRadius.
-    // This lets upgrade previews show only newly gained cells instead of repainting everything.
     private void DrawCellArea(int outerRadius, int innerRadius, Color fillColor, Color outlineColor)
     {
-        float cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
-        Vector3 scale = new Vector3(cellSize, 1f, cellSize);
+        var cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
+        var drawFill = drawSubtleFill && fillColor.a > 0.001f && _fillSprite != null;
+        var drawOutline = outlineColor.a > 0.001f && _outlineSprite != null;
 
-        bool drawFill = drawSubtleFill && fillColor.a > 0.001f;
-        bool drawOutline = outlineColor.a > 0.001f;
+        if (!drawFill && !drawOutline) return;
 
-        if (drawFill) SetMaterialColor(_fillMaterial, fillColor);
-        if (drawOutline) SetMaterialColor(_ringMaterial, outlineColor);
-
-        for (int x = -outerRadius; x <= outerRadius; x++)
+        for (var x = -outerRadius; x <= outerRadius; x++)
         {
-            for (int z = -outerRadius; z <= outerRadius; z++)
+            for (var z = -outerRadius; z <= outerRadius; z++)
             {
-                int distance = Mathf.Max(Mathf.Abs(x), Mathf.Abs(z));
+                var distance = Mathf.Max(Mathf.Abs(x), Mathf.Abs(z));
                 if (distance > outerRadius || distance <= innerRadius) continue;
 
-                Vector3 cellCenter = _center + new Vector3(x * cellSize, 0f, z * cellSize);
-                if (drawFill)
-                {
-                    Graphics.DrawMesh(_discMesh,
-                        Matrix4x4.TRS(cellCenter, Quaternion.identity, scale),
-                        _fillMaterial, 0);
-                }
-
-                if (drawOutline)
-                {
-                    Graphics.DrawMesh(_ringMesh,
-                        Matrix4x4.TRS(cellCenter + Vector3.up * 0.004f, Quaternion.identity, scale),
-                        _ringMaterial, 0);
-                }
+                var cellCenter = _center + new Vector3(x * cellSize, 0f, z * cellSize);
+                DrawCell(cellCenter, cellSize, drawFill, fillColor, drawOutline, outlineColor);
             }
         }
     }
 
-    #endregion
-
-    #region Mesh Builders
-
-    // Inset unit-cell fill. Scaled to GridManager.CellSize on draw.
-    private static Mesh BuildDiscMesh()
+    private void DrawCell(Vector3 center, float cellSize, bool drawFill, Color fillColor, bool drawOutline, Color outlineColor)
     {
-        var vertices = new Vector3[]
+        var cell = GetCell();
+        cell.Root.SetActive(true);
+
+        ConfigureRenderer(cell.Fill, _fillSprite, center, cellSize, drawFill, fillColor, 20);
+        ConfigureRenderer(cell.Outline, _outlineSprite, center + Vector3.up * OutlineYOffset, cellSize, drawOutline, outlineColor, 21);
+    }
+
+    private CellView GetCell()
+    {
+        if (_visibleCellCount >= _cells.Count)
+            _cells.Add(CreateCell(_cells.Count));
+
+        return _cells[_visibleCellCount++];
+    }
+
+    private CellView CreateCell(int index)
+    {
+        if (_poolRoot == null)
+            CreatePoolRoot();
+
+        var root = new GameObject($"TowerRangeCell_{index}");
+        root.transform.SetParent(_poolRoot, false);
+
+        return new CellView
         {
-            new(-FillHalfExtent, 0f, -FillHalfExtent),
-            new(FillHalfExtent, 0f, -FillHalfExtent),
-            new(FillHalfExtent, 0f, FillHalfExtent),
-            new(-FillHalfExtent, 0f, FillHalfExtent),
+            Root = root,
+            Fill = CreateRenderer(root.transform, "Fill"),
+            Outline = CreateRenderer(root.transform, "Outline"),
         };
-        var triangles = new int[] { 0, 2, 1, 0, 3, 2 };
-        var mesh = new Mesh { name = "RangeSquareFill" };
-        mesh.vertices = vertices;
-        mesh.triangles = triangles;
-        mesh.RecalculateNormals();
-        return mesh;
     }
 
-    // Inset unit-cell outline: a hollow border with a small gap between neighbouring cells.
-    // 8 vertices (4 outer + 4 inner), 8 triangles (2 per side).
-    private static Mesh BuildRingMesh()
+    private static SpriteRenderer CreateRenderer(Transform parent, string name)
     {
-        const float o = OutlineOuterHalfExtent;
-        const float i = OutlineInnerHalfExtent;
+        var child = new GameObject(name);
+        child.transform.SetParent(parent, false);
 
-        var v = new Vector3[]
-        {
-            new(-o, 0f, -o), // 0 outer corners
-            new(o, 0f, -o), // 1
-            new(o, 0f, o), // 2
-            new(-o, 0f, o), // 3
-            new(-i, 0f, -i), // 4 inner corners
-            new(i, 0f, -i), // 5
-            new(i, 0f, i), // 6
-            new(-i, 0f, i), // 7
-        };
-        var t = new int[]
-        {
-            0, 1, 5, 0, 5, 4, // top side   (–Z)
-            1, 2, 6, 1, 6, 5, // right side (+X)
-            2, 3, 7, 2, 7, 6, // bottom side(+Z)
-            3, 0, 4, 3, 4, 7, // left side  (–X)
-        };
-        var mesh = new Mesh { name = "RangeSquareOutline" };
-        mesh.vertices = v;
-        mesh.triangles = t;
-        mesh.RecalculateNormals();
-        return mesh;
+        var renderer = child.AddComponent<SpriteRenderer>();
+        renderer.enabled = false;
+        return renderer;
     }
 
-    #endregion
-
-    #region Material Helpers
-
-    private static Material BuildMaterial(string materialName, Color color)
+    private void CreatePoolRoot()
     {
-        // Prefer URP unlit but keep fallbacks so the indicator survives render-pipeline changes.
-        Shader shader = Shader.Find("Universal Render Pipeline/Unlit")
-                     ?? Shader.Find("Unlit/Color")
-                     ?? Shader.Find("Sprites/Default");
-
-        var material = new Material(shader) { name = materialName };
-        material.SetOverrideTag("RenderType", "Transparent");
-        SetFloatIfSupported(material, "_Surface", 1f);
-        SetFloatIfSupported(material, "_Blend", 0f);
-        SetFloatIfSupported(material, "_SrcBlend", (float)BlendMode.SrcAlpha);
-        SetFloatIfSupported(material, "_DstBlend", (float)BlendMode.OneMinusSrcAlpha);
-        SetFloatIfSupported(material, "_ZWrite", 0f);
-        SetFloatIfSupported(material, "_Cull", (float)CullMode.Off);
-        SetFloatIfSupported(material, "_AlphaClip", 0f);
-        material.DisableKeyword("_ALPHATEST_ON");
-        material.EnableKeyword("_ALPHABLEND_ON");
-        material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
-        material.renderQueue = (int)RenderQueue.Transparent;
-        SetMaterialColor(material, color);
-        return material;
+        var root = new GameObject($"{nameof(TowerRangeIndicator)}Sprites");
+        _poolRoot = root.transform;
+        _poolRoot.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+        _poolRoot.localScale = Vector3.one;
     }
 
-    private static void SetFloatIfSupported(Material material, string property, float value)
+    private static void ConfigureRenderer(SpriteRenderer renderer, Sprite sprite, Vector3 position, float cellSize, bool visible, Color color, int sortingOrder)
     {
-        if (material != null && material.HasProperty(property))
-            material.SetFloat(property, value);
+        renderer.enabled = visible;
+        if (!visible) return;
+
+        renderer.sprite = sprite;
+        renderer.color = color;
+        renderer.sortingOrder = sortingOrder;
+        renderer.transform.SetPositionAndRotation(position, GroundRotation);
+        var spriteSize = Mathf.Max(sprite.bounds.size.x, sprite.bounds.size.y, 0.001f);
+        var scale = cellSize / spriteSize;
+        renderer.transform.localScale = new Vector3(scale, scale, 1f);
     }
 
-    private static void SetMaterialColor(Material material, Color color)
+    private void HideUnusedCells()
     {
-        if (material == null) return;
-        // URP uses _BaseColor; legacy/simple shaders often use _Color.
-        if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
-        if (material.HasProperty("_Color")) material.SetColor("_Color", color);
+        for (var index = _visibleCellCount; index < _cells.Count; index++)
+            _cells[index].Root.SetActive(false);
+    }
+
+    private void HideCells()
+    {
+        _visibleCellCount = 0;
+        HideUnusedCells();
     }
 
     private static Color WithAlpha(Color color, float alpha)
@@ -389,5 +312,10 @@ public sealed class TowerRangeIndicator : MonoBehaviour
         return color;
     }
 
-    #endregion
+    private class CellView
+    {
+        public GameObject Root;
+        public SpriteRenderer Fill;
+        public SpriteRenderer Outline;
+    }
 }

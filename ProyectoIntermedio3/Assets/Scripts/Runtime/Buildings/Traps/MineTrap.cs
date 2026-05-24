@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public sealed class MineTrap : Trap
+public class MineTrap : Trap
 {
     #region Properties
 

@@ -4,7 +4,7 @@ using UnityEngine.Rendering;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(BuildingBase))]
-public sealed class BuildingLevelIndicator : MonoBehaviour
+public class BuildingLevelIndicator : MonoBehaviour
 {
     private const string RootName = "BuildingLevelIndicator";
     private const string PipSpriteResourcePath = "LevelPip";

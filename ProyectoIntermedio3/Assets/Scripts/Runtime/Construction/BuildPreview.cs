@@ -29,7 +29,7 @@ public class BuildPreview : MonoBehaviour
 
     #region Nested Types
 
-    private sealed class GhostRendererState
+    private class GhostRendererState
     {
         public Renderer Renderer;
         public int MaterialCount;

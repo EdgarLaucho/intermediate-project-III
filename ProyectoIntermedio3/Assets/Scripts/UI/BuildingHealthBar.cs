@@ -1,9 +1,6 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 
-// World-space health bar for buildings, driven by a UI Toolkit UIDocument.
-// Binds to IDamageable on the parent, reacts to OnHealthChanged, and optionally
-// faces the camera and scales with viewing distance for consistent readability.
 public class BuildingHealthBar : MonoBehaviour
 {
     #region Inspector Fields
@@ -75,7 +72,8 @@ public class BuildingHealthBar : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (_building != null) _building.OnHealthChanged -= HandleHealthChanged;
+        if (_building != null)
+            _building.OnHealthChanged -= HandleHealthChanged;
     }
 
     #endregion
@@ -84,7 +82,6 @@ public class BuildingHealthBar : MonoBehaviour
 
     private void HandleHealthChanged()
     {
-        // Extend the show window so the bar lingers briefly even when health returns to full
         _showUntilTime = Time.unscaledTime + Mathf.Max(0f, fullHealthLingerTime);
         Refresh();
     }
@@ -93,7 +90,7 @@ public class BuildingHealthBar : MonoBehaviour
     {
         if (_building == null || !_uiReady) return;
 
-        float ratio = _building.MaxHealth > 0
+        var ratio = _building.MaxHealth > 0
             ? Mathf.Clamp01((float)_building.CurrentHealth / _building.MaxHealth)
             : 0f;
 
@@ -113,8 +110,8 @@ public class BuildingHealthBar : MonoBehaviour
     {
         if (_building == null || !_uiReady || _root == null) return;
 
-        bool isDamaged = _building.CurrentHealth < _building.MaxHealth;
-        bool shouldShow = _building.IsAlive && (!hideWhenFullHealth || isDamaged || Time.unscaledTime < _showUntilTime);
+        var isDamaged = _building.CurrentHealth < _building.MaxHealth;
+        var shouldShow = _building.IsAlive && (!hideWhenFullHealth || isDamaged || Time.unscaledTime < _showUntilTime);
         _root.style.display = shouldShow ? DisplayStyle.Flex : DisplayStyle.None;
     }
 
@@ -127,8 +124,7 @@ public class BuildingHealthBar : MonoBehaviour
     {
         if (_uiReady) return true;
 
-        // Lazy-initialize: UIDocument component may not be ready until the first frame
-        UIDocument doc = CacheDocument();
+        var doc = CacheDocument();
         if (doc == null)
         {
             if (!_reportedMissingDocument)
@@ -139,7 +135,7 @@ public class BuildingHealthBar : MonoBehaviour
             return false;
         }
 
-        VisualElement root = doc.rootVisualElement;
+        var root = doc.rootVisualElement;
         if (root == null)
             return false;
 
@@ -173,18 +169,19 @@ public class BuildingHealthBar : MonoBehaviour
     #endregion
 
     #region Camera & Scale
-    private void FaceTargetCamera() {
+    private void FaceTargetCamera()
+    {
         if (!faceCamera) return;
 
-        Camera cameraToUse = ResolveCamera();
+        var cameraToUse = ResolveCamera();
         if (cameraToUse == null) return;
 
-        Vector3 forward = transform.position - cameraToUse.transform.position;
+        var forward = transform.position - cameraToUse.transform.position;
         if (forward.sqrMagnitude <= 0.0001f) return;
 
-        Vector3 normalizedForward = forward.normalized;
-        Vector3 up = keepUpright ? Vector3.up : cameraToUse.transform.up;
-        // Avoid gimbal lock when forward is nearly parallel to the up vector
+        var normalizedForward = forward.normalized;
+        var up = keepUpright ? Vector3.up : cameraToUse.transform.up;
+        
         if (Mathf.Abs(Vector3.Dot(normalizedForward, up)) > 0.98f)
             up = cameraToUse.transform.up;
 
@@ -203,12 +200,12 @@ public class BuildingHealthBar : MonoBehaviour
     {
         if (!scaleWithDistance) return;
 
-        Camera cameraToUse = ResolveCamera();
+        var cameraToUse = ResolveCamera();
         if (cameraToUse == null) return;
 
-        float distance = Vector3.Distance(cameraToUse.transform.position, transform.position);
-        float reference = Mathf.Max(0.1f, referenceDistance);
-        float scale = Mathf.Clamp(distance / reference, minScale, maxScale);
+        var distance = Vector3.Distance(cameraToUse.transform.position, transform.position);
+        var reference = Mathf.Max(0.1f, referenceDistance);
+        var scale = Mathf.Clamp(distance / reference, minScale, maxScale);
         transform.localScale = _baseScale * scale;
     }
 
@@ -222,8 +219,6 @@ public class BuildingHealthBar : MonoBehaviour
     #endregion
 
     #region Helpers
-
-    // Green → yellow → red based on health ratio thresholds
     private static Color ColorForRatio(float ratio)
     {
         if (ratio > 0.55f) return new Color(0.18f, 0.95f, 0.34f);

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Tower))]
-public sealed class TowerShooter : MonoBehaviour
+public class TowerShooter : MonoBehaviour
 {
     #region Inspector Fields
 

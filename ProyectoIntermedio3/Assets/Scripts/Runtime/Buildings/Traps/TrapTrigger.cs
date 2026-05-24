@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Trap))]
-public sealed class TrapTrigger : MonoBehaviour
+public class TrapTrigger : MonoBehaviour
 {
     #region Inspector Fields
 

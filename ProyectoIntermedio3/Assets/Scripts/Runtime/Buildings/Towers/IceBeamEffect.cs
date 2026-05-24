@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public sealed class IceBeamEffect : MonoBehaviour
+public class IceBeamEffect : MonoBehaviour
 {
     [SerializeField] private float duration = 0.18f;
     [SerializeField] private float startWidth = 0.12f;

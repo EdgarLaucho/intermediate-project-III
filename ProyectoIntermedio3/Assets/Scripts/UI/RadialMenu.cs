@@ -3,21 +3,15 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEngine.InputSystem;
 
-// UI Toolkit radial command wheel. ConstructionPresenter builds the entry list and calls ShowEntries.
-// This class only handles layout, spawning, visibility, and forwarding selection events back to the presenter.
 public class RadialMenu : MonoBehaviour
 {
-    #region Inspector Fields
-
     [Header("Dependencies")]
     [SerializeField] private RadialAudio radialAudio;
 
     [Header("Layout")]
     [SerializeField] private float outerRadius = 130f;
     [SerializeField] private float innerRadius = 44f;
-    #endregion
 
-    #region Runtime State & Events
     private VisualElement _radialRoot;
     private UIDocument _uiDocument;
     private readonly List<Entry> _activeEntries = new();
@@ -30,34 +24,13 @@ public class RadialMenu : MonoBehaviour
 
     public bool IsOpen => _radialRoot != null && _radialRoot.style.display == DisplayStyle.Flex;
 
-    public readonly struct Entry
-    {
-        public readonly string Label;
-        public readonly string SubLabel;
-        public readonly bool Interactable;
-        public readonly object Payload;
-
-        public Entry(string label, string subLabel, bool interactable, object payload)
-        {
-            Label = label;
-            SubLabel = subLabel;
-            Interactable = interactable;
-            Payload = payload;
-        }
-    }
-
-    #endregion
-
-    #region Unity Lifecycle
     private void Start()
     {
         EnsureRoot();
         if (_radialRoot != null)
             _radialRoot.style.display = DisplayStyle.None;
     }
-    #endregion
 
-    #region Public API
     public void Initialize()
     {
         CacheDocument();
@@ -72,7 +45,7 @@ public class RadialMenu : MonoBehaviour
             _activeEntries.AddRange(entries);
 
         ClearButtons();
-        SpawnPassiveButtons(_activeEntries);
+        CreateButtons(_activeEntries);
         Show();
     }
 
@@ -80,15 +53,11 @@ public class RadialMenu : MonoBehaviour
     {
         Hide();
     }
-    #endregion
 
-    #region Button Spawning
-
-    private void SpawnPassiveButtons(IList<Entry> entries)
+    private void CreateButtons(IList<Entry> entries)
     {
         if (_radialRoot?.panel == null) return;
 
-        // Transparent full-screen backdrop catches pointer-down outside any sector to close the menu
         var backdrop = new VisualElement();
         backdrop.style.position = Position.Absolute;
         backdrop.style.left = 0;
@@ -99,52 +68,50 @@ public class RadialMenu : MonoBehaviour
         backdrop.RegisterCallback<PointerDownEvent>(_ => RequestClose());
         _radialRoot.Add(backdrop);
 
-        var el = new RadialMenuElement
+        var element = new RadialMenuElement
         {
             OuterRadius = outerRadius,
             InnerRadius = innerRadius,
         };
 
         var sectors = new List<RadialMenuElement.SectorData>(entries.Count);
-        for (int index = 0; index < entries.Count; index++)
+        for (var index = 0; index < entries.Count; index++)
         {
-            int capturedIndex = index;
-            Entry entry = entries[index];
+            var capturedIndex = index;
+            var entry = entries[index];
             sectors.Add(new RadialMenuElement.SectorData(entry.Label, entry.SubLabel, entry.Interactable,
                 () => OnEntrySelected?.Invoke(_activeEntries[capturedIndex])));
         }
 
-        el.SetSectors(sectors);
-        el.OnCenterClicked += RequestClose;
-        el.OnHoverChanged += HandlePassiveHoverChanged;
+        element.SetSectors(sectors);
+        element.OnCenterClicked += RequestClose;
+        element.OnHoverChanged += HandleHoverChanged;
         if (radialAudio != null)
         {
-            el.OnHoverChanged += idx => { if (idx >= 0) radialAudio.PlayHover(); };
-            el.OnConfirm += _ => radialAudio.PlayClick();
+            element.OnHoverChanged += index => { if (index >= 0) radialAudio.PlayHover(); };
+            element.OnConfirm += _ => radialAudio.PlayClick();
         }
 
-        Vector2 mousePos = Mouse.current.position.ReadValue();
-        mousePos.y = Screen.height - mousePos.y;
-        Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(_radialRoot.panel, mousePos);
-        float halfSize = el.ElementHalfSize;
-        Rect screen = _radialRoot.panel.visualTree.layout;
-        Vector2 center = GetSmartMenuCenter(panelPos, halfSize, screen);
+        var mousePosition = Mouse.current.position.ReadValue();
+        mousePosition.y = Screen.height - mousePosition.y;
+        var panelPosition = RuntimePanelUtils.ScreenToPanel(_radialRoot.panel, mousePosition);
+        var halfSize = element.ElementHalfSize;
+        var screen = _radialRoot.panel.visualTree.layout;
+        var center = GetMenuCenter(panelPosition, halfSize, screen);
 
-        el.style.left = center.x - halfSize;
-        el.style.top = center.y - halfSize;
-
-        _radialRoot.Add(el);
+        element.style.left = center.x - halfSize;
+        element.style.top = center.y - halfSize;
+        _radialRoot.Add(element);
     }
 
-    private static Vector2 GetSmartMenuCenter(Vector2 cursorPanelPosition, float halfSize, Rect panelRect)
+    private static Vector2 GetMenuCenter(Vector2 cursorPanelPosition, float halfSize, Rect panelRect)
     {
         const float safeMargin = 10f;
 
-        // Compute the valid range so the menu stays fully within the panel
-        float minX = halfSize + safeMargin;
-        float minY = halfSize + safeMargin;
-        float maxX = Mathf.Max(minX, panelRect.width - halfSize - safeMargin);
-        float maxY = Mathf.Max(minY, panelRect.height - halfSize - safeMargin);
+        var minX = halfSize + safeMargin;
+        var minY = halfSize + safeMargin;
+        var maxX = Mathf.Max(minX, panelRect.width - halfSize - safeMargin);
+        var maxY = Mathf.Max(minY, panelRect.height - halfSize - safeMargin);
 
         if (panelRect.width <= halfSize * 2f + safeMargin * 2f)
             minX = maxX = panelRect.width * 0.5f;
@@ -157,33 +124,35 @@ public class RadialMenu : MonoBehaviour
             Mathf.Clamp(cursorPanelPosition.y, minY, maxY));
     }
 
-    private void ClearButtons() => _radialRoot?.Clear();
-
-    private void HandlePassiveHoverChanged(int sectorIndex)
+    private void ClearButtons()
     {
-        if (sectorIndex < 0 || sectorIndex >= _activeEntries.Count)
-            OnEntryHovered?.Invoke(null);
-        else
-            OnEntryHovered?.Invoke(_activeEntries[sectorIndex]);
+        _radialRoot?.Clear();
     }
-    #endregion
 
-    #region Visibility
+    private void HandleHoverChanged(int sectorIndex)
+    {
+        OnEntryHovered?.Invoke(sectorIndex < 0 || sectorIndex >= _activeEntries.Count ? null : _activeEntries[sectorIndex]);
+    }
 
     private void Show()
     {
         if (!EnsureRoot()) return;
+
         _radialRoot.style.display = DisplayStyle.Flex;
-        if (radialAudio != null) radialAudio.PlayOpen();
+        if (radialAudio != null)
+            radialAudio.PlayOpen();
     }
 
     private void Hide()
     {
         if (_radialRoot != null)
         {
-            if (_radialRoot.style.display == DisplayStyle.Flex && radialAudio != null) radialAudio.PlayClose();
+            if (_radialRoot.style.display == DisplayStyle.Flex && radialAudio != null)
+                radialAudio.PlayClose();
+
             _radialRoot.style.display = DisplayStyle.None;
         }
+
         ClearButtons();
         _activeEntries.Clear();
     }
@@ -192,18 +161,19 @@ public class RadialMenu : MonoBehaviour
     {
         if (_radialRoot != null) return true;
 
-        UIDocument doc = CacheDocument();
-        if (doc == null)
+        var document = CacheDocument();
+        if (document == null)
         {
             if (!_reportedMissingDocument)
             {
                 Debug.LogError("[RadialMenu] UIDocument not found on this GameObject.", this);
                 _reportedMissingDocument = true;
             }
+
             return false;
         }
 
-        VisualElement documentRoot = doc.rootVisualElement;
+        var documentRoot = document.rootVisualElement;
         if (documentRoot == null)
             return false;
 
@@ -215,6 +185,7 @@ public class RadialMenu : MonoBehaviour
                 Debug.LogError("[RadialMenu] 'radial-root' element not found in UXML.", this);
                 _reportedMissingRootElement = true;
             }
+
             return false;
         }
 
@@ -234,5 +205,20 @@ public class RadialMenu : MonoBehaviour
         Hide();
         OnClosed?.Invoke();
     }
-    #endregion
+
+    public readonly struct Entry
+    {
+        public readonly string Label;
+        public readonly string SubLabel;
+        public readonly bool Interactable;
+        public readonly object Payload;
+
+        public Entry(string label, string subLabel, bool interactable, object payload)
+        {
+            Label = label;
+            SubLabel = subLabel;
+            Interactable = interactable;
+            Payload = payload;
+        }
+    }
 }

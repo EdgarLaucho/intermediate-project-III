@@ -1,138 +1,146 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-// Lightweight Painter2D layer for the radial menu background.
-// Buttons, labels, colors, and interaction states live in USS-backed VisualElements.
-internal sealed class RadialMenuBackdrop : VisualElement
+public class RadialMenuBackdrop : VisualElement
 {
-    private const float AmbientSweepSpeed = 38f;
-    private const float AmbientPulseSpeed = 2.7f;
-
     private static readonly Color ShadowSoft = new(0.025f, 0.018f, 0.012f, 0.24f);
     private static readonly Color CompassLeather = new(0.105f, 0.072f, 0.047f, 0.68f);
     private static readonly Color CompassEdge = new(0.55f, 0.34f, 0.13f, 0.54f);
-    private static readonly Color BrassBright = new(1.00f, 0.78f, 0.30f, 0.84f);
-    private static readonly Color AmberGlow = new(1.00f, 0.58f, 0.18f, 0.20f);
-    private static readonly Color SweepShadow = new(0.13f, 0.045f, 0.005f, 0.34f);
+    private static readonly Color AmberGlow = new(1.00f, 0.58f, 0.18f, 0.28f);
 
-    public float OuterRadius;
-    public float InnerRadius;
-    public float OrbitRadius;
-    public float NodeRadius;
-    public int SectorCount;
-    public int HoveredIndex = -1;
-    public int FlashIndex = -1;
-    public bool CenterHovered;
+    private readonly List<VisualElement> _connectors = new();
+    private VisualElement _shadow;
+    private VisualElement _orbitOuter;
+    private VisualElement _orbitInner;
+
+    private float _outerRadius;
+    private float _innerRadius;
+    private float _orbitRadius;
+    private float _nodeRadius;
+    private int _sectorCount;
+    private int _hoveredIndex = -1;
+    private int _flashIndex = -1;
+    private bool _centerHovered;
+
+    public float OuterRadius { get => _outerRadius; set { _outerRadius = value; Rebuild(); } }
+    public float InnerRadius { get => _innerRadius; set { _innerRadius = value; Rebuild(); } }
+    public float OrbitRadius { get => _orbitRadius; set { _orbitRadius = value; Rebuild(); } }
+    public float NodeRadius { get => _nodeRadius; set { _nodeRadius = value; Rebuild(); } }
+    public int SectorCount { get => _sectorCount; set { _sectorCount = value; Rebuild(); } }
+    public int HoveredIndex { get => _hoveredIndex; set { _hoveredIndex = value; RefreshState(); } }
+    public int FlashIndex { get => _flashIndex; set { _flashIndex = value; RefreshState(); } }
+    public bool CenterHovered { get => _centerHovered; set { _centerHovered = value; RefreshState(); } }
 
     public RadialMenuBackdrop()
     {
         AddToClassList("radial-backdrop");
         pickingMode = PickingMode.Ignore;
-        generateVisualContent += Paint;
+        RegisterCallback<GeometryChangedEvent>(_ => Rebuild());
     }
 
-    private void Paint(MeshGenerationContext ctx)
+    private void Rebuild()
     {
-        Painter2D painter = ctx.painter2D;
-        Vector2 center = new(layout.width * 0.5f, layout.height * 0.5f);
+        if (layout.width <= 0f || layout.height <= 0f) return;
 
-        DrawShadow(painter, center);
-        DrawConnectorLines(painter, center);
-        DrawOrbitGuide(painter, center);
-        DrawAmbientSweep(painter, center);
-    }
+        Clear();
+        _connectors.Clear();
 
-    private void DrawShadow(Painter2D painter, Vector2 center)
-    {
-        painter.fillColor = ShadowSoft;
-        painter.BeginPath();
-        painter.Arc(center + new Vector2(0f, 11f), OuterRadius + 25f, 0f, 360f);
-        painter.ClosePath();
-        painter.Fill();
-    }
+        var center = new Vector2(layout.width * 0.5f, layout.height * 0.5f);
+        _shadow = CreateCircle("radial-backdrop-shadow", center + new Vector2(0f, 11f), OuterRadius + 25f, ShadowSoft, 0f);
+        _orbitOuter = CreateCircle("radial-backdrop-orbit-outer", center, OrbitRadius, Color.clear, 4.8f);
+        _orbitInner = CreateCircle("radial-backdrop-orbit-inner", center, OrbitRadius, Color.clear, 1.1f);
+        Add(_shadow);
 
-    private void DrawConnectorLines(Painter2D painter, Vector2 center)
-    {
-        if (SectorCount <= 0) return;
-
-        for (int index = 0; index < SectorCount; index++)
+        if (SectorCount >= 2)
         {
-            Vector2 direction = DirectionFor(index, SectorCount);
-            Vector2 from = center + direction * (Mathf.Max(30f, InnerRadius - 6f) + 6f);
-            Vector2 to = center + direction * (OrbitRadius - NodeRadius - 4f);
-            bool emphasized = index == HoveredIndex || index == FlashIndex;
+            Add(_orbitOuter);
+            Add(_orbitInner);
+        }
 
-            painter.strokeColor = emphasized ? AmberGlow : CompassLeather;
-            painter.lineWidth = emphasized ? 3.2f : 2.2f;
-            painter.BeginPath();
-            painter.MoveTo(from);
-            painter.LineTo(to);
-            painter.Stroke();
+        for (var index = 0; index < SectorCount; index++)
+        {
+            var direction = DirectionFor(index, SectorCount);
+            var from = center + direction * (Mathf.Max(30f, InnerRadius - 6f) + 6f);
+            var to = center + direction * (OrbitRadius - NodeRadius - 4f);
+            var connector = CreateLine(from, to, CompassLeather, 2.2f);
+            _connectors.Add(connector);
+            Add(connector);
+        }
 
-            painter.strokeColor = CompassEdge;
-            painter.lineWidth = 0.8f;
-            painter.BeginPath();
-            painter.MoveTo(from);
-            painter.LineTo(to);
-            painter.Stroke();
+        RefreshState();
+    }
+
+    private void RefreshState()
+    {
+        if (_orbitOuter != null)
+            SetBorder(_orbitOuter, new Color(0.08f, 0.055f, 0.035f, CenterHovered ? 0.32f : 0.22f), 4.8f);
+
+        if (_orbitInner != null)
+            SetBorder(_orbitInner, CenterHovered ? AmberGlow : CompassEdge, 1.1f);
+
+        for (var index = 0; index < _connectors.Count; index++)
+        {
+            var emphasized = index == HoveredIndex || index == FlashIndex;
+            SetLine(_connectors[index], emphasized ? AmberGlow : CompassLeather, emphasized ? 3.2f : 2.2f);
         }
     }
 
-    private void DrawOrbitGuide(Painter2D painter, Vector2 center)
+    private static VisualElement CreateCircle(string className, Vector2 center, float radius, Color fill, float borderWidth)
     {
-        if (SectorCount < 2) return;
-
-        painter.strokeColor = new Color(0.08f, 0.055f, 0.035f, 0.22f);
-        painter.lineWidth = 4.8f;
-        painter.BeginPath();
-        painter.Arc(center, OrbitRadius, 0f, 360f);
-        painter.Stroke();
-
-        painter.strokeColor = CompassEdge;
-        painter.lineWidth = 1.1f;
-        painter.BeginPath();
-        painter.Arc(center, OrbitRadius, 0f, 360f);
-        painter.Stroke();
+        var element = new VisualElement { pickingMode = PickingMode.Ignore };
+        element.AddToClassList(className);
+        element.style.position = Position.Absolute;
+        element.style.left = center.x - radius;
+        element.style.top = center.y - radius;
+        element.style.width = radius * 2f;
+        element.style.height = radius * 2f;
+        element.style.backgroundColor = new StyleColor(fill);
+        element.style.borderTopLeftRadius = radius;
+        element.style.borderTopRightRadius = radius;
+        element.style.borderBottomLeftRadius = radius;
+        element.style.borderBottomRightRadius = radius;
+        SetBorder(element, CompassEdge, borderWidth);
+        return element;
     }
 
-    private void DrawAmbientSweep(Painter2D painter, Vector2 center)
+    private static VisualElement CreateLine(Vector2 from, Vector2 to, Color color, float width)
     {
-        if (SectorCount <= 0) return;
+        var element = new VisualElement { pickingMode = PickingMode.Ignore };
+        var delta = to - from;
+        var length = delta.magnitude;
+        element.style.position = Position.Absolute;
+        element.style.left = from.x;
+        element.style.top = from.y - width * 0.5f;
+        element.style.width = length;
+        element.style.height = width;
+        element.style.transformOrigin = new TransformOrigin(Length.Percent(0f), Length.Percent(50f), 0f);
+        element.style.rotate = new Rotate(Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg);
+        SetLine(element, color, width);
+        return element;
+    }
 
-        float time = Time.realtimeSinceStartup;
-        float pulse = 0.5f + 0.5f * Mathf.Sin(time * AmbientPulseSpeed);
-        float sweepRadius = Mathf.Lerp(Mathf.Max(30f, InnerRadius - 6f) + 14f, OrbitRadius - 8f, 0.55f);
-        float arcLength = 42f;
-        Color sweepColor = CenterHovered
-            ? new Color(1.00f, 0.80f, 0.28f, 0.50f)
-            : new Color(1.00f, 0.58f, 0.14f, 0.36f);
-        sweepColor.a += pulse * 0.12f;
+    private static void SetBorder(VisualElement element, Color color, float width)
+    {
+        element.style.borderTopColor = new StyleColor(color);
+        element.style.borderRightColor = new StyleColor(color);
+        element.style.borderBottomColor = new StyleColor(color);
+        element.style.borderLeftColor = new StyleColor(color);
+        element.style.borderTopWidth = width;
+        element.style.borderRightWidth = width;
+        element.style.borderBottomWidth = width;
+        element.style.borderLeftWidth = width;
+    }
 
-        painter.strokeColor = SweepShadow;
-        painter.lineWidth = 4.6f + pulse * 0.9f;
-        for (int sweepIndex = 0; sweepIndex < 3; sweepIndex++)
-        {
-            float startAngle = time * AmbientSweepSpeed + sweepIndex * 120f;
-            painter.BeginPath();
-            painter.Arc(center, sweepRadius, startAngle, startAngle + arcLength, ArcDirection.Clockwise);
-            painter.Stroke();
-        }
-
-        painter.strokeColor = sweepColor;
-        painter.lineWidth = 2.4f + pulse * 0.8f;
-
-        for (int sweepIndex = 0; sweepIndex < 3; sweepIndex++)
-        {
-            float startAngle = time * AmbientSweepSpeed + sweepIndex * 120f;
-            painter.BeginPath();
-            painter.Arc(center, sweepRadius, startAngle, startAngle + arcLength, ArcDirection.Clockwise);
-            painter.Stroke();
-        }
+    private static void SetLine(VisualElement element, Color color, float width)
+    {
+        element.style.backgroundColor = new StyleColor(color);
+        element.style.height = width;
     }
 
     private static Vector2 DirectionFor(int index, int sectorCount)
     {
-        float angle = CommandAngleFor(index, sectorCount) * Mathf.Deg2Rad;
+        var angle = CommandAngleFor(index, sectorCount) * Mathf.Deg2Rad;
         return new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
     }
 
@@ -150,9 +158,6 @@ internal sealed class RadialMenuBackdrop : VisualElement
             };
         }
 
-        if (sectorCount == 4)
-            return -135f + index * 90f;
-
-        return -90f + index * (360f / sectorCount);
+        return sectorCount == 4 ? -135f + index * 90f : -90f + index * (360f / sectorCount);
     }
 }

@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 
 [DisallowMultipleComponent]
-public sealed class CannonCatapultAnimator : MonoBehaviour
+public class CannonCatapultAnimator : MonoBehaviour
 {
     #region Serialized Fields
 

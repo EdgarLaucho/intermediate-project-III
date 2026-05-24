@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [DisallowMultipleComponent]
-public sealed class SpikeTrapAnimator : MonoBehaviour
+public class SpikeTrapAnimator : MonoBehaviour
 {
     [SerializeField] private Transform[] spikes;
     [SerializeField] private float hiddenDepth = 0.35f;

@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public sealed class TarTrap : Trap
+public class TarTrap : Trap
 {
     #region Inspector Fields
 

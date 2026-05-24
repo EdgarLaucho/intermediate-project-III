@@ -3,7 +3,7 @@ using UnityEngine;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(BuildingBase))]
-public sealed class BuildingVisualController : MonoBehaviour
+public class BuildingVisualController : MonoBehaviour
 {
     #region Inspector Fields
 

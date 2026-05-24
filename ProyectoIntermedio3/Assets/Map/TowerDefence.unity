@@ -4815,18 +4815,6 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6667612137095404449, guid: 44768a341afa00b43aa34b22f2a670b9, type: 3}
-      propertyPath: gridRadius
-      value: 10
-      objectReference: {fileID: 0}
-    - target: {fileID: 6667612137095404449, guid: 44768a341afa00b43aa34b22f2a670b9, type: 3}
-      propertyPath: nexusSize.x
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 6667612137095404449, guid: 44768a341afa00b43aa34b22f2a670b9, type: 3}
-      propertyPath: nexusSize.y
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 6667612137095404449, guid: 44768a341afa00b43aa34b22f2a670b9, type: 3}
       propertyPath: nexusTransform
       value: 
       objectReference: {fileID: 562981185}

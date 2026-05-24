@@ -27,7 +27,7 @@ public class CellBlocker : MonoBehaviour
 
     private void Awake()
     {
-        _grid = FindAnyObjectByType<GridManager>();
+        _grid = GridManager.Instance;
 
         if (_grid == null)
         {
@@ -110,8 +110,10 @@ public class CellBlocker : MonoBehaviour
     private void AddManualCells(GridManager grid, List<Vector2Int> cells)
     {
         var origin = grid.WorldToGrid(transform.position);
+
         var width = Mathf.Max(1, manualSizeX);
         var height = Mathf.Max(1, manualSizeY);
+        
         var startX = origin.x - (width - 1) / 2;
         var startY = origin.y - (height - 1) / 2;
 
