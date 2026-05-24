@@ -36,4 +36,4 @@ MonoBehaviour:
   damage: 6
   attackRange: 1.6
   attackCooldown: 2.4
-  attackSound: {fileID: 0}
+  attackSound: {fileID: 8300000, guid: 89fd551f9ea24dc469916cfdbaf1c3c9, type: 3}

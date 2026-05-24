@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 public class ExplodingEnemyAI : BaseEnemyAI
@@ -28,6 +27,11 @@ public class ExplodingEnemyAI : BaseEnemyAI
         Debug.Log("BOOM Kitty explotó");
         hasExploded = true;
         agent.isStopped = true;
+        
+        if (enemySO.attackSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(enemySO.attackSound);
+        }
 
         Collider[] hits = Physics.OverlapSphere(transform.position, explosionRadius);
         foreach (Collider hit in hits)
@@ -39,16 +43,16 @@ public class ExplodingEnemyAI : BaseEnemyAI
             
             if (damageable is BaseEnemyAI)
                 continue;
-            if (explosionEffect != null)
-            {
-                Instantiate(
-                    explosionEffect,
-                    transform.position,
-                    Quaternion.identity);
-            }
+            
             damageable.TakeDamage(explosionDamage);
         }
-        
+        if (explosionEffect != null)
+        {
+            Instantiate(
+                explosionEffect,
+                transform.position,
+                Quaternion.identity);
+        }
         Die();
         
         
