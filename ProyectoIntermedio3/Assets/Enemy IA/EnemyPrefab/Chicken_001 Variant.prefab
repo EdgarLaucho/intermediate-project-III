@@ -52,8 +52,67 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5999196838363805413, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
+      propertyPath: enemy
+      value: 
+      objectReference: {fileID: 4334973632486553405}
+    - target: {fileID: 5999196838363805413, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
+      propertyPath: possibleDrops.Array.size
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 5999196838363805413, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
+      propertyPath: possibleDrops.Array.data[2].dropChance
+      value: 60
+      objectReference: {fileID: 0}
+    - target: {fileID: 5999196838363805413, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
+      propertyPath: possibleDrops.Array.data[3].dropChance
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 5999196838363805413, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
+      propertyPath: possibleDrops.Array.data[4].dropChance
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 5999196838363805413, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
+      propertyPath: possibleDrops.Array.data[5].dropChance
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 5999196838363805413, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
+      propertyPath: possibleDrops.Array.data[6].dropChance
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 5999196838363805413, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
+      propertyPath: possibleDrops.Array.data[2].pickupPrefab
+      value: 
+      objectReference: {fileID: 9101450133790372412, guid: 819bece66c5a09d43ba0e03e8f06e865, type: 3}
+    - target: {fileID: 5999196838363805413, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
+      propertyPath: possibleDrops.Array.data[3].pickupPrefab
+      value: 
+      objectReference: {fileID: 5794499460462228412, guid: ee1c081589400b04ebb143aa845fab2a, type: 3}
+    - target: {fileID: 5999196838363805413, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
+      propertyPath: possibleDrops.Array.data[4].pickupPrefab
+      value: 
+      objectReference: {fileID: 6770822860894924233, guid: f5f1646a36a4a6d47b2f0d1f006f87e4, type: 3}
+    - target: {fileID: 5999196838363805413, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
+      propertyPath: possibleDrops.Array.data[5].pickupPrefab
+      value: 
+      objectReference: {fileID: 7187790904398156385, guid: 8566d82482569894eb697b185a44f84f, type: 3}
+    - target: {fileID: 5999196838363805413, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
+      propertyPath: possibleDrops.Array.data[6].pickupPrefab
+      value: 
+      objectReference: {fileID: 7851072900253812416, guid: bd7de4b5c0a3a374fa43c3120649d7d7, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
+--- !u!114 &4334973632486553405 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6626416365391958936, guid: e7e4036a4e72d7b46ad1ab44a38a48dd, type: 3}
+  m_PrefabInstance: {fileID: 7484183366364718245}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99af4f8316cccf347a9e5dda5a72469b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BaseEnemyAI
