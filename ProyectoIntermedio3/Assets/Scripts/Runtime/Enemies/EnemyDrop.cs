@@ -3,7 +3,7 @@ using UnityEngine;
 public class EnemyDrop : MonoBehaviour
 {
     [SerializeField]
-    private EnemyDummy enemy;
+    private BaseEnemyAI enemy;
 
     [SerializeField]
     private DropData[] possibleDrops;

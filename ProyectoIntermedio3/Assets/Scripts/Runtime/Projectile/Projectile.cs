@@ -12,11 +12,10 @@ public class Projectile : MonoBehaviour
     protected int damage;
     protected Transform owner;
 
-    private Vector3 startPosition;
+    protected Vector3 startPosition;
+    protected float journeyLength;
+    protected float currentTravelDistance;
 
-    private float journeyLength;
-
-    private float currentTravelDistance;
     protected bool isGamePaused;
 
     protected virtual void OnEnable()
@@ -89,7 +88,8 @@ public class Projectile : MonoBehaviour
 
         if (movementDirection != Vector3.zero)
         {
-            transform.rotation = Quaternion.LookRotation(movementDirection);
+            transform.rotation = Quaternion.LookRotation(movementDirection)
+                * Quaternion.Euler(90f, 0f, 0f);
         }
 
         if (progress >= 1f)

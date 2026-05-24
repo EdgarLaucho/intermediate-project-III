@@ -128,7 +128,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d60747f8df7a3248b276c3297296690, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPickup
-  weaponData: {fileID: 11400000, guid: fdaaccd4bb4633948a3a4ef03e7cba92, type: 2}
+  weaponData: {fileID: 11400000, guid: 6ff0c1257ec0e014fb522da55884e31d, type: 2}
   weaponDuration: 20
 --- !u!114 &7010397887454137519
 MonoBehaviour:
