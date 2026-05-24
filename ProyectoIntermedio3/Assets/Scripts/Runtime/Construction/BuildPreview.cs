@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Rendering;
-using UnityEngine.UIElements;
 
 public class BuildPreview : MonoBehaviour
 {
@@ -23,8 +22,8 @@ public class BuildPreview : MonoBehaviour
     private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
     private static readonly int ColorId = Shader.PropertyToID("_Color");
 
-    private readonly List<GhostRendererState> _ghostRenderers = new();
-    private readonly MaterialPropertyBlock _ghostTintBlock = new();
+    private readonly List<MeshRenderer> _ghostRenderers = new();
+    private MaterialPropertyBlock _ghostTintBlock;
 
     private BuildingData _data;
     private GameObject _currentPrefab;
@@ -43,6 +42,7 @@ public class BuildPreview : MonoBehaviour
 
     private void Awake()
     {
+        _ghostTintBlock = new MaterialPropertyBlock();
         EnsureVisualHelpersExist();
 
         if (validMaterial == null)
@@ -166,14 +166,14 @@ public class BuildPreview : MonoBehaviour
         _ghostPrefabRotation = _ghost.transform.rotation;
         _ghostBaseRotation = _ghostPrefabRotation;
 
-        DisableColliders(_ghost);
-        DisableGhostGameplay(_ghost);
-        DisableGhostLevelIndicators(_ghost);
-        CacheGhostRenderers(_ghost);
-
         _previewTower = null;
         _ghost.TryGetComponent(out _previewTower);
         _previewTower?.Initialize(_data);
+
+        DisableColliders(_ghost);
+        DisableGhostScripts(_ghost);
+        DisableGhostLevelIndicators(_ghost);
+        CacheGhostRenderers(_ghost);
 
         ApplyGhostVisual(_lastPlacementState, _lastPlacementState == BuildManager.PlacementState.Valid);
     }
@@ -189,29 +189,17 @@ public class BuildPreview : MonoBehaviour
 
     private static void DisableColliders(GameObject target)
     {
-        foreach (var collider in target.GetComponentsInChildren<Collider>())
+        foreach (var collider in target.GetComponentsInChildren<Collider>(true))
             collider.enabled = false;
 
-        foreach (var obstacle in target.GetComponentsInChildren<NavMeshObstacle>())
+        foreach (var obstacle in target.GetComponentsInChildren<NavMeshObstacle>(true))
             obstacle.enabled = false;
     }
 
-    private static void DisableGhostGameplay(GameObject target)
+    private static void DisableGhostScripts(GameObject target)
     {
-        foreach (var shooter in target.GetComponentsInChildren<TowerShooter>(true))
-            shooter.enabled = false;
-
-        foreach (var catapultAnimator in target.GetComponentsInChildren<CannonCatapultAnimator>(true))
-            catapultAnimator.enabled = false;
-
-        foreach (var trigger in target.GetComponentsInChildren<TrapTrigger>(true))
-            trigger.enabled = false;
-
-        foreach (var healthBar in target.GetComponentsInChildren<BuildingHealthBar>(true))
-            healthBar.enabled = false;
-
-        foreach (var document in target.GetComponentsInChildren<UIDocument>(true))
-            document.enabled = false;
+        foreach (var behaviour in target.GetComponentsInChildren<MonoBehaviour>(true))
+            behaviour.enabled = false;
     }
 
     private static void DisableGhostLevelIndicators(GameObject target)
@@ -224,44 +212,49 @@ public class BuildPreview : MonoBehaviour
     {
         _ghostRenderers.Clear();
 
-        foreach (var renderer in target.GetComponentsInChildren<Renderer>())
+        foreach (var renderer in target.GetComponentsInChildren<MeshRenderer>(true))
         {
             renderer.shadowCastingMode = ShadowCastingMode.Off;
             renderer.receiveShadows = false;
-
-            var materialCount = renderer.sharedMaterials.Length;
-            if (materialCount <= 0) continue;
-
-            _ghostRenderers.Add(new GhostRendererState(renderer, materialCount));
+            _ghostRenderers.Add(renderer);
         }
     }
 
     private void ApplyGhostVisual(BuildManager.PlacementState state, bool isValidPlacement)
     {
+        if (_ghost != null)
+            CacheGhostRenderers(_ghost);
+
         var material = isValidPlacement ? validMaterial : invalidMaterial;
         var tint = GhostTintFor(state);
 
         for (var index = 0; index < _ghostRenderers.Count; index++)
         {
-            var rendererState = _ghostRenderers[index];
-            if (rendererState.Renderer == null || material == null) continue;
+            var renderer = _ghostRenderers[index];
+            if (renderer == null || material == null) continue;
 
-            rendererState.Renderer.sharedMaterials = FilledMaterials(material, rendererState.MaterialCount);
-            ApplyGhostTint(rendererState.Renderer, tint);
+            ApplyMaterialToAllSlots(renderer, material);
+            ApplyGhostTint(renderer, tint);
         }
     }
 
-    private static Material[] FilledMaterials(Material material, int count)
+    private static void ApplyMaterialToAllSlots(MeshRenderer renderer, Material material)
     {
-        var materials = new Material[count];
+        var materials = renderer.sharedMaterials;
+        if (materials == null || materials.Length == 0)
+            materials = new Material[1];
+
         for (var index = 0; index < materials.Length; index++)
             materials[index] = material;
 
-        return materials;
+        renderer.sharedMaterials = materials;
     }
 
     private void ApplyGhostTint(Renderer renderer, Color tint)
     {
+        if (_ghostTintBlock == null)
+            _ghostTintBlock = new MaterialPropertyBlock();
+
         _ghostTintBlock.Clear();
         _ghostTintBlock.SetColor(BaseColorId, tint);
         _ghostTintBlock.SetColor(ColorId, tint);
@@ -302,15 +295,4 @@ public class BuildPreview : MonoBehaviour
         return 1f - Mathf.Pow(1f - t, 3f);
     }
 
-    private readonly struct GhostRendererState
-    {
-        public readonly Renderer Renderer;
-        public readonly int MaterialCount;
-
-        public GhostRendererState(Renderer renderer, int materialCount)
-        {
-            Renderer = renderer;
-            MaterialCount = materialCount;
-        }
-    }
 }
