@@ -4,13 +4,14 @@ using UnityEngine.UIElements;
 
 public class PauseScreen : MonoBehaviour
 {
+    [SerializeField] private GameObject pausePanel;
     [SerializeField] private UIDocument screenUIDocument;
 
-    private VisualElement _panel;
-    private VisualElement _screenOverlays;
-    private Button _resumeButton;
-    private Button _restartButton;
-    private Button _mainMenuButton;
+    private VisualElement pauseToolkitPanel;
+    private VisualElement screenOverlays;
+    private Button resumeButton;
+    private Button restartButton;
+    private Button mainMenuButton;
 
     private void OnEnable()
     {
@@ -28,31 +29,37 @@ public class PauseScreen : MonoBehaviour
         SetPanelVisible(false);
     }
 
-    private void Update()
-    {
-        if (!Input.GetKeyDown(KeyCode.Escape)) return;
-
-        if (GamePauseEvents.IsPaused && GamePauseEvents.CanResume)
-            ResumeGame();
-        else if (!GamePauseEvents.IsPaused)
-            PauseGame();
-    }
-
     private void OnDestroy()
     {
-        if (_resumeButton != null)
-            _resumeButton.clicked -= ResumeGame;
+        if (resumeButton != null)
+            resumeButton.clicked -= ResumeGame;
 
-        if (_restartButton != null)
-            _restartButton.clicked -= RestartGame;
+        if (restartButton != null)
+            restartButton.clicked -= RestartGame;
 
-        if (_mainMenuButton != null)
-            _mainMenuButton.clicked -= GoToMainMenu;
+        if (mainMenuButton != null)
+            mainMenuButton.clicked -= GoToMainMenu;
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (GamePauseEvents.IsPaused && GamePauseEvents.CanResume)
+            {
+                ResumeGame();
+            }
+            else if (!GamePauseEvents.IsPaused)
+            {
+                PauseGame();
+            }
+        }
     }
 
     public void PauseGame()
     {
-        if (GamePauseEvents.IsPaused) return;
+        if (GamePauseEvents.IsPaused)
+            return;
 
         SetPanelVisible(true);
         GamePauseEvents.PauseGame(true);
@@ -60,7 +67,8 @@ public class PauseScreen : MonoBehaviour
 
     public void ResumeGame()
     {
-        if (!GamePauseEvents.CanResume) return;
+        if (!GamePauseEvents.CanResume)
+            return;
 
         SetPanelVisible(false);
         GamePauseEvents.ResumeGame();
@@ -85,53 +93,72 @@ public class PauseScreen : MonoBehaviour
 
     private void ResolveScreenUI()
     {
-        var document = screenUIDocument != null ? screenUIDocument : FindScreenUIDocument();
-        if (document == null || document.rootVisualElement == null) return;
+        UIDocument doc = screenUIDocument != null ? screenUIDocument : FindScreenUIDocument();
+        if (doc == null || doc.rootVisualElement == null)
+            return;
 
-        screenUIDocument = document;
-        var root = document.rootVisualElement;
-        _screenOverlays = root.Q<VisualElement>("screen-overlays");
-        _panel = root.Q<VisualElement>("pause-panel");
-        _resumeButton = root.Q<Button>("pause-resume-button");
-        _restartButton = root.Q<Button>("pause-restart-button");
-        _mainMenuButton = root.Q<Button>("pause-main-menu-button");
+        screenUIDocument = doc;
+        screenOverlays = doc.rootVisualElement.Q<VisualElement>("screen-overlays");
+        pauseToolkitPanel = doc.rootVisualElement.Q<VisualElement>("pause-panel");
+        resumeButton = doc.rootVisualElement.Q<Button>("pause-resume-button");
+        restartButton = doc.rootVisualElement.Q<Button>("pause-restart-button");
+        mainMenuButton = doc.rootVisualElement.Q<Button>("pause-main-menu-button");
 
-        if (_screenOverlays != null)
-            _screenOverlays.pickingMode = PickingMode.Ignore;
+        if (screenOverlays != null)
+            screenOverlays.pickingMode = PickingMode.Ignore;
 
-        if (_panel != null)
-            _panel.pickingMode = PickingMode.Ignore;
+        if (pauseToolkitPanel != null)
+            pauseToolkitPanel.pickingMode = PickingMode.Ignore;
 
-        BindButton(_resumeButton, ResumeGame);
-        BindButton(_restartButton, RestartGame);
-        BindButton(_mainMenuButton, GoToMainMenu);
+        if (resumeButton != null)
+        {
+            resumeButton.clicked -= ResumeGame;
+            resumeButton.clicked += ResumeGame;
+            resumeButton.pickingMode = PickingMode.Position;
+        }
+
+        if (restartButton != null)
+        {
+            restartButton.clicked -= RestartGame;
+            restartButton.clicked += RestartGame;
+            restartButton.pickingMode = PickingMode.Position;
+        }
+
+        if (mainMenuButton != null)
+        {
+            mainMenuButton.clicked -= GoToMainMenu;
+            mainMenuButton.clicked += GoToMainMenu;
+            mainMenuButton.pickingMode = PickingMode.Position;
+        }
     }
 
     private void SetPanelVisible(bool visible)
     {
-        if (_panel == null) return;
+        if (pauseToolkitPanel != null)
+        {
+            if (screenOverlays != null)
+                screenOverlays.pickingMode = visible ? PickingMode.Position : PickingMode.Ignore;
 
-        if (_screenOverlays != null)
-            _screenOverlays.pickingMode = visible ? PickingMode.Position : PickingMode.Ignore;
+            pauseToolkitPanel.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+            pauseToolkitPanel.pickingMode = visible ? PickingMode.Position : PickingMode.Ignore;
 
-        _panel.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
-        _panel.pickingMode = visible ? PickingMode.Position : PickingMode.Ignore;
-    }
+            if (pausePanel != null)
+                pausePanel.SetActive(false);
 
-    private static void BindButton(Button button, System.Action action)
-    {
-        if (button == null) return;
+            return;
+        }
 
-        button.clicked -= action;
-        button.clicked += action;
-        button.pickingMode = PickingMode.Position;
+        if (pausePanel != null)
+            pausePanel.SetActive(visible);
     }
 
     private static UIDocument FindScreenUIDocument()
     {
-        foreach (var document in FindObjectsByType<UIDocument>(FindObjectsInactive.Include))
-            if (document?.rootVisualElement?.Q<VisualElement>("pause-panel") != null)
-                return document;
+        foreach (UIDocument doc in FindObjectsByType<UIDocument>(FindObjectsInactive.Include))
+        {
+            if (doc?.rootVisualElement?.Q<VisualElement>("pause-panel") != null)
+                return doc;
+        }
 
         return null;
     }

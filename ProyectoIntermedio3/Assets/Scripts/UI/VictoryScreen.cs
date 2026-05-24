@@ -4,12 +4,13 @@ using UnityEngine.UIElements;
 
 public class VictoryScreen : MonoBehaviour
 {
+    [SerializeField] private GameObject victoryPanel;
     [SerializeField] private UIDocument screenUIDocument;
 
-    private VisualElement _panel;
-    private VisualElement _screenOverlays;
-    private Button _restartButton;
-    private Button _mainMenuButton;
+    private VisualElement victoryToolkitPanel;
+    private VisualElement screenOverlays;
+    private Button restartButton;
+    private Button mainMenuButton;
 
     private void OnEnable()
     {
@@ -29,11 +30,11 @@ public class VictoryScreen : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (_restartButton != null)
-            _restartButton.clicked -= RestartGame;
+        if (restartButton != null)
+            restartButton.clicked -= RestartGame;
 
-        if (_mainMenuButton != null)
-            _mainMenuButton.clicked -= GoToMainMenu;
+        if (mainMenuButton != null)
+            mainMenuButton.clicked -= GoToMainMenu;
     }
 
     private void ShowVictoryScreen()
@@ -56,51 +57,64 @@ public class VictoryScreen : MonoBehaviour
 
     private void ResolveScreenUI()
     {
-        var document = screenUIDocument != null ? screenUIDocument : FindScreenUIDocument();
-        if (document == null || document.rootVisualElement == null) return;
+        UIDocument doc = screenUIDocument != null ? screenUIDocument : FindScreenUIDocument();
+        if (doc == null || doc.rootVisualElement == null)
+            return;
 
-        screenUIDocument = document;
-        var root = document.rootVisualElement;
-        _screenOverlays = root.Q<VisualElement>("screen-overlays");
-        _panel = root.Q<VisualElement>("victory-panel");
-        _restartButton = root.Q<Button>("victory-restart-button");
-        _mainMenuButton = root.Q<Button>("victory-main-menu-button");
+        screenUIDocument = doc;
+        screenOverlays = doc.rootVisualElement.Q<VisualElement>("screen-overlays");
+        victoryToolkitPanel = doc.rootVisualElement.Q<VisualElement>("victory-panel");
+        restartButton = doc.rootVisualElement.Q<Button>("victory-restart-button");
+        mainMenuButton = doc.rootVisualElement.Q<Button>("victory-main-menu-button");
 
-        if (_screenOverlays != null)
-            _screenOverlays.pickingMode = PickingMode.Ignore;
+        if (screenOverlays != null)
+            screenOverlays.pickingMode = PickingMode.Ignore;
 
-        if (_panel != null)
-            _panel.pickingMode = PickingMode.Ignore;
+        if (victoryToolkitPanel != null)
+            victoryToolkitPanel.pickingMode = PickingMode.Ignore;
 
-        BindButton(_restartButton, RestartGame);
-        BindButton(_mainMenuButton, GoToMainMenu);
+        if (restartButton != null)
+        {
+            restartButton.clicked -= RestartGame;
+            restartButton.clicked += RestartGame;
+            restartButton.pickingMode = PickingMode.Position;
+        }
+
+        if (mainMenuButton != null)
+        {
+            mainMenuButton.clicked -= GoToMainMenu;
+            mainMenuButton.clicked += GoToMainMenu;
+            mainMenuButton.pickingMode = PickingMode.Position;
+        }
     }
 
     private void SetPanelVisible(bool visible)
     {
-        if (_panel == null) return;
+        if (victoryToolkitPanel != null)
+        {
+            if (screenOverlays != null)
+                screenOverlays.pickingMode = visible ? PickingMode.Position : PickingMode.Ignore;
 
-        if (_screenOverlays != null)
-            _screenOverlays.pickingMode = visible ? PickingMode.Position : PickingMode.Ignore;
+            victoryToolkitPanel.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+            victoryToolkitPanel.pickingMode = visible ? PickingMode.Position : PickingMode.Ignore;
 
-        _panel.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
-        _panel.pickingMode = visible ? PickingMode.Position : PickingMode.Ignore;
-    }
+            if (victoryPanel != null)
+                victoryPanel.SetActive(false);
 
-    private static void BindButton(Button button, System.Action action)
-    {
-        if (button == null) return;
+            return;
+        }
 
-        button.clicked -= action;
-        button.clicked += action;
-        button.pickingMode = PickingMode.Position;
+        if (victoryPanel != null)
+            victoryPanel.SetActive(visible);
     }
 
     private static UIDocument FindScreenUIDocument()
     {
-        foreach (var document in FindObjectsByType<UIDocument>(FindObjectsInactive.Include))
-            if (document?.rootVisualElement?.Q<VisualElement>("victory-panel") != null)
-                return document;
+        foreach (UIDocument doc in FindObjectsByType<UIDocument>(FindObjectsInactive.Include))
+        {
+            if (doc?.rootVisualElement?.Q<VisualElement>("victory-panel") != null)
+                return doc;
+        }
 
         return null;
     }
