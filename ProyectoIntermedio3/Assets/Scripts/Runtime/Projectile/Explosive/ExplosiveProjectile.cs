@@ -15,21 +15,14 @@ public class ExplosiveProjectile : Projectile
     {
         if (explosionEffect != null)
         {
-            Instantiate(
-                explosionEffect,
-                transform.position,
-                Quaternion.identity);
+            Instantiate(explosionEffect, transform.position, Quaternion.identity);
         }
 
-        Collider[] hits = Physics.OverlapSphere(
-            transform.position,
-            explosionRadius,
-            damageLayers);
+        var hits = Physics.OverlapSphere(transform.position, explosionRadius, damageLayers);
 
         foreach (Collider hit in hits)
         {
-            IDamageable damageable =
-                hit.GetComponent<IDamageable>();
+            IDamageable damageable = hit.GetComponent<IDamageable>();
 
             if (damageable != null)
             {
@@ -43,9 +36,6 @@ public class ExplosiveProjectile : Projectile
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
-
-        Gizmos.DrawWireSphere(
-            transform.position,
-            explosionRadius);
+        Gizmos.DrawWireSphere(transform.position, explosionRadius);
     }
 }

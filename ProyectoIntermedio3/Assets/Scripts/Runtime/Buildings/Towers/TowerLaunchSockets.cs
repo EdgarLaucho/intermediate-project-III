@@ -1,10 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Marks and exposes the physical attachment points used by TowerShooter.
-// Placing this component on the visual mesh lets designers configure shoot points
-// per-prefab without touching TowerShooter's serialized fields on the root GameObject.
-public sealed class TowerLaunchSockets : MonoBehaviour
+public class TowerLaunchSockets : MonoBehaviour
 {
     #region Inspector Fields
 
@@ -17,7 +14,6 @@ public sealed class TowerLaunchSockets : MonoBehaviour
 
     #region Public API
 
-    // Lazy resolution ensures references survive visual swaps at runtime.
     public Transform AimPivot
     {
         get
@@ -36,8 +32,6 @@ public sealed class TowerLaunchSockets : MonoBehaviour
         }
     }
 
-    // Wraps the index so callers can cycle through all shoot points without
-    // worrying about going out of bounds.
     public Transform GetShootPoint(int index)
     {
         ResolveMissingReferences();
@@ -58,9 +52,6 @@ public sealed class TowerLaunchSockets : MonoBehaviour
 
     #region Reference Resolution
 
-    // Fills in any references left blank in the Inspector by searching the hierarchy
-    // by name. This means the component works even on dynamically instantiated prefabs
-    // that haven't been manually wired up.
     private void ResolveMissingReferences()
     {
         if (aimPivot == null && !string.IsNullOrEmpty(aimPivotName))
@@ -74,26 +65,23 @@ public sealed class TowerLaunchSockets : MonoBehaviour
 
     #region Static Hierarchy Utilities
 
-    // Depth-first search that returns the first child whose name matches.
     public static Transform FindChildRecursive(Transform parent, string childName)
     {
         for (int index = 0; index < parent.childCount; index++)
         {
-            Transform child = parent.GetChild(index);
+            var child = parent.GetChild(index);
             if (child.name == childName) return child;
 
-            Transform match = FindChildRecursive(child, childName);
+            var match = FindChildRecursive(child, childName);
             if (match != null) return match;
         }
 
         return null;
     }
 
-    // Collects every child in the hierarchy whose name matches – used for
-    // multi-barrel towers that have several shoot points.
     public static Transform[] FindChildrenRecursive(Transform parent, string childName)
     {
-        List<Transform> matches = new();
+        var matches = new List<Transform>();
         CollectChildrenNamed(parent, childName, matches);
         return matches.ToArray();
     }
@@ -102,7 +90,7 @@ public sealed class TowerLaunchSockets : MonoBehaviour
     {
         for (int index = 0; index < parent.childCount; index++)
         {
-            Transform child = parent.GetChild(index);
+            var child = parent.GetChild(index);
             if (child.name == childName)
                 matches.Add(child);
 

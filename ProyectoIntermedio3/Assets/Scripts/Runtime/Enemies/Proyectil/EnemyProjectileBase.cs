@@ -2,13 +2,13 @@ using UnityEngine;
 
 public class EnemyProjectileBase : MonoBehaviour
 {
-    [Header("Settings")] [SerializeField] 
+    [Header("Settings")] [SerializeField]
     protected float speed = 10f;
-    [SerializeField] 
+    [SerializeField]
     protected int damage = 10;
-    [SerializeField] 
+    [SerializeField]
     protected float lifeTime = 10f;
-    
+
     protected Vector3 moveDirection;
     protected IDamageable owner;
     protected bool isGamePaused;
@@ -65,13 +65,13 @@ public class EnemyProjectileBase : MonoBehaviour
 
         if (damageable == owner)
             return;
-        
+
 
         if (damageable == null)
             return;
-        
+
         damageable.TakeDamage(damage);
-        
+
         Destroy(gameObject);
     }
 }

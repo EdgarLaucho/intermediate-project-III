@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [DisallowMultipleComponent]
-public sealed class SpikeTrapAnimator : MonoBehaviour
+public class SpikeTrapAnimator : MonoBehaviour
 {
     [SerializeField] private Transform[] spikes;
     [SerializeField] private float hiddenDepth = 0.35f;
@@ -21,7 +21,7 @@ public sealed class SpikeTrapAnimator : MonoBehaviour
 
     public void SyncToAttackRate(float cooldown)
     {
-        float duration = Mathf.Max(0.12f, cooldown);
+        var duration = Mathf.Max(0.12f, cooldown);
         riseDuration = Mathf.Clamp(duration * 0.28f, 0.05f, 0.12f);
         holdDuration = Mathf.Clamp(duration * 0.18f, 0.04f, 0.12f);
         hideDuration = Mathf.Max(0.05f, duration - riseDuration - holdDuration);
@@ -40,7 +40,7 @@ public sealed class SpikeTrapAnimator : MonoBehaviour
 
         for (int index = 0; index < spikeStates.Count; index++)
         {
-            SpikeState spikeState = spikeStates[index];
+            var spikeState = spikeStates[index];
             spikeState.StartPosition = spikeState.Spike.localPosition;
             spikeStates[index] = spikeState;
         }
@@ -110,7 +110,7 @@ public sealed class SpikeTrapAnimator : MonoBehaviour
         List<Transform> foundSpikes = new();
         foreach (MeshRenderer renderer in GetComponentsInChildren<MeshRenderer>(true))
         {
-            Transform candidate = renderer.transform;
+            var candidate = renderer.transform;
             if (candidate == transform) continue;
             if (!candidate.name.ToLowerInvariant().Contains("spike")) continue;
             foundSpikes.Add(candidate);
@@ -136,10 +136,10 @@ public sealed class SpikeTrapAnimator : MonoBehaviour
 
     private void AnimateTowardsShown()
     {
-        float t = Smooth01(timer / Mathf.Max(0.01f, riseDuration));
+        var t = Smooth01(timer / Mathf.Max(0.01f, riseDuration));
         for (int index = 0; index < spikeStates.Count; index++)
         {
-            SpikeState spikeState = spikeStates[index];
+            var spikeState = spikeStates[index];
             spikeState.Spike.localPosition = Vector3.Lerp(spikeState.StartPosition, spikeState.ShownPosition, t);
         }
 
@@ -157,7 +157,7 @@ public sealed class SpikeTrapAnimator : MonoBehaviour
 
         for (int index = 0; index < spikeStates.Count; index++)
         {
-            SpikeState spikeState = spikeStates[index];
+            var spikeState = spikeStates[index];
             spikeState.StartPosition = spikeState.Spike.localPosition;
             spikeStates[index] = spikeState;
         }
@@ -168,10 +168,10 @@ public sealed class SpikeTrapAnimator : MonoBehaviour
 
     private void AnimateTowardsHidden()
     {
-        float t = Smooth01(timer / Mathf.Max(0.01f, hideDuration));
+        var t = Smooth01(timer / Mathf.Max(0.01f, hideDuration));
         for (int index = 0; index < spikeStates.Count; index++)
         {
-            SpikeState spikeState = spikeStates[index];
+            var spikeState = spikeStates[index];
             spikeState.Spike.localPosition = Vector3.Lerp(spikeState.StartPosition, spikeState.HiddenPosition, t);
         }
 

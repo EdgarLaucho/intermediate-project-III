@@ -2,14 +2,20 @@ using System;
 using UnityEngine;
 
 [DisallowMultipleComponent]
-public sealed class CannonCatapultAnimator : MonoBehaviour
+public class CannonCatapultAnimator : MonoBehaviour
 {
+    #region Serialized Fields
+
     [SerializeField] private string armName = "CatapultG_Arm02";
     [SerializeField] private string projectileAnchorName = "ShootPoint";
     [SerializeField] private float launchAngleX = 80f;
     [SerializeField] private float windupDuration = 0.25f;
     [SerializeField] private float reloadDuration = 0.25f;
     [SerializeField] private float loadedProjectileScale = 1f;
+
+    #endregion
+
+    #region State
 
     private Transform arm;
     private Transform projectileAnchor;
@@ -23,13 +29,21 @@ public sealed class CannonCatapultAnimator : MonoBehaviour
     private Action releaseCallback;
     private Action completeCallback;
 
+    #endregion
+
+    #region Properties
+
     public bool CanAnimate => arm != null && projectileAnchor != null;
 
     public bool IsPlaying => state != MotionState.Ready;
 
+    #endregion
+
+    #region Public API
+
     public void Configure(GameObject projectilePrefab, Transform launchPoint, Transform searchRoot)
     {
-        Transform root = searchRoot != null ? searchRoot : transform;
+        var root = searchRoot != null ? searchRoot : transform;
 
         if (arm == null || !arm.IsChildOf(root))
             arm = TowerLaunchSockets.FindChildRecursive(root, armName);
@@ -39,7 +53,7 @@ public sealed class CannonCatapultAnimator : MonoBehaviour
         if (arm != null)
         {
             restRotation = arm.localRotation;
-            Vector3 restEuler = restRotation.eulerAngles;
+            var restEuler = restRotation.eulerAngles;
             launchRotation = Quaternion.Euler(restEuler.x + launchAngleX, restEuler.y, restEuler.z);
         }
 
@@ -60,6 +74,10 @@ public sealed class CannonCatapultAnimator : MonoBehaviour
         SetLoadedProjectileVisible(true);
         return true;
     }
+
+    #endregion
+
+    #region Unity Events
 
     private void OnEnable()
     {
@@ -89,9 +107,13 @@ public sealed class CannonCatapultAnimator : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Motion
+
     private void UpdateWindup()
     {
-        float t = Smooth01(timer / Mathf.Max(0.01f, windupDuration));
+        var t = Smooth01(timer / Mathf.Max(0.01f, windupDuration));
         arm.localRotation = Quaternion.Slerp(restRotation, launchRotation, t);
 
         if (timer < windupDuration) return;
@@ -105,7 +127,7 @@ public sealed class CannonCatapultAnimator : MonoBehaviour
 
     private void UpdateReload()
     {
-        float t = Smooth01(timer / Mathf.Max(0.01f, reloadDuration));
+        var t = Smooth01(timer / Mathf.Max(0.01f, reloadDuration));
         arm.localRotation = Quaternion.Slerp(launchRotation, restRotation, t);
 
         if (timer < reloadDuration) return;
@@ -116,6 +138,10 @@ public sealed class CannonCatapultAnimator : MonoBehaviour
         SetLoadedProjectileVisible(true);
         InvokeComplete();
     }
+
+    #endregion
+
+    #region Projectile Visual
 
     private void EnsureLoadedProjectile()
     {
@@ -145,9 +171,8 @@ public sealed class CannonCatapultAnimator : MonoBehaviour
     {
         if (loadedProjectile == null) return;
 
-        Transform loadedTransform = loadedProjectile.transform;
-        loadedTransform.localPosition = Vector3.zero;
-        loadedTransform.localRotation = Quaternion.identity;
+        var loadedTransform = loadedProjectile.transform;
+        loadedTransform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
         loadedTransform.localScale = Vector3.one * loadedProjectileScale;
     }
 
@@ -155,23 +180,6 @@ public sealed class CannonCatapultAnimator : MonoBehaviour
     {
         if (loadedProjectile != null && loadedProjectile.activeSelf != visible)
             loadedProjectile.SetActive(visible);
-    }
-
-    private void InvokeRelease()
-    {
-        if (releaseInvoked) return;
-
-        releaseInvoked = true;
-        Action callback = releaseCallback;
-        releaseCallback = null;
-        callback?.Invoke();
-    }
-
-    private void InvokeComplete()
-    {
-        Action callback = completeCallback;
-        completeCallback = null;
-        callback?.Invoke();
     }
 
     private static void PrepareLoadedProjectileVisual(GameObject visual)
@@ -197,11 +205,40 @@ public sealed class CannonCatapultAnimator : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Helpers
+
     private static float Smooth01(float t)
     {
         t = Mathf.Clamp01(t);
         return t * t * (3f - 2f * t);
     }
+
+    #endregion
+
+    #region Callbacks
+
+    private void InvokeRelease()
+    {
+        if (releaseInvoked) return;
+
+        releaseInvoked = true;
+        Action callback = releaseCallback;
+        releaseCallback = null;
+        callback?.Invoke();
+    }
+
+    private void InvokeComplete()
+    {
+        Action callback = completeCallback;
+        completeCallback = null;
+        callback?.Invoke();
+    }
+
+    #endregion
+
+    #region Types
 
     private enum MotionState
     {
@@ -209,4 +246,6 @@ public sealed class CannonCatapultAnimator : MonoBehaviour
         Windup,
         Reloading
     }
+
+    #endregion
 }

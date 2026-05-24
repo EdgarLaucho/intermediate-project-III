@@ -1,22 +1,14 @@
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 
-// Owns and initialises the entire grid data model. Provides coordinate conversion
-// and cell lookups for any system that needs to query occupancy (BuildManager,
-// GridRenderer, targeting logic, etc.).
-
-// Layout: the nexus sits at the origin (cell 0,0 = nexus centre). Buildable cells
-// extend `gridRadius` steps away from the nexus edge using Chebyshev distance
-// (max of dx, dy), which produces a square ring rather than a circular one.
 public class GridManager : MonoBehaviour
 {
     #region Inspector Fields
 
     [Header("Grid Configuration")]
-    [SerializeField] private int gridRadius = 3;
-    // How many cells wide/tall the nexus footprint is. Centred on the origin.
+    [SerializeField, Min(1)] private int gridRadius = 3;
     [SerializeField] private Vector2Int nexusSize = new(2, 2);
-    [SerializeField] private float cellSize = 1f;
+    [SerializeField, Min(0.01f)] private float cellSize = 1f;
 
     [Header("Scene References")]
     [SerializeField] private Transform nexusTransform;
@@ -25,13 +17,9 @@ public class GridManager : MonoBehaviour
 
     #region Runtime State
 
-    private Dictionary<Vector2Int, GridCell> cells = new();
+    private readonly Dictionary<Vector2Int, GridCell> cells = new();
+    private readonly Dictionary<Vector2Int, int> _blockerCounts = new();
 
-    // Tracks how many active CellBlockers are covering each cell.
-    // A cell stays non-buildable as long as its count is > 0.
-    private Dictionary<Vector2Int, int> _blockerCounts = new();
-
-    // Cached nexus bounds (in grid coords) computed once during InitializeGrid.
     private Vector2Int nexusMin;
     private Vector2Int nexusMax;
 
@@ -39,49 +27,36 @@ public class GridManager : MonoBehaviour
 
     #region Public API
 
+    public static GridManager Instance { get; private set; }
+
     public float CellSize => cellSize;
     public IEnumerable<GridCell> GetAllCells() => cells.Values;
 
-    // Single-scene singleton. Set in Awake; cleared on destroy.
-    public static GridManager Instance { get; private set; }
-
-    // Marks each cell in the list as blocked. Multiple blockers can overlap:
-    // a cell only becomes buildable again when every blocker has been removed.
     public void BlockCells(IReadOnlyList<Vector2Int> coords)
     {
         foreach (Vector2Int c in coords)
         {
-            _blockerCounts.TryGetValue(c, out int count);
+            _blockerCounts.TryGetValue(c, out var count);
             _blockerCounts[c] = count + 1;
 
-            if (cells.TryGetValue(c, out GridCell cell))
+            if (cells.TryGetValue(c, out var cell))
                 cell.IsBuildable = false;
         }
     }
 
-    // Releases the block added by one CellBlocker. When the ref-count reaches
-    // zero the cell becomes buildable again — unless it's a nexus cell or
-    // permanently non-buildable (outside the play ring).
     public void UnblockCells(IReadOnlyList<Vector2Int> coords)
     {
         foreach (Vector2Int c in coords)
         {
-            if (!_blockerCounts.TryGetValue(c, out int count)) continue;
+            if (!_blockerCounts.TryGetValue(c, out var count)) continue;
 
-            int next = count - 1;
+            var next = count - 1;
             if (next <= 0)
             {
                 _blockerCounts.Remove(c);
 
-                // Restore buildability only when no other blocker covers the cell
-                // and the cell is not permanently reserved (nexus footprint).
-                if (cells.TryGetValue(c, out GridCell cell) && !cell.IsOccupiedByNexus)
-                {
-                    // Re-evaluate distance to restore the original buildable state.
-                    int dx = Mathf.Max(0, Mathf.Max(nexusMin.x - c.x, c.x - nexusMax.x));
-                    int dy = Mathf.Max(0, Mathf.Max(nexusMin.y - c.y, c.y - nexusMax.y));
-                    cell.IsBuildable = Mathf.Max(dx, dy) <= gridRadius;
-                }
+                if (cells.TryGetValue(c, out var cell) && !cell.IsOccupiedByNexus)
+                    cell.IsBuildable = IsInsideBuildRadius(c, nexusMin, nexusMax);
             }
             else
             {
@@ -96,22 +71,17 @@ public class GridManager : MonoBehaviour
         return cell;
     }
 
-    // Subtracts the nexus world origin then divides by cellSize.
-    // RoundToInt snaps to the nearest cell rather than truncating.
     public Vector2Int WorldToGrid(Vector3 worldPos)
     {
-        Vector3 origin = nexusTransform != null ? nexusTransform.position : Vector3.zero;
-        Vector3 local = worldPos - origin;
-        int x = Mathf.RoundToInt(local.x / cellSize);
-        int y = Mathf.RoundToInt(local.z / cellSize);
+        var local = worldPos - Origin;
+        var x = Mathf.RoundToInt(local.x / cellSize);
+        var y = Mathf.RoundToInt(local.z / cellSize);
         return new Vector2Int(x, y);
     }
 
-    // Reverses WorldToGrid. Y is always 0 (flat grid).
     public Vector3 GridToWorld(Vector2Int coords)
     {
-        Vector3 origin = nexusTransform != null ? nexusTransform.position : Vector3.zero;
-        return origin + new Vector3(coords.x * cellSize, 0f, coords.y * cellSize);
+        return Origin + new Vector3(coords.x * cellSize, 0f, coords.y * cellSize);
     }
 
     #endregion
@@ -124,107 +94,121 @@ public class GridManager : MonoBehaviour
         InitializeGrid();
     }
 
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
+    }
+
     #endregion
 
     #region Grid Initialization
 
-    public void InitializeGrid()
+    private void InitializeGrid()
     {
         cells.Clear();
+        _blockerCounts.Clear();
 
-        // Centre the nexus footprint on the origin. Integer division floors toward
-        // negative, so a 2×2 nexus occupies cells (-1,-1) through (0,0).
-        int halfX = nexusSize.x / 2;
-        int halfY = nexusSize.y / 2;
-        nexusMin = new Vector2Int(-halfX, -halfY);
-        nexusMax = new Vector2Int(nexusSize.x - 1 - halfX, nexusSize.y - 1 - halfY);
-
-        int xMin = nexusMin.x - gridRadius;
-        int xMax = nexusMax.x + gridRadius;
-        int yMin = nexusMin.y - gridRadius;
-        int yMax = nexusMax.y + gridRadius;
+        var safeNexusSize = SafeNexusSize;
+        GetNexusBounds(safeNexusSize, out nexusMin, out nexusMax);
+        GetGridBounds(nexusMin, nexusMax, out int xMin, out int xMax, out int yMin, out int yMax);
 
         for (int x = xMin; x <= xMax; x++)
         {
             for (int y = yMin; y <= yMax; y++)
             {
-                Vector2Int coords = new Vector2Int(x, y);
-                GridCell cell = new GridCell(coords);
+                var coords = new Vector2Int(x, y);
+                var cell = new GridCell(coords);
 
-                bool inNexus = x >= nexusMin.x && x <= nexusMax.x
-                            && y >= nexusMin.y && y <= nexusMax.y;
-
-                if (inNexus)
+                if (IsInsideRect(coords, nexusMin, nexusMax))
                 {
                     cell.IsOccupiedByNexus = true;
                     cell.IsBuildable = false;
                 }
                 else
                 {
-                    // Chebyshev distance from this cell to the nearest nexus edge.
-                    // Cells within gridRadius steps are buildable; beyond that they
-                    // are still added to the dictionary so WorldToGrid always returns
-                    // a valid cell even outside the playable ring.
-                    int dx = Mathf.Max(0, Mathf.Max(nexusMin.x - x, x - nexusMax.x));
-                    int dy = Mathf.Max(0, Mathf.Max(nexusMin.y - y, y - nexusMax.y));
-                    int dist = Mathf.Max(dx, dy);
-                    cell.IsBuildable = dist <= gridRadius;
+                    cell.IsBuildable = IsInsideBuildRadius(coords, nexusMin, nexusMax);
                 }
 
                 cells[coords] = cell;
             }
         }
 
-        Debug.Log($"[GridManager] Grid initialised — {cells.Count} cells, radius {gridRadius}, nexus {nexusSize}.");
+        Debug.Log($"[GridManager] Grid initialized - {cells.Count} cells, radius {gridRadius}, nexus {safeNexusSize}.");
+    }
+
+    #endregion
+
+    #region Grid Helpers
+
+    private Vector3 Origin => nexusTransform != null ? nexusTransform.position : Vector3.zero;
+
+    private Vector2Int SafeNexusSize => new(
+        Mathf.Max(1, nexusSize.x),
+        Mathf.Max(1, nexusSize.y));
+
+    private static void GetNexusBounds(Vector2Int size, out Vector2Int min, out Vector2Int max)
+    {
+        var halfX = size.x / 2;
+        var halfY = size.y / 2;
+        min = new Vector2Int(-halfX, -halfY);
+        max = new Vector2Int(size.x - 1 - halfX, size.y - 1 - halfY);
+    }
+
+    private void GetGridBounds(Vector2Int min, Vector2Int max, out int xMin, out int xMax, out int yMin, out int yMax)
+    {
+        xMin = min.x - gridRadius;
+        xMax = max.x + gridRadius;
+        yMin = min.y - gridRadius;
+        yMax = max.y + gridRadius;
+    }
+
+    private bool IsInsideBuildRadius(Vector2Int coords, Vector2Int min, Vector2Int max)
+    {
+        var dx = Mathf.Max(0, Mathf.Max(min.x - coords.x, coords.x - max.x));
+        var dy = Mathf.Max(0, Mathf.Max(min.y - coords.y, coords.y - max.y));
+        return Mathf.Max(dx, dy) <= gridRadius;
+    }
+
+    private static bool IsInsideRect(Vector2Int coords, Vector2Int min, Vector2Int max)
+    {
+        return coords.x >= min.x && coords.x <= max.x
+            && coords.y >= min.y && coords.y <= max.y;
     }
 
     #endregion
 
     #region Editor Visualization
 
-    // Draws the full grid in the Scene view without entering Play mode.
-    // Blue = nexus, Green = buildable, Red = out-of-range.
-    // The logic mirrors InitializeGrid exactly so the gizmo is always in sync.
     private void OnDrawGizmos()
     {
-        int halfX = nexusSize.x / 2;
-        int halfY = nexusSize.y / 2;
-        Vector2Int nMin = new(-halfX, -halfY);
-        Vector2Int nMax = new(nexusSize.x - 1 - halfX, nexusSize.y - 1 - halfY);
+        var safeNexusSize = SafeNexusSize;
+        GetNexusBounds(safeNexusSize, out var nMin, out var nMax);
+        GetGridBounds(nMin, nMax, out var xMin, out var xMax, out var yMin, out var yMax);
 
-        int xMin = nMin.x - gridRadius;
-        int xMax = nMax.x + gridRadius;
-        int yMin = nMin.y - gridRadius;
-        int yMax = nMax.y + gridRadius;
-
-        Vector3 origin = nexusTransform != null ? nexusTransform.position : Vector3.zero;
-        // Slightly smaller than the full cell so borders show as visible gaps.
-        Vector3 cubeSize = new(cellSize * 0.9f, 0.05f, cellSize * 0.9f);
+        var cubeSize = new Vector3(cellSize * 0.9f, 0.05f, cellSize * 0.9f);
 
         for (int x = xMin; x <= xMax; x++)
         {
             for (int y = yMin; y <= yMax; y++)
             {
-                bool inNexus = x >= nMin.x && x <= nMax.x && y >= nMin.y && y <= nMax.y;
+                var coords = new Vector2Int(x, y);
 
-                if (inNexus)
-                {
-                    Gizmos.color = new Color(0.2f, 0.5f, 1f, 0.5f);
-                }
-                else
-                {
-                    int dx = Mathf.Max(0, Mathf.Max(nMin.x - x, x - nMax.x));
-                    int dy = Mathf.Max(0, Mathf.Max(nMin.y - y, y - nMax.y));
-                    int dist = Mathf.Max(dx, dy);
-                    Gizmos.color = dist <= gridRadius
-                        ? new Color(0f, 1f, 0f, 0.3f)
-                        : new Color(1f, 0f, 0f, 0.2f);
-                }
+                Gizmos.color = IsInsideRect(coords, nMin, nMax)
+                    ? new Color(0.2f, 0.5f, 1f, 0.5f)
+                    : BuildableGizmoColor(coords, nMin, nMax);
 
-                Vector3 center = origin + new Vector3(x * cellSize, 0f, y * cellSize);
+                var center = Origin + new Vector3(x * cellSize, 0f, y * cellSize);
                 Gizmos.DrawCube(center, cubeSize);
             }
         }
+    }
+
+    private Color BuildableGizmoColor(Vector2Int coords, Vector2Int min, Vector2Int max)
+    {
+        return IsInsideBuildRadius(coords, min, max)
+            ? new Color(0f, 1f, 0f, 0.3f)
+            : new Color(1f, 0f, 0f, 0.2f);
     }
 
     #endregion

@@ -22,11 +22,9 @@ public class ExplosionWave : MonoBehaviour
 
     private IEnumerator Animate()
     {
-        float timer = 0f;
-
-        Color startColor = new Color(1f, 1f, 0f, 0.8f);
-
-        Color endColor = new Color(1f, 0f, 0f, 0f);
+        var timer = 0f;
+        var startColor = new Color(1f, 1f, 0f, 0.8f);
+        var endColor = new Color(1f, 0f, 0f, 0f);
 
         while (timer < duration)
         {
@@ -38,12 +36,10 @@ public class ExplosionWave : MonoBehaviour
 
             timer += Time.deltaTime;
 
-            float progress = timer / duration;
-
-            float scale = Mathf.Lerp(0f, maxScale, progress);
+            var progress = timer / duration;
+            var scale = Mathf.Lerp(0f, maxScale, progress);
 
             transform.localScale = Vector3.one * scale;
-
             material.color = Color.Lerp(startColor, endColor, progress);
 
             yield return null;

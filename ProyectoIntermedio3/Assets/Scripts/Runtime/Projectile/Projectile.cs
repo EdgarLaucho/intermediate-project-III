@@ -50,10 +50,7 @@ public class Projectile : MonoBehaviour
 
         if (target != null)
         {
-            journeyLength =
-                Vector3.Distance(
-                    startPosition,
-                    target.position);
+            journeyLength = Vector3.Distance(startPosition, target.position);
         }
     }
 
@@ -75,21 +72,17 @@ public class Projectile : MonoBehaviour
     {
         currentTravelDistance += speed * Time.deltaTime;
 
-        float progress = currentTravelDistance / journeyLength;
+        var progress = currentTravelDistance / journeyLength;
 
         progress = Mathf.Clamp01(progress);
 
-        Vector3 targetPosition = target.position;
+        var targetPosition = target.position;
 
-        Vector3 nextPosition =
-            Vector3.Lerp(
-                startPosition,
-                targetPosition,
-                progress);
+        var nextPosition = Vector3.Lerp(startPosition, targetPosition, progress);
 
         nextPosition.y += Mathf.Sin(progress * Mathf.PI) * arcHeight;
 
-        Vector3 movementDirection = nextPosition - transform.position;
+        var movementDirection = nextPosition - transform.position;
 
         transform.position = nextPosition;
 
@@ -112,8 +105,7 @@ public class Projectile : MonoBehaviour
         if (damageable != null)
         {
             damageable.TakeDamage(damage);
-            BaseEnemyAI enemy =
-                target.GetComponent<BaseEnemyAI>();
+            var enemy = target.GetComponent<BaseEnemyAI>();
 
             if (enemy != null)
             {

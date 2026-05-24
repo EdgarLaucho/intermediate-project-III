@@ -13,7 +13,6 @@ public struct TrapStatsData
     public int triggerDamage;
     public float cooldown;
     public int maxUses;
-    // Effect radius in grid cells. Spikes can leave this at 0; Mine/Tar use it for AOE.
     public int effectRadius;
     public float effectDuration;
     [Range(0f, 1f)] public float slowPercent;

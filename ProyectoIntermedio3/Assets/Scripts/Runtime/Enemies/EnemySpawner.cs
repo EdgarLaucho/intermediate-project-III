@@ -7,8 +7,8 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField] private EnemyPoolDataSO[] enemiesPoolData;
     [SerializeField] private EnemySpawnPoint[] spawnPoints;
 
-    
-    private Dictionary<EnemyType, ObjectPool<BaseEnemyAI>> pools = 
+
+    private Dictionary<EnemyType, ObjectPool<BaseEnemyAI>> pools =
         new Dictionary<EnemyType, ObjectPool<BaseEnemyAI>>();
 
     private void Awake()
@@ -23,7 +23,7 @@ public class EnemySpawner : MonoBehaviour
                 true,
                 data.defaultCapacity,
                 data.maxSize);
-            
+
             pools.Add(data.EnemyType,  pool);
         }
     }

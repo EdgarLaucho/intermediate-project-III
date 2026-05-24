@@ -30,6 +30,7 @@
         </ui:VisualElement>
         <ui:VisualElement name="pause-panel" class="screen-panel pause-panel" style="display: none;">
             <ui:Label text="PAUSE" class="screen-title pause-title"/>
+            <ui:Button name="pause-resume-button" text="RESUME" class="screen-menu-button"/>
             <ui:Button name="pause-restart-button" text="RESTART" class="screen-menu-button"/>
             <ui:Button name="pause-main-menu-button" text="MAIN MENU" class="screen-menu-button"/>
         </ui:VisualElement>

@@ -47,6 +47,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TarTrap
   slowFieldVfxPrefab: {fileID: 0}
+  mudPatchPrefab: {fileID: 1000000000000000003, guid: 8d4d579b214248ae80857e8202586d46, type: 3}
 --- !u!114 &1000000000000000055
 MonoBehaviour:
   m_ObjectHideFlags: 0

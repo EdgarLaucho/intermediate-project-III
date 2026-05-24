@@ -2,24 +2,24 @@ using UnityEngine;
 
 public class ChickenPenguinEnemyAI : RangedEnemyAI
 {
-    [Header("Phase Visuals")] 
+    [Header("Phase Visuals")]
     [SerializeField]
     private GameObject chickenVisual;
 
-    [SerializeField] 
+    [SerializeField]
     private GameObject mountedPenguinVisual;
-    
+
     [SerializeField]
     private GameObject standingPenguinVisual;
 
-    [Header("Second Phase")] 
+    [Header("Second Phase")]
     [SerializeField]
     private int secondPhaseHealth = 100;
 
-    [SerializeField] 
+    [SerializeField]
     private float secondPhaseSpeed = 5f;
-    
-    
+
+
     private bool secondPhase = false;
 
     protected override void Attack()
@@ -45,12 +45,12 @@ public class ChickenPenguinEnemyAI : RangedEnemyAI
     private void EnterSecondPhase()
     {
         secondPhase = true;
-        
+
         chickenVisual.SetActive(false);
-        
+
         if (mountedPenguinVisual != null)
             mountedPenguinVisual.SetActive(false);
-        
+
         if (standingPenguinVisual != null)
             standingPenguinVisual.SetActive(true);
 
@@ -63,7 +63,7 @@ public class ChickenPenguinEnemyAI : RangedEnemyAI
         }
         Debug.Log("Penguin entered second phase");
     }
-    
+
     public override void Initialize()
     {
         base.Initialize();

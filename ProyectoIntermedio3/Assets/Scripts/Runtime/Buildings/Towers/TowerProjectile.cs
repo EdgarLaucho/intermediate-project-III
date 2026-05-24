@@ -1,10 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// A self-contained projectile that arcs toward a moving target and delivers
-// damage (and an optional slow) on impact. The arc is computed at launch time
-// so the projectile follows a smooth parabola even as the target moves.
-public sealed class TowerProjectile : MonoBehaviour
+public class TowerProjectile : MonoBehaviour
 {
     #region Inspector Fields
 
@@ -12,18 +9,13 @@ public sealed class TowerProjectile : MonoBehaviour
     [SerializeField] private float maxLifetime = 5f;
     [SerializeField] private float turnSpeed = 900f;
     [SerializeField] private float arcHeight = 1.15f;
-    // Extra arc height added per unit of horizontal distance to the target, so
-    // distant targets get a more pronounced arc that looks natural.
     [SerializeField] private float arcHeightPerDistance = 0.16f;
     [SerializeField] private float minFlightDuration = 0.18f;
 
     #endregion
 
     #region Runtime State
-
-    // Reusable overlap buffer – avoids per-frame heap allocations for splash damage.
     private readonly Collider[] _hits = new Collider[64];
-    // HashSet prevents the same target from being damaged twice in one splash.
     private readonly HashSet<ITargetable> _splashTargets = new();
 
     private ITargetable _target;
@@ -38,7 +30,6 @@ public sealed class TowerProjectile : MonoBehaviour
     private Vector3 _startPosition;
     private float _flightDuration;
     private float _arcPeakHeight;
-    // 0–1 progress along the arc used to evaluate the parabola each frame.
     private float _progress;
     private bool _launched;
     private bool _impacted;
@@ -114,20 +105,18 @@ public sealed class TowerProjectile : MonoBehaviour
             return;
         }
 
-        Vector3 targetPosition = GetTargetPosition(_targetComponent);
-        Vector3 previousPosition = transform.position;
+        var targetPosition = GetTargetPosition(_targetComponent);
+        var previousPosition = transform.position;
 
-        // Advance along the arc based on elapsed time vs. the pre-computed flight duration.
         _progress = Mathf.Clamp01(_progress + Time.deltaTime / _flightDuration);
 
-        Vector3 nextPosition = EvaluateArcPosition(targetPosition, _progress);
+        var nextPosition = EvaluateArcPosition(targetPosition, _progress);
         transform.position = nextPosition;
 
-        // Rotate to face the direction of travel so the projectile model aligns with its arc.
-        Vector3 velocity = nextPosition - previousPosition;
+        var velocity = nextPosition - previousPosition;
         if (velocity.sqrMagnitude > 0.0001f)
         {
-            Quaternion targetRotation = Quaternion.LookRotation(velocity.normalized, Vector3.up);
+            var targetRotation = Quaternion.LookRotation(velocity.normalized, Vector3.up);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, turnSpeed * Time.deltaTime);
         }
 
@@ -141,16 +130,15 @@ public sealed class TowerProjectile : MonoBehaviour
 
     private void ConfigureArc()
     {
-        Vector3 targetPosition = _targetComponent != null ? GetTargetPosition(_targetComponent) : _startPosition;
-        float distance = Vector3.Distance(_startPosition, targetPosition);
+        var targetPosition = _targetComponent != null ? GetTargetPosition(_targetComponent) : _startPosition;
+        var distance = Vector3.Distance(_startPosition, targetPosition);
         _flightDuration = Mathf.Max(0.01f, Mathf.Max(minFlightDuration, distance / _speed));
         _arcPeakHeight = Mathf.Max(0f, arcHeight + distance * arcHeightPerDistance);
     }
 
-    // Linear XZ interpolation + a sine-based Y offset creates a smooth parabolic arc.
     private Vector3 EvaluateArcPosition(Vector3 targetPosition, float progress)
     {
-        Vector3 position = Vector3.Lerp(_startPosition, targetPosition, progress);
+        var position = Vector3.Lerp(_startPosition, targetPosition, progress);
         position.y += Mathf.Sin(progress * Mathf.PI) * _arcPeakHeight;
         return position;
     }
@@ -175,17 +163,17 @@ public sealed class TowerProjectile : MonoBehaviour
     private void DamageSplash(Vector3 center)
     {
         _splashTargets.Clear();
-        Vector3 boxCenter = SnapToGridCenter(center);
-        float cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
-        float half = (_splashRadius + 0.5f) * cellSize;
-        int count = Physics.OverlapBoxNonAlloc(boxCenter, new Vector3(half, half, half), _hits, Quaternion.identity, _targetMask, QueryTriggerInteraction.Ignore);
+        var boxCenter = SnapToGridCenter(center);
+        var cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
+        var half = (_splashRadius + 0.5f) * cellSize;
+        var count = Physics.OverlapBoxNonAlloc(boxCenter, new Vector3(half, half, half), _hits, Quaternion.identity, _targetMask, QueryTriggerInteraction.Ignore);
 
         for (int index = 0; index < count; index++)
         {
-            Collider hit = _hits[index];
+            var hit = _hits[index];
             if (hit == null) continue;
 
-            ITargetable target = hit.GetComponentInParent<ITargetable>();
+            var target = hit.GetComponentInParent<ITargetable>();
             if (target == null || !target.IsAlive || !_splashTargets.Add(target)) continue;
             DamageTarget(target);
         }
@@ -193,7 +181,7 @@ public sealed class TowerProjectile : MonoBehaviour
 
     private static Vector3 SnapToGridCenter(Vector3 worldPosition)
     {
-        GridManager grid = GridManager.Instance;
+        var grid = GridManager.Instance;
         return grid != null ? grid.GridToWorld(grid.WorldToGrid(worldPosition)) : worldPosition;
     }
 
@@ -216,11 +204,9 @@ public sealed class TowerProjectile : MonoBehaviour
 
     #region Static Helpers
 
-    // Prefer the collider's center over the root transform position so the
-    // projectile aims at the visual body of the target, not its pivot point.
     private static Vector3 GetTargetPosition(Component targetComponent)
     {
-        Collider targetCollider = targetComponent.GetComponentInChildren<Collider>();
+        var targetCollider = targetComponent.GetComponentInChildren<Collider>();
         return targetCollider != null ? targetCollider.bounds.center : targetComponent.transform.position;
     }
 

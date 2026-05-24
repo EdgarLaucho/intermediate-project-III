@@ -788,14 +788,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TD.Construction.CellHoverIndicator
   grid: {fileID: 622606618}
   uiDocument: {fileID: 343229871}
-  buildableColor: {r: 1, g: 0.66, b: 0.12, a: 0.26}
-  occupiedColor: {r: 0.24, g: 0.88, b: 1, a: 0.3}
-  invalidColor: {r: 1, g: 0.12, b: 0.1, a: 0.32}
-  noGoldColor: {r: 1, g: 0.78, b: 0.12, a: 0.3}
-  phaseColor: {r: 0.55, g: 0.58, b: 0.66, a: 0.24}
-  outlineColor: {r: 1, g: 1, b: 1, a: 0.7}
-  validPlacementColor: {r: 0.28, g: 1, b: 0.46, a: 0.26}
-  validAccentColor: {r: 0.66, g: 1, b: 0.68, a: 0.82}
+  fillSprite: {fileID: 21300000, guid: 9dbde5a63c7548a7a1e85f25b42a727d, type: 3}
+  borderSprite: {fileID: 21300000, guid: 33053e0a66c24126a04e92ee69770c29, type: 3}
+  focusSprite: {fileID: 21300000, guid: ed8da73e51234d20adf755e3e013f99b, type: 3}
+  hatchSprite: {fileID: 21300000, guid: 5a31d811d845458d958f1eb08a0d8798, type: 3}
+  buildableColor: {r: 1, g: 0.66, b: 0.12, a: 0.45}
+  occupiedColor: {r: 0.24, g: 0.88, b: 1, a: 0.55}
+  invalidColor: {r: 1, g: 0.12, b: 0.1, a: 0.65}
+  noGoldColor: {r: 1, g: 0.78, b: 0.12, a: 0.62}
+  phaseColor: {r: 0.55, g: 0.58, b: 0.66, a: 0.50}
+  outlineColor: {r: 1, g: 1, b: 1, a: 0.90}
+  validPlacementColor: {r: 0.18, g: 1, b: 0.32, a: 0.88}
+  validAccentColor: {r: 1, g: 1, b: 1, a: 1}
   pulseSpeed: 5
   pulseAmplitude: 0.14
   reticleRotationSpeed: 34
@@ -2025,8 +2029,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1926432098}
-  - component: {fileID: 1926432101}
-  - component: {fileID: 1926432100}
   - component: {fileID: 1926432099}
   m_Layer: 0
   m_Name: GridRenderer
@@ -2065,66 +2067,10 @@ MonoBehaviour:
   grid: {fileID: 622606618}
   markerScale: 0.52
   yOffset: 0.02
-  buildableMaterial: {fileID: 2100000, guid: 23a2577e2a172b2499217e7e316b6287, type: 2}
-  nexusMaterial: {fileID: 2100000, guid: 2716efd12550e6941b733f1018a67ec7, type: 2}
-  occupiedMaterial: {fileID: 2100000, guid: a15377880c0ac8440a4d48691333a741, type: 2}
---- !u!23 &1926432100
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1926432097}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 0}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &1926432101
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1926432097}
-  m_Mesh: {fileID: 0}
+  cellSprite: {fileID: 21300000, guid: 59c8e1fb8ad24e47a7d9ebf4f79e6e7a, type: 3}
+  buildableColor: {r: 0.25, g: 0.9, b: 0.35, a: 0.4}
+  nexusColor: {r: 0.25, g: 0.55, b: 1, a: 0.58}
+  occupiedColor: {r: 0.75, g: 0.75, b: 0.75, a: 0.5}
 --- !u!1 &2029335199
 GameObject:
   m_ObjectHideFlags: 0
@@ -2255,6 +2201,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TD.Construction.BuildFeedbackController
   grid: {fileID: 622606618}
+  fillSprite: {fileID: 21300000, guid: 2e64806a46884283a35cd169d21f3e5a, type: 3}
+  ringSprite: {fileID: 21300000, guid: f922965784924a838d24a3dc487a18ac, type: 3}
+  burstSprite: {fileID: 21300000, guid: 76f82722286048c7887e286e3990b6e5, type: 3}
   popDuration: 0.24
   popStartScale: 0.84
   popOvershootScale: 1.08

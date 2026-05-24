@@ -1,8 +1,5 @@
 using UnityEngine;
 
-// Optional audio companion for RadialMenu. Attach to the same GameObject and assign any clips.
-// Missing clips are silently ignored — all audio fields are optional.
-// Each playback randomizes pitch within pitchJitter for a more natural, organic feel.
 [RequireComponent(typeof(AudioSource))]
 public class RadialAudio : MonoBehaviour
 {

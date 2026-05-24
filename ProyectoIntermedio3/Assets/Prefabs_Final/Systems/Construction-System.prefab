@@ -251,9 +251,10 @@ MonoBehaviour:
   grid: {fileID: 6667612137095404449}
   markerScale: 0.52
   yOffset: 0.02
-  buildableMaterial: {fileID: 2100000, guid: 23a2577e2a172b2499217e7e316b6287, type: 2}
-  nexusMaterial: {fileID: 2100000, guid: 2716efd12550e6941b733f1018a67ec7, type: 2}
-  occupiedMaterial: {fileID: 2100000, guid: a15377880c0ac8440a4d48691333a741, type: 2}
+  cellSprite: {fileID: 21300000, guid: e9ba86de87f54b641876e71ec2119ba8, type: 3}
+  buildableColor: {r: 0.25, g: 0.9, b: 0.35, a: 0.7490196}
+  nexusColor: {r: 0.25, g: 0.55, b: 1, a: 0.7490196}
+  occupiedColor: {r: 0.75, g: 0.75, b: 0.75, a: 0.7490196}
 --- !u!1 &1924101832090768391
 GameObject:
   m_ObjectHideFlags: 0
@@ -627,13 +628,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TD.Construction.BuildPreview
   validMaterial: {fileID: 2100000, guid: eb06eef61dbc7d040b92afe5617d671b, type: 2}
   invalidMaterial: {fileID: 2100000, guid: cca501c6c28369147a2e709cfeecd9c3, type: 2}
-  cellHighlightPrefab: {fileID: 5272952608844639938, guid: e0ac758368bd0d148a2e9720b3efe91c, type: 3}
   ghostBobHeight: 0.045
   ghostBobSpeed: 3.2
   ghostBreathAmount: 0.025
   ghostTiltDegrees: 1.4
   invalidTiltDegrees: 3.6
-  highlightSpinSpeed: 28
 --- !u!1 &7198386807350168367
 GameObject:
   m_ObjectHideFlags: 0
@@ -714,6 +713,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TD.Construction.BuildFeedbackController
   grid: {fileID: 6667612137095404449}
+  fillSprite: {fileID: 21300000, guid: a127e3bfbbf348f4da8f0390b207e2f4, type: 3}
+  ringSprite: {fileID: 21300000, guid: eb294a340ffc51a4f867dfcdf384fd9e, type: 3}
+  burstSprite: {fileID: 21300000, guid: f8142b89f3bc76c4d9c0e5ee0f9e1949, type: 3}
   popDuration: 0.24
   popStartScale: 0.84
   popOvershootScale: 1.08
@@ -812,14 +814,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TD.Construction.CellHoverIndicator
   grid: {fileID: 6667612137095404449}
   uiDocument: {fileID: 4523581147475411057}
-  buildableColor: {r: 1, g: 0.66, b: 0.12, a: 0.26}
-  occupiedColor: {r: 0.24, g: 0.88, b: 1, a: 0.3}
-  invalidColor: {r: 1, g: 0.12, b: 0.1, a: 0.32}
-  noGoldColor: {r: 1, g: 0.78, b: 0.12, a: 0.3}
-  phaseColor: {r: 0.55, g: 0.58, b: 0.66, a: 0.24}
-  outlineColor: {r: 1, g: 1, b: 1, a: 0.7}
-  validPlacementColor: {r: 0.28, g: 1, b: 0.46, a: 0.26}
-  validAccentColor: {r: 0.66, g: 1, b: 0.68, a: 0.82}
+  fillSprite: {fileID: 21300000, guid: 9dbde5a63c7548a7a1e85f25b42a727d, type: 3}
+  borderSprite: {fileID: 21300000, guid: 33053e0a66c24126a04e92ee69770c29, type: 3}
+  focusSprite: {fileID: 21300000, guid: ed8da73e51234d20adf755e3e013f99b, type: 3}
+  hatchSprite: {fileID: 21300000, guid: 5a31d811d845458d958f1eb08a0d8798, type: 3}
+  buildableColor: {r: 1, g: 0.66, b: 0.12, a: 0.45}
+  occupiedColor: {r: 0.24, g: 0.88, b: 1, a: 0.55}
+  invalidColor: {r: 1, g: 0.12, b: 0.1, a: 0.65}
+  noGoldColor: {r: 1, g: 0.78, b: 0.12, a: 0.62}
+  phaseColor: {r: 0.55, g: 0.58, b: 0.66, a: 0.5}
+  outlineColor: {r: 1, g: 1, b: 1, a: 0.9}
+  validPlacementColor: {r: 0.18, g: 1, b: 0.32, a: 0.88}
+  validAccentColor: {r: 1, g: 1, b: 1, a: 1}
   pulseSpeed: 5
   pulseAmplitude: 0.14
   reticleRotationSpeed: 34

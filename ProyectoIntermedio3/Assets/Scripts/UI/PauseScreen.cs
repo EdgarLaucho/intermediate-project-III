@@ -9,6 +9,7 @@ public class PauseScreen : MonoBehaviour
 
     private VisualElement pauseToolkitPanel;
     private VisualElement screenOverlays;
+    private Button resumeButton;
     private Button restartButton;
     private Button mainMenuButton;
 
@@ -30,6 +31,9 @@ public class PauseScreen : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (resumeButton != null)
+            resumeButton.clicked -= ResumeGame;
+
         if (restartButton != null)
             restartButton.clicked -= RestartGame;
 
@@ -96,6 +100,7 @@ public class PauseScreen : MonoBehaviour
         screenUIDocument = doc;
         screenOverlays = doc.rootVisualElement.Q<VisualElement>("screen-overlays");
         pauseToolkitPanel = doc.rootVisualElement.Q<VisualElement>("pause-panel");
+        resumeButton = doc.rootVisualElement.Q<Button>("pause-resume-button");
         restartButton = doc.rootVisualElement.Q<Button>("pause-restart-button");
         mainMenuButton = doc.rootVisualElement.Q<Button>("pause-main-menu-button");
 
@@ -104,6 +109,13 @@ public class PauseScreen : MonoBehaviour
 
         if (pauseToolkitPanel != null)
             pauseToolkitPanel.pickingMode = PickingMode.Ignore;
+
+        if (resumeButton != null)
+        {
+            resumeButton.clicked -= ResumeGame;
+            resumeButton.clicked += ResumeGame;
+            resumeButton.pickingMode = PickingMode.Position;
+        }
 
         if (restartButton != null)
         {

@@ -1,10 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Runtime-only area created by TarTrap after activation. While alive it refreshes
-// a short slow on every target inside the square cell area, then destroys itself
-// when the configured effect duration expires.
-public sealed class TarSlowField : MonoBehaviour
+public class TarSlowField : MonoBehaviour
 {
     #region Inspector Fields
 
@@ -65,25 +62,20 @@ public sealed class TarSlowField : MonoBehaviour
 
         _uniqueTargets.Clear();
 
-        float cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
-        float half = (_cellRadius + 0.5f) * cellSize;
-        Vector3 center = SnapToGridCenter(transform.position);
+        var cellSize = GridManager.Instance != null ? GridManager.Instance.CellSize : 1f;
+        var half = (_cellRadius + 0.5f) * cellSize;
+        var center = SnapToGridCenter(transform.position);
 
-        int count = Physics.OverlapBoxNonAlloc(
-            center,
-            new Vector3(half, half, half),
-            _hits,
-            Quaternion.identity,
-            _targetMask,
-            QueryTriggerInteraction.Ignore);
+        var count = Physics.OverlapBoxNonAlloc(center, new Vector3(half, half, half), _hits,
+                Quaternion.identity, _targetMask, QueryTriggerInteraction.Ignore);
 
         float refreshDuration = Mathf.Max(0.08f, tickInterval * 2f);
         for (int index = 0; index < count; index++)
         {
-            Collider hit = _hits[index];
+            var hit = _hits[index];
             if (hit == null) continue;
 
-            ITargetable target = hit.GetComponentInParent<ITargetable>();
+            var target = hit.GetComponentInParent<ITargetable>();
             if (target == null || !target.IsAlive || !_uniqueTargets.Add(target)) continue;
 
             if (target is ISlowable slowable)
@@ -93,7 +85,7 @@ public sealed class TarSlowField : MonoBehaviour
 
     private static Vector3 SnapToGridCenter(Vector3 worldPosition)
     {
-        GridManager grid = GridManager.Instance;
+        var grid = GridManager.Instance;
         return grid != null ? grid.GridToWorld(grid.WorldToGrid(worldPosition)) : worldPosition;
     }
 

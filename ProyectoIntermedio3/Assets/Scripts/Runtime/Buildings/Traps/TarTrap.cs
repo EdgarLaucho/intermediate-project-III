@@ -1,15 +1,13 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-// Tar variant of Trap. It activates when an enemy steps on its own cell, then
-// creates a temporary square slow field. The activation itself deals no damage;
-// the slowing area lasts EffectDuration seconds and then disappears.
-public sealed class TarTrap : Trap
+public class TarTrap : Trap
 {
     #region Inspector Fields
 
     [Header("Tar Field Feedback")]
     [SerializeField] private ParticleSystem slowFieldVfxPrefab;
+    [SerializeField] private TarMudPatchVisual mudPatchPrefab;
 
     #endregion
 
@@ -39,7 +37,7 @@ public sealed class TarTrap : Trap
     {
         if (!IsAlive || RemainingUses <= 0) return;
 
-        PlayActivationFeedback(true, true);
+        PlayActivationFeedback();
         SpawnSlowField();
         TryConsumeUse();
 
@@ -84,7 +82,10 @@ public sealed class TarTrap : Trap
         }
         else
         {
-            TarMudPatchVisual mudVisual = fieldObject.AddComponent<TarMudPatchVisual>();
+            var mudVisual = mudPatchPrefab != null
+                ? Instantiate(mudPatchPrefab, center, Quaternion.identity, fieldObject.transform)
+                : fieldObject.AddComponent<TarMudPatchVisual>();
+
             mudVisual.Initialize(EffectRadius, EffectDuration);
         }
     }
