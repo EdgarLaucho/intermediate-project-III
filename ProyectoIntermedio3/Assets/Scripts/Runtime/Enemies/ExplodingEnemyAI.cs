@@ -28,9 +28,13 @@ public class ExplodingEnemyAI : BaseEnemyAI
         hasExploded = true;
         agent.isStopped = true;
         
-        if (enemySO.attackSound != null && audioSource != null)
+        if (enemySO.attackSound != null)
         {
-            audioSource.PlayOneShot(enemySO.attackSound);
+            AudioSource.PlayClipAtPoint(
+                enemySO.attackSound,
+                transform.position,
+                1f
+            );
         }
 
         Collider[] hits = Physics.OverlapSphere(transform.position, explosionRadius);
