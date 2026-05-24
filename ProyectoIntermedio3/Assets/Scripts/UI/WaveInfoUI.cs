@@ -31,19 +31,19 @@ public class WaveInfoUI : MonoBehaviour
     {
         panel.SetActive(true);
 
-        waveTitleText.text = $"Oleada {waveIndex + 1} / {totalWaves}";
-        phaseText.text = "Tiempo de construcción";
+        waveTitleText.text = $"Wave {waveIndex + 1} / {totalWaves}";
+        phaseText.text = "Construction phase";
 
         timerText.gameObject.SetActive(true);
-        timerText.text = $"Siguiente oleada en: {Mathf.CeilToInt(timeRemaining)}";
+        timerText.text = $"Next wave: {Mathf.CeilToInt(timeRemaining)}";
     }
 
     public void ShowBuildPhaseWithButton(int waveIndex, int totalWaves)
     {
         panel.SetActive(true);
 
-        waveTitleText.text = $"Oleada {waveIndex + 1} / {totalWaves}";
-        phaseText.text = "Tiempo de construcción";
+        waveTitleText.text = $"Wave {waveIndex + 1} / {totalWaves}";
+        phaseText.text = "Construction phase";
 
         timerText.gameObject.SetActive(false);
     }
@@ -52,8 +52,8 @@ public class WaveInfoUI : MonoBehaviour
     {
         panel.SetActive(true);
 
-        waveTitleText.text = $"Oleada {waveIndex + 1} / {totalWaves}";
-        phaseText.text = "Combate";
+        waveTitleText.text = $"Wave {waveIndex + 1} / {totalWaves}";
+        phaseText.text = "Combat phase";
 
         timerText.gameObject.SetActive(false);
     }

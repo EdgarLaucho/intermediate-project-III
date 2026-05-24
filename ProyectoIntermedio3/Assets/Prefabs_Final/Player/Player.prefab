@@ -6281,6 +6281,7 @@ GameObject:
   - component: {fileID: 7536291386188499425}
   - component: {fileID: 6568025490499100292}
   - component: {fileID: 3772811934461837291}
+  - component: {fileID: 4414810406357939930}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -6392,7 +6393,7 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.3
-  m_Speed: 2.8
+  m_Speed: 4
   m_Acceleration: 8
   avoidancePriority: 50
   m_AngularSpeed: 480
@@ -6498,7 +6499,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3eb43ff554c465540a2eec55af4a0a12, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerWeaponController
-  startingWeapon: {fileID: 11400000, guid: e212ce75ee8a8494b841fe215b2f7f1e, type: 2}
+  startingWeapon: {fileID: 11400000, guid: 00ea3f71f070b934ab08021fdecbeae7, type: 2}
 --- !u!114 &6568025490499100292
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6531,6 +6532,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameOverTrigger
   reason: 0
   health: {fileID: 4568379442998236797}
+--- !u!114 &4414810406357939930
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6792327054025522797}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8c897a9125050142a5523f2c1876f49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHealthHUD
+  screenUIDocument: {fileID: 0}
+  playerHealth: {fileID: 4568379442998236797}
 --- !u!1 &7060605132943402213
 GameObject:
   m_ObjectHideFlags: 0

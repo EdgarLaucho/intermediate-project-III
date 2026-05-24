@@ -153,8 +153,7 @@ public class BuildManager : MonoBehaviour
         validation.Cell.SetBuilding(building);
         building.BindToGridCell(coords, validation.Cell);
 
-        ConstructionEvents.BuildingPlaced(new BuildingActionArgs(coords, building));
-        Debug.Log($"[BuildManager] Built '{data.buildingName}' at {coords}. Gold remaining: {economy.Gold}.");
+        ConstructionEvents.BuildingPlaced(new BuildingActionArgs(coords, building)); 
         return true;
     }
 
