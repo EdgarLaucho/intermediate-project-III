@@ -143,13 +143,13 @@ public class RadialMenuEntryView
     {
         var lower = (label ?? string.Empty).ToLowerInvariant();
 
-        if (lower.Contains("tower") || lower.Contains("torre")) return RadialMenuIcon.Kind.Tower;
-        if (lower.Contains("trap") || lower.Contains("trampa")) return RadialMenuIcon.Kind.Trap;
-        if (lower.Contains("wall") || lower.Contains("muro")) return RadialMenuIcon.Kind.Wall;
-        if (lower.Contains("repair") || lower.Contains("repar")) return RadialMenuIcon.Kind.Repair;
-        if (lower.Contains("upgrade") || lower.Contains("mejor") || lower.Contains("max")) return RadialMenuIcon.Kind.Upgrade;
+        if (lower.Contains("tower")) return RadialMenuIcon.Kind.Tower;
+        if (lower.Contains("trap")) return RadialMenuIcon.Kind.Trap;
+        if (lower.Contains("wall")) return RadialMenuIcon.Kind.Wall;
+        if (lower.Contains("repair")) return RadialMenuIcon.Kind.Repair;
+        if (lower.Contains("upgrade") || lower.Contains("max")) return RadialMenuIcon.Kind.Upgrade;
         if (lower.Contains("demolish") || lower.Contains("demol")) return RadialMenuIcon.Kind.Demolish;
-        if (lower.Contains("back") || lower.Contains("volver")) return RadialMenuIcon.Kind.Back;
+        if (lower.Contains("back")) return RadialMenuIcon.Kind.Back;
         if (lower.Contains("cancel")) return RadialMenuIcon.Kind.Cancel;
         return RadialMenuIcon.Kind.Build;
     }

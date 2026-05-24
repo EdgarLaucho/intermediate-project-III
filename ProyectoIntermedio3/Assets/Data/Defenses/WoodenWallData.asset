@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dce0f33572c6a0347a62ddde9199c8fa, type: 3}
   m_Name: WoodenWallData
   m_EditorClassIdentifier: Assembly-CSharp::TD.Data.WallData
-  buildingName: Muro de Madera
+  buildingName: Wooden Wall
   prefab: {fileID: 1000000000000000071, guid: a1f0c9e76b9a4b4fb2e8e8d47a100008, type: 3}
   buyCost: 40
   refundPercentage: 0.5

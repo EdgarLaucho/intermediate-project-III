@@ -2,13 +2,10 @@ using System;
 using UnityEngine;
 using UnityEngine.AI;
 
-
-
-public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
+public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable, ISlowable
 {
     [Header("References")] 
     [SerializeField] protected EnemySO enemySO;
-    
     
     protected EnemyState currentState;
     protected NavMeshAgent agent;
@@ -21,15 +18,16 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
     protected bool wasAttackedByPlayer;
     protected Transform playerAggroTarget;
     protected AudioSource audioSource;
-    
 
     protected float attackTimer;
-    
-    
+    protected float baseMoveSpeed;
+    private float _slowPercent;
+    private float _slowEndTime;
     
     public int CurrentHealth { get; protected set; }
     public int MaxHealth { get; protected set; }
     public bool IsAlive => CurrentHealth > 0;
+    public float MoveSpeedMultiplier => HasActiveSlow ? 1f - _slowPercent : 1f;
     public event Action<IDamageable> OnDeath;
     public event Action OnHealthChanged;
     protected virtual void Awake()
@@ -42,7 +40,7 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
         {
             MaxHealth = enemySO.health;
             CurrentHealth = MaxHealth;
-            agent.speed = enemySO.speed;
+            SetBaseMoveSpeed(enemySO.speed);
         }
     }
 
@@ -75,6 +73,8 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
             StopAgent();
             return;
         }
+
+        UpdateSlow();
 
         if (hasCompletedObjective)
         {
@@ -130,10 +130,12 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
         currentTarget = null;
         currentDamageable = null;
         attackTimer = 0f;
+        _slowPercent = 0f;
+        _slowEndTime = 0f;
 
         if (agent != null)
         {
-            agent.speed = enemySO.speed;
+            SetBaseMoveSpeed(enemySO.speed);
             agent.isStopped = GamePauseEvents.IsPaused;
         }
 
@@ -242,6 +244,46 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
     {
         agent.isStopped = false;
         agent.SetDestination(currentTarget.position);
+    }
+
+    public void ApplySlow(float slowPercent, float duration)
+    {
+        if (!IsAlive || slowPercent <= 0f || duration <= 0f)
+            return;
+
+        _slowPercent = Mathf.Max(_slowPercent, Mathf.Clamp01(slowPercent));
+        _slowEndTime = Mathf.Max(_slowEndTime, Time.time + duration);
+        RefreshMoveSpeed();
+    }
+
+    protected void SetBaseMoveSpeed(float speed)
+    {
+        baseMoveSpeed = Mathf.Max(0f, speed);
+        RefreshMoveSpeed();
+    }
+
+    private bool HasActiveSlow => _slowPercent > 0f && Time.time < _slowEndTime;
+
+    private void UpdateSlow()
+    {
+        if (_slowPercent <= 0f)
+            return;
+
+        if (Time.time < _slowEndTime)
+        {
+            RefreshMoveSpeed();
+            return;
+        }
+
+        _slowPercent = 0f;
+        _slowEndTime = 0f;
+        RefreshMoveSpeed();
+    }
+
+    private void RefreshMoveSpeed()
+    {
+        if (agent != null)
+            agent.speed = baseMoveSpeed * MoveSpeedMultiplier;
     }
     
     protected virtual void Attack()

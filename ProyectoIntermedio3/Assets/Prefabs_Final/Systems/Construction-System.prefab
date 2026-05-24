@@ -354,6 +354,7 @@ GameObject:
   - component: {fileID: 4574848285396774895}
   - component: {fileID: 7009379723565280105}
   - component: {fileID: 8126271509518419778}
+  - component: {fileID: 2147814062076854912}
   - component: {fileID: 4765194661248274434}
   m_Layer: 0
   m_Name: ScreenUI
@@ -453,6 +454,27 @@ MonoBehaviour:
   openVolume: 0.55
   closeVolume: 0.45
   pitchJitter: 0.05
+--- !u!114 &2147814062076854912
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4613608711422294143}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f72f13d055704eb5a0bc527d862caf15, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::BuildActionAudio
+  constructClip: {fileID: 8300000, guid: c939961412b84dbeb97c77ad2d6d4002, type: 3}
+  demolishClip: {fileID: 8300000, guid: f7c25aa8d6dc4100afddb39802dd732c, type: 3}
+  repairClip: {fileID: 8300000, guid: 22b99ef0f00942e59af92fb7accf108d, type: 3}
+  upgradeClip: {fileID: 8300000, guid: 01bfad65f7c04f30a2abb1cdcb7fc3ec, type: 3}
+  constructVolume: 0.75
+  demolishVolume: 0.75
+  repairVolume: 0.55
+  upgradeVolume: 0.7
+  pitchJitter: 0.04
 --- !u!82 &4765194661248274434
 AudioSource:
   m_ObjectHideFlags: 0
@@ -465,7 +487,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
-  m_PlayOnAwake: 1
+  m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
   Loop: 0

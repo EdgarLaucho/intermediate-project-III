@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e4e9cbe90762814591360f178b4c1ce, type: 3}
   m_Name: SpikeTrapData
   m_EditorClassIdentifier: Assembly-CSharp::TD.Data.TrapData
-  buildingName: Pinchos
+  buildingName: Spike Trap
   prefab: {fileID: 1000000000000000041, guid: a1f0c9e76b9a4b4fb2e8e8d47a100005, type: 3}
   buyCost: 40
   refundPercentage: 0.35

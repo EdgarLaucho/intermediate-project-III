@@ -697,7 +697,7 @@ public class BuildModeManager : MonoBehaviour
             var towerParts = new List<string> { $"{upgradeCost}g" };
             if (nextDamage - tower.AttackDamage > 0) towerParts.Add($"+{nextDamage - tower.AttackDamage} DMG");
             if (nextRange - tower.AttackRange > 0) towerParts.Add($"+{nextRange - tower.AttackRange} RNG");
-            if (nextFireRate - tower.FireRate > 0.05f) towerParts.Add($"+{FormatStat(nextFireRate - tower.FireRate)} CAD");
+            if (nextFireRate - tower.FireRate > 0.05f) towerParts.Add($"+{FormatStat(nextFireRate - tower.FireRate)} RATE");
             if (upgrade.bonusProjectilesPerAttack > 0) towerParts.Add($"+{upgrade.bonusProjectilesPerAttack} PROJ");
             if (upgrade.visualPrefabOverride != null) towerParts.Add("VIS");
             return string.Join("  ", towerParts);
@@ -708,7 +708,7 @@ public class BuildModeManager : MonoBehaviour
             UpgradeLevelData upgrade = building.Data.upgradeLevels[building.CurrentLevel];
             var trapParts = new List<string> { $"{upgradeCost}g" };
             if (upgrade.statMultiplier > 1f && trap.TriggerDamage > 0) trapParts.Add("+DMG");
-            if (upgrade.bonusTrapUses > 0) trapParts.Add($"+{upgrade.bonusTrapUses} USO");
+            if (upgrade.bonusTrapUses > 0) trapParts.Add($"+{upgrade.bonusTrapUses} USE");
             if (upgrade.bonusRange > 0f || upgrade.statMultiplier > 1f) trapParts.Add("+RNG");
             return string.Join("  ", trapParts);
         }

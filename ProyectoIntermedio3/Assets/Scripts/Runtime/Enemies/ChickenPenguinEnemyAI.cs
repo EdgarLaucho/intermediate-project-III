@@ -59,7 +59,7 @@ public class ChickenPenguinEnemyAI : RangedEnemyAI
 
         if (agent != null)
         {
-            agent.speed = secondPhaseSpeed;
+            SetBaseMoveSpeed(secondPhaseSpeed);
         }
         Debug.Log("Penguin entered second phase");
     }
@@ -71,7 +71,7 @@ public class ChickenPenguinEnemyAI : RangedEnemyAI
         secondPhase = false;
         if (agent != null)
         {
-            agent.speed = enemySO.speed;
+            SetBaseMoveSpeed(enemySO.speed);
         }
 
         chickenVisual.SetActive(true);

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d5fbce3a6924c04fbced9e19b628639, type: 3}
   m_Name: CannonTowerData
   m_EditorClassIdentifier: Assembly-CSharp::TD.Data.TowerData
-  buildingName: Torre de Canon
+  buildingName: Cannon Tower
   prefab: {fileID: 1000000000000000011, guid: a1f0c9e76b9a4b4fb2e8e8d47a100002, type: 3}
   buyCost: 110
   refundPercentage: 0.5

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dce0f33572c6a0347a62ddde9199c8fa, type: 3}
   m_Name: ThornWallData
   m_EditorClassIdentifier: Assembly-CSharp::TD.Data.WallData
-  buildingName: Muro Espinoso
+  buildingName: Thorn Wall
   prefab: {fileID: 5620625464038206038, guid: a1f0c9e76b9a4b4fb2e8e8d47a100009, type: 3}
   buyCost: 55
   refundPercentage: 0.5
