@@ -27,7 +27,7 @@ public class CellBlocker : MonoBehaviour
 
     private void Awake()
     {
-        _grid = GridManager.Instance;
+        _grid = FindAnyObjectByType<GridManager>();
 
         if (_grid == null)
         {
