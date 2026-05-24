@@ -7868,7 +7868,7 @@ MonoBehaviour:
   waves:
   - waveName: Number 1
     mixedEnemies:
-    - enemyType: 0
+    - enemyType: 3
       enemyCount: 30
       rate: 3
       delayBeforeStart: 0
