@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 1270244208350386445}
   - component: {fileID: 4631814245991082317}
   - component: {fileID: 1392352978762795624}
+  - component: {fileID: 2226087911288025684}
   m_Layer: 7
   m_Name: ChickenPenguinEnemy
   m_TagString: Untagged
@@ -129,6 +130,26 @@ MonoBehaviour:
   standingPenguinVisual: {fileID: 552587759696363628}
   secondPhaseHealth: 100
   secondPhaseSpeed: 5
+--- !u!114 &2226087911288025684
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9173542017446471154}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f368764ec0b9c9f498248bc13bc48db6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyDrop
+  enemy: {fileID: 1392352978762795624}
+  possibleDrops:
+  - pickupPrefab: {fileID: 4228365931688133127, guid: a289b446aad1c354c849ab51a03a78ab, type: 3}
+    dropChance: 30
+  - pickupPrefab: {fileID: 8047764633477264512, guid: a47cb43f5c153684ca580e1c545c1dce, type: 3}
+    dropChance: 30
+  - pickupPrefab: {fileID: 1162392375372998, guid: 1d15740f85f3032459f5e7118e3e859b, type: 3}
+    dropChance: 10
 --- !u!1001 &1752103220238273363
 PrefabInstance:
   m_ObjectHideFlags: 0

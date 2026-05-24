@@ -185,6 +185,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f709cd56f14494d43a4d2c7e2b8bcaed, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2918133106599682706}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f709cd56f14494d43a4d2c7e2b8bcaed, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5999196838363805413}
   m_SourcePrefab: {fileID: 100100000, guid: f709cd56f14494d43a4d2c7e2b8bcaed, type: 3}
 --- !u!1 &305033601637051736 stripped
 GameObject:
@@ -249,3 +252,21 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 1
   m_Center: {x: 0, y: 0.5, z: 0}
+--- !u!114 &5999196838363805413
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 305033601637051736}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f368764ec0b9c9f498248bc13bc48db6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyDrop
+  enemy: {fileID: 4334973632486553405, guid: 59e21df39059dca488e1d08c9cb6e5e2, type: 3}
+  possibleDrops:
+  - pickupPrefab: {fileID: 4228365931688133127, guid: a289b446aad1c354c849ab51a03a78ab, type: 3}
+    dropChance: 40
+  - pickupPrefab: {fileID: 8047764633477264512, guid: a47cb43f5c153684ca580e1c545c1dce, type: 3}
+    dropChance: 20
