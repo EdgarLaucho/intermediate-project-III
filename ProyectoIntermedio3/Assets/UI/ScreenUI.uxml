@@ -18,8 +18,7 @@
                 <ui:VisualElement name="life-bar-fill" picking-mode="Ignore" class="life-bar-fill"/>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:Label name="kills-label" text="KILLS: 0" enabled="true" display-tooltip-when-elided="false" triple-click-selects-line="false" double-click-selects-word="false" picking-mode="Ignore" class="kills-label" style="height: 66px; width: 285px; left: auto; top: 0; font-size: 35px;"/>
-        <ui:Label name="wave-message-label" text="" picking-mode="Ignore" class="wave-message-label" style="display: none;"/>
+        <ui:Label name="wave-message-label" text="" picking-mode="Ignore" class="wave-message-label" style="display: flex; top: 20px;"/>
         <ui:Button name="battle-button" text="BATTLE !" class="battle-button" style="display: none; height: 67px; width: 192px; font-size: 29px;"/>
     </ui:VisualElement>
     <ui:VisualElement name="screen-overlays" picking-mode="Ignore" class="screen-overlays">

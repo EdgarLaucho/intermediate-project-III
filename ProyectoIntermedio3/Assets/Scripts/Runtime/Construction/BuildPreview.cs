@@ -1,13 +1,11 @@
-using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.AI;
-using UnityEngine.UIElements;
 using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.AI;
+using UnityEngine.Rendering;
+using UnityEngine.UIElements;
 
 public class BuildPreview : MonoBehaviour
 {
-    #region Inspector Fields
-
     [Header("Materials")]
     [SerializeField] private Material validMaterial;
     [SerializeField] private Material invalidMaterial;
@@ -19,72 +17,39 @@ public class BuildPreview : MonoBehaviour
     [SerializeField] private float ghostTiltDegrees = 1.4f;
     [SerializeField] private float invalidTiltDegrees = 3.6f;
 
-    #endregion
-
-    #region Constants
-
     private const float SnapDuration = 0.085f;
+    private const string GhostPrefix = "__BuildPreview_Ghost_";
 
-    #endregion
+    private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+    private static readonly int ColorId = Shader.PropertyToID("_Color");
 
-    #region Nested Types
-
-    private class GhostRendererState
-    {
-        public Renderer Renderer;
-        public int MaterialCount;
-    }
-
-    #endregion
-
-    #region Runtime State
+    private readonly List<GhostRendererState> _ghostRenderers = new();
+    private readonly MaterialPropertyBlock _ghostTintBlock = new();
 
     private BuildingData _data;
+    private GameObject _currentPrefab;
     private GameObject _ghost;
     private Tower _previewTower;
     private Vector2Int _lastCell;
-    private bool _hasLastCell;
     private Vector3 _displayPosition;
     private Vector3 _snapFrom;
     private Vector3 _snapTo;
-    private float _snapT = SnapDuration;
     private Vector3 _ghostBaseScale = Vector3.one;
     private Quaternion _ghostBaseRotation = Quaternion.identity;
     private Quaternion _ghostPrefabRotation = Quaternion.identity;
     private BuildManager.PlacementState _lastPlacementState = BuildManager.PlacementState.Blocked;
-
-    private readonly List<GhostRendererState> _ghostRenderers = new();
-    private Material _validGhostMaterial;
-    private Material _invalidGhostMaterial;
-
-    #endregion
-
-    #region Lifecycle
+    private float _snapT = SnapDuration;
+    private bool _hasLastCell;
 
     private void Awake()
     {
-        EnsureRangeIndicatorExists();
-        EnsurePaintPreviewExists();
-        EnsureGhostMaterials();
+        EnsureVisualHelpersExist();
 
-        if (validMaterial == null) Debug.LogError("[BuildPreview] 'validMaterial' not assigned.");
-        if (invalidMaterial == null) Debug.LogError("[BuildPreview] 'invalidMaterial' not assigned.");
-    }
+        if (validMaterial == null)
+            Debug.LogError("[BuildPreview] 'validMaterial' not assigned.", this);
 
-    private void EnsureRangeIndicatorExists()
-    {
-        if (FindAnyObjectByType<TowerRangeIndicator>() != null)
-            return;
-
-        gameObject.AddComponent<TowerRangeIndicator>();
-    }
-
-    private void EnsurePaintPreviewExists()
-    {
-        if (FindAnyObjectByType<PaintPlacementPreviewRenderer>() != null)
-            return;
-
-        gameObject.AddComponent<PaintPlacementPreviewRenderer>();
+        if (invalidMaterial == null)
+            Debug.LogError("[BuildPreview] 'invalidMaterial' not assigned.", this);
     }
 
     private void OnEnable()
@@ -101,20 +66,10 @@ public class BuildPreview : MonoBehaviour
         ConstructionEvents.OnPlacementEnded -= Hide;
     }
 
-    private void OnPlacementUpdated(PlacementUpdatedArgs args)
-    {
-        UpdatePreview(args.Coords, args.WorldPos, args.Validation);
-    }
-
     private void OnDestroy()
     {
         DestroyGhost();
-        DestroyGhostMaterials();
     }
-
-    #endregion
-
-    #region Public API
 
     public void Show(BuildingData data)
     {
@@ -123,21 +78,7 @@ public class BuildPreview : MonoBehaviour
 
         if (data?.prefab == null) return;
 
-        _ghost = Instantiate(data.prefab);
-        _ghost.name = "__BuildPreview_Ghost_" + data.prefab.name;
-        _ghostBaseScale = _ghost.transform.localScale;
-        _ghostPrefabRotation = _ghost.transform.rotation;
-        _ghostBaseRotation = _ghostPrefabRotation;
-        DisableColliders(_ghost);
-        DisableGhostGameplay(_ghost);
-        CacheGhostRenderers(_ghost);
-        _previewTower = null;
-        _ghost.TryGetComponent<Tower>(out _previewTower);
-
-        _previewTower?.Initialize(data);
-        DisableGhostLevelIndicators(_ghost);
-
-
+        CreateGhost(data.prefab);
         _hasLastCell = false;
         _snapT = SnapDuration;
     }
@@ -147,6 +88,7 @@ public class BuildPreview : MonoBehaviour
         DestroyGhost();
         ConstructionEvents.TowerFocused(null);
         _data = null;
+        _currentPrefab = null;
         _previewTower = null;
         _ghostRenderers.Clear();
         _hasLastCell = false;
@@ -156,234 +98,203 @@ public class BuildPreview : MonoBehaviour
     {
         if (_data == null) return;
 
-        bool changedCell = !_hasLastCell || _lastCell != coords;
-        bool changedState = validation.State != _lastPlacementState;
+        var changedCell = !_hasLastCell || _lastCell != coords;
+        var changedState = validation.State != _lastPlacementState;
 
         if (changedCell)
-        {
-            _snapFrom = _hasLastCell ? _displayPosition : snappedWorldPosition;
-            _snapTo = snappedWorldPosition;
-            _snapT = 0f;
-            _lastCell = coords;
-            _hasLastCell = true;
-
-            GameObject neededPrefab = BuildingRotationHelper.ResolvePrefab(coords, _data);
-            if (_ghost == null || _ghost.name != "__BuildPreview_Ghost_" + neededPrefab.name)
-                RebuildGhost(neededPrefab);
-
-            _ghostBaseRotation = BuildingRotationHelper.ComputePlacementRotationForCell(coords, _data) * _ghostPrefabRotation;
-        }
+            MoveToCell(coords, snappedWorldPosition);
 
         if (changedCell || changedState)
         {
             _lastPlacementState = validation.State;
-            ApplyGhostVisual(validation);
+            ApplyGhostVisual(validation.State, validation.IsValid);
         }
 
-        _snapT = Mathf.Min(SnapDuration, _snapT + Time.deltaTime);
-        float snapEase = EaseOutCubic(SnapDuration <= 0f ? 1f : _snapT / SnapDuration);
-        _displayPosition = Vector3.Lerp(_snapFrom, _snapTo, snapEase);
-
-        Vector3 finalPosition = _displayPosition;
-        float time = Time.unscaledTime;
-        float bob = Mathf.Sin(time * ghostBobSpeed) * ghostBobHeight;
-        float breath = 1f + Mathf.Sin(time * ghostBobSpeed * 0.72f) * ghostBreathAmount;
-        float tiltAmount = validation.IsValid ? ghostTiltDegrees : invalidTiltDegrees;
-        float tiltX = Mathf.Sin(time * ghostBobSpeed * 1.17f) * tiltAmount;
-        float tiltZ = Mathf.Cos(time * ghostBobSpeed * 0.93f) * tiltAmount;
-
-        if (_ghost != null)
-        {
-            _ghost.transform.position = finalPosition + Vector3.up * (validation.IsValid ? bob : bob * 0.35f);
-            _ghost.transform.rotation = _ghostBaseRotation * Quaternion.Euler(tiltX, 0f, tiltZ);
-            _ghost.transform.localScale = _ghostBaseScale * breath;
-        }
-
-
-
-        if (_previewTower != null)
-            ConstructionEvents.TowerFocused(_previewTower);
-        else
-            ConstructionEvents.TowerFocused(null);
+        UpdateGhostTransform(validation.IsValid);
+        ConstructionEvents.TowerFocused(_previewTower);
     }
 
-    #endregion
-
-    #region Ghost Setup Helpers
-
-    private static void DisableColliders(GameObject go)
+    private void OnPlacementUpdated(PlacementUpdatedArgs args)
     {
-        foreach (var col in go.GetComponentsInChildren<Collider>())
-            col.enabled = false;
+        UpdatePreview(args.Coords, args.WorldPos, args.Validation);
+    }
 
-        foreach (var obstacle in go.GetComponentsInChildren<NavMeshObstacle>())
+    private void MoveToCell(Vector2Int coords, Vector3 snappedWorldPosition)
+    {
+        _snapFrom = _hasLastCell ? _displayPosition : snappedWorldPosition;
+        _snapTo = snappedWorldPosition;
+        _snapT = 0f;
+        _lastCell = coords;
+        _hasLastCell = true;
+
+        var neededPrefab = BuildingRotationHelper.ResolvePrefab(coords, _data);
+        if (_ghost == null || _currentPrefab != neededPrefab)
+            CreateGhost(neededPrefab);
+
+        _ghostBaseRotation = BuildingRotationHelper.ComputePlacementRotationForCell(coords, _data) * _ghostPrefabRotation;
+    }
+
+    private void UpdateGhostTransform(bool isValidPlacement)
+    {
+        if (_ghost == null) return;
+
+        _snapT = Mathf.Min(SnapDuration, _snapT + Time.deltaTime);
+        var snapEase = EaseOutCubic(SnapDuration <= 0f ? 1f : _snapT / SnapDuration);
+        _displayPosition = Vector3.Lerp(_snapFrom, _snapTo, snapEase);
+
+        var time = Time.unscaledTime;
+        var bob = Mathf.Sin(time * ghostBobSpeed) * ghostBobHeight;
+        var breath = 1f + Mathf.Sin(time * ghostBobSpeed * 0.72f) * ghostBreathAmount;
+        var tiltAmount = isValidPlacement ? ghostTiltDegrees : invalidTiltDegrees;
+        var tiltX = Mathf.Sin(time * ghostBobSpeed * 1.17f) * tiltAmount;
+        var tiltZ = Mathf.Cos(time * ghostBobSpeed * 0.93f) * tiltAmount;
+        var bobScale = isValidPlacement ? 1f : 0.35f;
+
+        _ghost.transform.position = _displayPosition + Vector3.up * (bob * bobScale);
+        _ghost.transform.rotation = _ghostBaseRotation * Quaternion.Euler(tiltX, 0f, tiltZ);
+        _ghost.transform.localScale = _ghostBaseScale * breath;
+    }
+
+    private void CreateGhost(GameObject prefab)
+    {
+        DestroyGhost();
+
+        _currentPrefab = prefab;
+        _ghost = Instantiate(prefab);
+        _ghost.name = GhostPrefix + prefab.name;
+        _ghostBaseScale = _ghost.transform.localScale;
+        _ghostPrefabRotation = _ghost.transform.rotation;
+        _ghostBaseRotation = _ghostPrefabRotation;
+
+        DisableColliders(_ghost);
+        DisableGhostGameplay(_ghost);
+        DisableGhostLevelIndicators(_ghost);
+        CacheGhostRenderers(_ghost);
+
+        _previewTower = null;
+        _ghost.TryGetComponent(out _previewTower);
+        _previewTower?.Initialize(_data);
+
+        ApplyGhostVisual(_lastPlacementState, _lastPlacementState == BuildManager.PlacementState.Valid);
+    }
+
+    private void DestroyGhost()
+    {
+        if (_ghost == null) return;
+
+        Destroy(_ghost);
+        _ghost = null;
+        _currentPrefab = null;
+    }
+
+    private static void DisableColliders(GameObject target)
+    {
+        foreach (var collider in target.GetComponentsInChildren<Collider>())
+            collider.enabled = false;
+
+        foreach (var obstacle in target.GetComponentsInChildren<NavMeshObstacle>())
             obstacle.enabled = false;
     }
 
-    private static void DisableGhostGameplay(GameObject go)
+    private static void DisableGhostGameplay(GameObject target)
     {
-        foreach (var shooter in go.GetComponentsInChildren<TowerShooter>(true))
+        foreach (var shooter in target.GetComponentsInChildren<TowerShooter>(true))
             shooter.enabled = false;
 
-        foreach (var catapultAnimator in go.GetComponentsInChildren<CannonCatapultAnimator>(true))
+        foreach (var catapultAnimator in target.GetComponentsInChildren<CannonCatapultAnimator>(true))
             catapultAnimator.enabled = false;
 
-        foreach (var trigger in go.GetComponentsInChildren<TrapTrigger>(true))
+        foreach (var trigger in target.GetComponentsInChildren<TrapTrigger>(true))
             trigger.enabled = false;
 
-        foreach (var healthBar in go.GetComponentsInChildren<BuildingHealthBar>(true))
+        foreach (var healthBar in target.GetComponentsInChildren<BuildingHealthBar>(true))
             healthBar.enabled = false;
 
-        foreach (var uiDocument in go.GetComponentsInChildren<UIDocument>(true))
-            uiDocument.enabled = false;
+        foreach (var document in target.GetComponentsInChildren<UIDocument>(true))
+            document.enabled = false;
     }
 
-    private static void DisableGhostLevelIndicators(GameObject go)
+    private static void DisableGhostLevelIndicators(GameObject target)
     {
-        foreach (var indicator in go.GetComponentsInChildren<BuildingLevelIndicator>(true))
+        foreach (var indicator in target.GetComponentsInChildren<BuildingLevelIndicator>(true))
             indicator.enabled = false;
     }
 
-    private void CacheGhostRenderers(GameObject go)
+    private void CacheGhostRenderers(GameObject target)
     {
         _ghostRenderers.Clear();
 
-        foreach (var renderer in go.GetComponentsInChildren<Renderer>())
+        foreach (var renderer in target.GetComponentsInChildren<Renderer>())
         {
             renderer.shadowCastingMode = ShadowCastingMode.Off;
             renderer.receiveShadows = false;
 
-            int materialCount = renderer.sharedMaterials.Length;
-            if (materialCount == 0)
-                continue;
+            var materialCount = renderer.sharedMaterials.Length;
+            if (materialCount <= 0) continue;
 
-            _ghostRenderers.Add(new GhostRendererState
-            {
-                Renderer = renderer,
-                MaterialCount = materialCount
-            });
+            _ghostRenderers.Add(new GhostRendererState(renderer, materialCount));
         }
     }
 
-    #endregion
-
-    #region Visual Tinting
-
-    private void ApplyGhostVisual(BuildManager.PlacementValidation validation)
+    private void ApplyGhostVisual(BuildManager.PlacementState state, bool isValidPlacement)
     {
-        Material material = validation.IsValid ? _validGhostMaterial : _invalidGhostMaterial;
-        SetMaterialColor(material, GhostTintFor(validation.State));
-        ConfigureSurface(material, validation.IsValid);
+        var material = isValidPlacement ? validMaterial : invalidMaterial;
+        var tint = GhostTintFor(state);
 
-        foreach (var state in _ghostRenderers)
+        for (var index = 0; index < _ghostRenderers.Count; index++)
         {
-            if (state.Renderer == null) continue;
-            Material[] mats = new Material[state.MaterialCount];
-            for (int i = 0; i < mats.Length; i++)
-                mats[i] = material;
-            state.Renderer.sharedMaterials = mats;
+            var rendererState = _ghostRenderers[index];
+            if (rendererState.Renderer == null || material == null) continue;
+
+            rendererState.Renderer.sharedMaterials = FilledMaterials(material, rendererState.MaterialCount);
+            ApplyGhostTint(rendererState.Renderer, tint);
         }
+    }
+
+    private static Material[] FilledMaterials(Material material, int count)
+    {
+        var materials = new Material[count];
+        for (var index = 0; index < materials.Length; index++)
+            materials[index] = material;
+
+        return materials;
+    }
+
+    private void ApplyGhostTint(Renderer renderer, Color tint)
+    {
+        _ghostTintBlock.Clear();
+        _ghostTintBlock.SetColor(BaseColorId, tint);
+        _ghostTintBlock.SetColor(ColorId, tint);
+        renderer.SetPropertyBlock(_ghostTintBlock);
     }
 
     private Color GhostTintFor(BuildManager.PlacementState state)
     {
-        if (state == BuildManager.PlacementState.Valid)
-            return new Color(0.72f, 0.72f, 0.72f, 1f);
-
-        if (state == BuildManager.PlacementState.InsufficientGold)
-            return new Color(1.00f, 0.78f, 0.16f, 0.65f);
-
-        if (state == BuildManager.PlacementState.InvalidPhase)
-            return new Color(0.55f, 0.58f, 0.66f, 0.55f);
-
-        return ReadMaterialColor(invalidMaterial, new Color(1f, 0.16f, 0.12f, 0.65f));
-    }
-
-    #endregion
-
-    #region Material Utilities
-
-    private void EnsureGhostMaterials()
-    {
-        if (_validGhostMaterial == null)
-            _validGhostMaterial = CreateGhostMaterial("BuildPreview_Valid", new Color(0.72f, 0.72f, 0.72f, 1f), true);
-
-        if (_invalidGhostMaterial == null)
-            _invalidGhostMaterial = CreateGhostMaterial("BuildPreview_Invalid", new Color(1f, 0.16f, 0.12f, 0.68f), false);
-    }
-
-    private static Material CreateGhostMaterial(string name, Color color, bool opaque)
-    {
-        var shader = Shader.Find("Universal Render Pipeline/Unlit")
-            ?? Shader.Find("Unlit/Color")
-            ?? Shader.Find("Sprites/Default")
-            ?? Shader.Find("Standard");
-
-        Material mat = shader != null ? new Material(shader) : new Material(Shader.Find("Sprites/Default"));
-        mat.name = name;
-        SetMaterialColor(mat, color);
-        ConfigureSurface(mat, opaque);
-        return mat;
-    }
-
-    private static void SetMaterialColor(Material mat, Color color)
-    {
-        if (mat == null) return;
-        if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", color);
-        if (mat.HasProperty("_Color")) mat.SetColor("_Color", color);
-    }
-
-    private void DestroyGhostMaterials()
-    {
-        DestroyRuntimeMaterial(_validGhostMaterial);
-        DestroyRuntimeMaterial(_invalidGhostMaterial);
-        _validGhostMaterial = null;
-        _invalidGhostMaterial = null;
-    }
-
-    private static void DestroyRuntimeMaterial(Material material)
-    {
-        if (material == null) return;
-        if (Application.isPlaying)
-            Destroy(material);
-        else
-            DestroyImmediate(material);
-    }
-
-    private static void ConfigureSurface(Material mat, bool opaque)
-    {
-        if (mat == null) return;
-
-        if (mat.HasProperty("_Surface")) mat.SetFloat("_Surface", opaque ? 0f : 1f);
-        if (mat.HasProperty("_Blend")) mat.SetFloat("_Blend", 0f);
-        if (mat.HasProperty("_SrcBlend")) mat.SetFloat("_SrcBlend", opaque ? (float)BlendMode.One : (float)BlendMode.SrcAlpha);
-        if (mat.HasProperty("_DstBlend")) mat.SetFloat("_DstBlend", opaque ? (float)BlendMode.Zero : (float)BlendMode.OneMinusSrcAlpha);
-        if (mat.HasProperty("_ZWrite")) mat.SetFloat("_ZWrite", opaque ? 1f : 0f);
-        if (mat.HasProperty("_Cull")) mat.SetFloat("_Cull", (float)CullMode.Off);
-        if (opaque)
+        return state switch
         {
-            mat.SetOverrideTag("RenderType", "Opaque");
-            mat.DisableKeyword("_SURFACE_TYPE_TRANSPARENT");
-            mat.DisableKeyword("_ALPHABLEND_ON");
-            mat.renderQueue = (int)RenderQueue.Geometry;
-            return;
-        }
-
-        mat.SetOverrideTag("RenderType", "Transparent");
-        mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
-        mat.EnableKeyword("_ALPHABLEND_ON");
-        mat.renderQueue = (int)RenderQueue.Transparent;
+            BuildManager.PlacementState.Valid => new Color(0.72f, 0.72f, 0.72f, 1f),
+            BuildManager.PlacementState.InsufficientGold => new Color(1.00f, 0.78f, 0.16f, 0.65f),
+            BuildManager.PlacementState.InvalidPhase => new Color(0.55f, 0.58f, 0.66f, 0.55f),
+            _ => ReadMaterialColor(invalidMaterial, new Color(1f, 0.16f, 0.12f, 0.65f)),
+        };
     }
 
-    private static Color ReadMaterialColor(Material mat, Color defaultColor)
+    private static Color ReadMaterialColor(Material material, Color fallback)
     {
-        if (mat == null) return defaultColor;
-        if (mat.HasProperty("_BaseColor")) return mat.GetColor("_BaseColor");
-        if (mat.HasProperty("_Color")) return mat.GetColor("_Color");
-        return defaultColor;
+        if (material == null) return fallback;
+        if (material.HasProperty(BaseColorId)) return material.GetColor(BaseColorId);
+        if (material.HasProperty(ColorId)) return material.GetColor(ColorId);
+        return fallback;
     }
 
-    #endregion
+    private void EnsureVisualHelpersExist()
+    {
+        if (FindAnyObjectByType<TowerRangeIndicator>() == null)
+            gameObject.AddComponent<TowerRangeIndicator>();
+
+        if (FindAnyObjectByType<PaintPlacementPreviewRenderer>() == null)
+            gameObject.AddComponent<PaintPlacementPreviewRenderer>();
+    }
 
     private static float EaseOutCubic(float t)
     {
@@ -391,27 +302,15 @@ public class BuildPreview : MonoBehaviour
         return 1f - Mathf.Pow(1f - t, 3f);
     }
 
-    private void DestroyGhost()
+    private readonly struct GhostRendererState
     {
-        if (_ghost != null) { Destroy(_ghost); _ghost = null; }
-    }
+        public readonly Renderer Renderer;
+        public readonly int MaterialCount;
 
-    private void RebuildGhost(GameObject prefab)
-    {
-        DestroyGhost();
-        _ghost = Instantiate(prefab);
-        _ghost.name = "__BuildPreview_Ghost_" + prefab.name;
-        _ghostBaseScale = _ghost.transform.localScale;
-        _ghostPrefabRotation = _ghost.transform.rotation;
-        _ghostBaseRotation = _ghostPrefabRotation;
-        DisableColliders(_ghost);
-        DisableGhostGameplay(_ghost);
-        CacheGhostRenderers(_ghost);
-        _previewTower = null;
-        _ghost.TryGetComponent<Tower>(out _previewTower);
-        _previewTower?.Initialize(_data);
-        DisableGhostLevelIndicators(_ghost);
-        ApplyGhostVisual(new BuildManager.PlacementValidation(
-            _lastPlacementState, null, string.Empty));
+        public GhostRendererState(Renderer renderer, int materialCount)
+        {
+            Renderer = renderer;
+            MaterialCount = materialCount;
+        }
     }
 }
