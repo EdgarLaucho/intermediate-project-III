@@ -22,6 +22,12 @@ public class RangedEnemyAI : BaseEnemyAI
             agent.isStopped = false;
             return;
          }
+         
+         if (enemySO.attackSound != null && audioSource != null)
+         {
+            audioSource.PlayOneShot(enemySO.attackSound);
+         }
+         
          ShootProjectile();
 
          Debug.Log($"{gameObject.name} shot projectile at {currentTarget.name}");

@@ -20,6 +20,7 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
     protected bool isGamePaused;
     protected bool wasAttackedByPlayer;
     protected Transform playerAggroTarget;
+    protected AudioSource audioSource;
     
 
     protected float attackTimer;
@@ -33,7 +34,9 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
     public event Action OnHealthChanged;
     protected virtual void Awake()
     {
+        
         agent = GetComponent<NavMeshAgent>();
+        audioSource = GetComponent<AudioSource>();
         agent.updateRotation = false;
         if (enemySO!=null)
         {
@@ -266,6 +269,11 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
             }
 
             currentDamageable.TakeDamage(enemySO.damage);
+            
+            if (enemySO.attackSound != null && audioSource != null)
+            {
+                audioSource.PlayOneShot(enemySO.attackSound);
+            }
 
             Debug.Log($"{gameObject.name} attacked {currentTarget.name}");
 
