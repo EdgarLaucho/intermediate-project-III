@@ -62,9 +62,21 @@ public class EnemySpawner : MonoBehaviour
         }
 
         BaseEnemyAI enemy = pools[enemyType].Get();
-        enemy.transform.position = position;
+
         enemy.transform.rotation = Quaternion.identity;
         enemy.Initialize();
+
+        UnityEngine.AI.NavMeshAgent agent = enemy.GetComponent<UnityEngine.AI.NavMeshAgent>();
+
+        if (agent != null)
+        {
+            agent.Warp(position);
+        }
+        else
+        {
+            enemy.transform.position = position;
+        }
+
         return enemy;
     }
 

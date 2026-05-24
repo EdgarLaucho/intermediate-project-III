@@ -294,7 +294,7 @@ PrefabInstance:
       addedObject: {fileID: 3632257810091161083}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 36b3f23f8fb70004eae2950a9d38abdd, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 8064149846209428361}
+      addedObject: {fileID: 6249409341218907499}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 36b3f23f8fb70004eae2950a9d38abdd, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7347903052477760442}
@@ -368,7 +368,7 @@ CapsuleCollider:
   m_Height: 1.54
   m_Direction: 1
   m_Center: {x: 0, y: 0.6, z: 0}
---- !u!114 &8064149846209428361
+--- !u!114 &6249409341218907499
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -383,11 +383,25 @@ MonoBehaviour:
   enemy: {fileID: 893968752849499729}
   possibleDrops:
   - pickupPrefab: {fileID: 4228365931688133127, guid: a289b446aad1c354c849ab51a03a78ab, type: 3}
-    dropChance: 20
+    dropChance: 30
   - pickupPrefab: {fileID: 8047764633477264512, guid: a47cb43f5c153684ca580e1c545c1dce, type: 3}
-    dropChance: 20
+    dropChance: 30
   - pickupPrefab: {fileID: 1162392375372998, guid: 1d15740f85f3032459f5e7118e3e859b, type: 3}
-    dropChance: 20
+    dropChance: 10
+  - pickupPrefab: {fileID: 5794499460462228412, guid: ee1c081589400b04ebb143aa845fab2a, type: 3}
+    dropChance: 30
+  - pickupPrefab: {fileID: 6770822860894924233, guid: f5f1646a36a4a6d47b2f0d1f006f87e4, type: 3}
+    dropChance: 30
+  - pickupPrefab: {fileID: 7851072900253812416, guid: bd7de4b5c0a3a374fa43c3120649d7d7, type: 3}
+    dropChance: 30
+  - pickupPrefab: {fileID: 7187790904398156385, guid: 8566d82482569894eb697b185a44f84f, type: 3}
+    dropChance: 30
+  - pickupPrefab: {fileID: 2925952572052976986, guid: 8d8d6773d1891cd4d89bf50a30f8bbd6, type: 3}
+    dropChance: 30
+  - pickupPrefab: {fileID: 9101450133790372412, guid: 819bece66c5a09d43ba0e03e8f06e865, type: 3}
+    dropChance: 30
+  - pickupPrefab: {fileID: 3757802214320153559, guid: 3f520a9710b4c5447b4066840669af8f, type: 3}
+    dropChance: 60
 --- !u!82 &7347903052477760442
 AudioSource:
   m_ObjectHideFlags: 0

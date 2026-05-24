@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyPoolDataSO
   EnemyType: 0
   prefab: {fileID: 4334973632486553405, guid: 59e21df39059dca488e1d08c9cb6e5e2, type: 3}
-  defaultCapacity: 10
-  maxSize: 30
+  defaultCapacity: 30
+  maxSize: 40

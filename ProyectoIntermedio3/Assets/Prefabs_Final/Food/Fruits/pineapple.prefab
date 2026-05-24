@@ -9,6 +9,18 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: e5b53b0b65a489b4884b52be6a511969, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: e5b53b0b65a489b4884b52be6a511969, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: e5b53b0b65a489b4884b52be6a511969, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: e5b53b0b65a489b4884b52be6a511969, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
@@ -66,6 +78,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e5b53b0b65a489b4884b52be6a511969, type: 3}
       insertIndex: -1
       addedObject: {fileID: 20535531009944029}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e5b53b0b65a489b4884b52be6a511969, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -9009777944493702792}
   m_SourcePrefab: {fileID: 100100000, guid: e5b53b0b65a489b4884b52be6a511969, type: 3}
 --- !u!1 &7851072900253812416 stripped
 GameObject:
@@ -104,6 +119,27 @@ MonoBehaviour:
   rotationSpeed: 80
   itemRenderer: {fileID: 8643640531865085717}
   flashMaterial: {fileID: 2100000, guid: 592fda3de8c32234e932d37ccea8de64, type: 2}
+--- !u!65 &-9009777944493702792
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7851072900253812416}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.11044652, y: 0.36323887, z: 0.11044651}
+  m_Center: {x: 0, y: 0.18161944, z: 0}
 --- !u!23 &8643640531865085717 stripped
 MeshRenderer:
   m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: e5b53b0b65a489b4884b52be6a511969, type: 3}

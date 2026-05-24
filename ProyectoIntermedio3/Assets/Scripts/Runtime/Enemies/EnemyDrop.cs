@@ -1,4 +1,6 @@
+using System;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class EnemyDrop : MonoBehaviour
 {
@@ -8,13 +10,27 @@ public class EnemyDrop : MonoBehaviour
     [SerializeField]
     private DropData[] possibleDrops;
 
+
+    private void Awake()
+    {
+        if (enemy == null)
+        {
+            enemy = GetComponent<BaseEnemyAI>();
+        }
+    }
+
     private void OnEnable()
     {
+        if (enemy==null)
+            return;
+        
         enemy.OnDeath += HandleDeath;
     }
 
     private void OnDisable()
     {
+        if (enemy==null)
+            return;
         enemy.OnDeath -= HandleDeath;
     }
 

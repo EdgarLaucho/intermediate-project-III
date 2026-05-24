@@ -159,7 +159,7 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
             agent.isStopped = true;
     }
     
-    //State Enemy
+   
     protected virtual void HandleIdle()
     {
         currentState = EnemyState.MovingToTarget;
@@ -307,7 +307,6 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
 
     protected virtual void EvaluateTargets()
     {
-        // Si ya está atacando una torreta viva, NO cambia de objetivo
         if (enemySO.canAttackConstruction &&
             currentTarget != null &&
             currentTargetLayer == LayerMask.NameToLayer("Construction") &&
@@ -318,7 +317,6 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
             return;
         }
 
-        // Si ya está persiguiendo un player vivo, NO cambia de objetivo
         if (enemySO.canAttackPlayer &&
             currentTarget != null &&
             currentTargetLayer == LayerMask.NameToLayer("Player") &&
@@ -329,8 +327,6 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
             return;
         }
 
-        // Primero busca torretas si puede atacarlas
-        // Esto permite que deje la mesa si aparece una torreta cerca
         if (enemySO.canAttackConstruction)
         {
             Collider[] Constructions = Physics.OverlapSphere(
@@ -362,8 +358,6 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
             }
         }
 
-        // Luego busca player si puede atacarlo
-        // Ya NO hay probabilidad, si lo detecta lo ataca
         if (enemySO.canAttackPlayer &&
             wasAttackedByPlayer &&
             playerAggroTarget != null)
@@ -409,7 +403,6 @@ public class BaseEnemyAI : MonoBehaviour, IDamageable, ITargetable
             return;
         }
 
-        // Si no puede atacar nada
         currentTarget = null;
         currentDamageable = null;
         currentState = EnemyState.Idle;
