@@ -63,11 +63,13 @@ public class EnemyProjectileBase : MonoBehaviour
         IDamageable damageable = other.GetComponentInParent<IDamageable>();
         Debug.Log("Damageable found: " + (damageable != null));
 
+        if (damageable == null)
+            return;
+        
         if (damageable == owner)
             return;
-
-
-        if (damageable == null)
+        
+        if (damageable is BaseEnemyAI)
             return;
 
         damageable.TakeDamage(damage);
